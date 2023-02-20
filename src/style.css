@@ -1,102 +1,112 @@
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
+html {
+  background-color: #121212;
+  padding: 100px;
+  font-family: 'Space Grotesk';
 }
 
 h1 {
-  text-align: center;
+  background: linear-gradient(111.49deg, #0F62FE -141.23%, #94B9FF 83.37%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  margin-right: 100px;
+  font-size: 32px;
+  position: relative;
 }
 
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+h2 {
+  font-size: 32px;
+  color: #FFFFFF;
+}
+
+label {
+  display: inline-flex;
+  color: #C6C6C6;
+  font-size: 14px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+input[type="text"], input[type="password"] {
+  background-color: #262626;
+  border: 0px;
+  border-bottom: 2px solid #6F6F6F;
+  width: 420px;
+  height: 48px;
+  color: #F4F4F4;
+  font-size: 14px;
+  padding-left: 16px;
+  padding-right: 40px;
 }
 
 button {
+  background-color: #0F62FE;
+  color: #FFFFFF;
+  border: 0px;
+  width: 208px;
+  height: 48px;
+}
+
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  display: inline-block;
+  position: relative;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  background-color: #121212;
+  border: 1px solid #C6C6C6;
   cursor: pointer;
+  margin-right: 8px;
 }
 
-button:hover {
-  border-color: #396cd8;
+input[type="checkbox"]:checked {
+  background-image: url("assets/checked.png");
+  background-size: 16px 16px;
 }
 
-input,
-button {
-  outline: none;
+
+
+
+
+
+
+
+
+
+/*the container must be positioned relative:*/
+.autocomplete {
+  position: relative;
+  display: inline-block;
 }
 
-#greet-input {
-  margin-right: 5px;
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-bottom: none;
+  border-top: none;
+  z-index: 99;
+  /*position the autocomplete items to be the same width as the container:*/
+  top: 100%;
+  left: 0;
+  right: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
+.autocomplete-items div {
+  cursor: pointer;
+  background-color: #fff; 
+  border-bottom: 1px solid #d4d4d4; 
+}
 
-  a:hover {
-    color: #24c8db;
-  }
+/*when hovering an item:*/
+.autocomplete-items div:hover {
+  background-color: #e9e9e9; 
+}
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
+/*when navigating through the items using the arrow keys:*/
+.autocomplete-active {
+  background-color: DodgerBlue !important; 
+  color: #ffffff; 
 }
