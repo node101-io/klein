@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Login</title>
   <link rel="stylesheet" href="style.css">
 </head>
   <body>
@@ -16,13 +15,10 @@
         <div style="flex: 1;">
           <label>IP Address</label><br>
           <div class="autocomplete">
-            <input autocomplete="off" oninput="render()" type="text" id="ip-input">
-          </div>
-          <img onclick="toggleMenu()" width="16px" src="assets/down_arrowhead.png" style="vertical-align: middle; margin-left: -32px;" id="menu-toggle"></img><br>
-          <ul id="ip-list">
-            <li>aAfdlsşfsad</li>
-            <li>sdfdsf</li>
-          </ul>
+            <input autocomplete="off" type="text" id="ip-input">
+            <img onclick="toggleMenu()" width="16px" src="assets/down_arrowhead.png" style="vertical-align: middle; margin-left: -32px;" id="menu-toggle"></img>
+            <div id="ip-input-autocomplete-list" class="autocomplete-items"></div>
+          </div><br>
           <label>Password</label><br>
           <input type="password" id="password-input">
           <img onclick="toggleVisibility()" width="16px" src="assets/eye_off.png" style="vertical-align: middle; margin-left: -32px;" id="visibility-toggle"></img><br>
@@ -38,6 +34,7 @@
       <a href="https://twitter.com">Twitter</a>
       <a href="https://node101.io">Website</a>
     </div>
+
     <script src="main.js"></script>    
   </body>
 </html>

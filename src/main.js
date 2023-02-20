@@ -2,93 +2,63 @@ const { invoke } = window.__TAURI__.tauri;
 
 let ipInputEl = document.getElementById("ip-input");
 let passwordInputEl = document.getElementById("password-input");
-let visibilityToggleEl = document.getElementById("visibility-toggle")
-let names = ["Ayla", "Jake", "Sean", "Henry", "Brad", "Stephen", "Taylor", "Timmy", "Cathy", "John", "Amanda", "Amara", "Sam", "Sandy", "Danny", "Ellen", "Camille", "Chloe", "Emily", "Nadia", "Mitchell", "Harvey", "Lucy", "Amy", "Glen", "Peter"];
+let visibilityToggleEl = document.getElementById("visibility-toggle");
+let autocompleteList = document.getElementById("ip-input-autocomplete-list");
+let names = ["Afghanistan","Albania","Algeria","Andorra","Angola","Anguilla","Antigua & Barbuda","Argentina","Armenia","Aruba","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bermuda","Bhutan","Bolivia","Bosnia & Herzegovina","Botswana","Brazil","British Virgin Islands","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde","Cayman Islands","Central Arfrican Republic","Chad","Chile","China","Colombia","Congo","Cook Islands","Costa Rica","Cote D Ivoire","Croatia","Cuba","Curacao","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Ethiopia","Falkland Islands","Faroe Islands","Fiji","Finland","France","French Polynesia","French West Indies","Gabon","Gambia","Georgia","Germany","Ghana","Gibraltar","Greece","Greenland","Grenada","Guam","Guatemala","Guernsey","Guinea","Guinea Bissau","Guyana","Haiti","Honduras","Hong Kong","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Isle of Man","Israel","Italy","Jamaica","Japan","Jersey","Jordan","Kazakhstan","Kenya","Kiribati","Kosovo","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Macau","Macedonia","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Montserrat","Morocco","Mozambique","Myanmar","Namibia","Nauro","Nepal","Netherlands","Netherlands Antilles","New Caledonia","New Zealand","Nicaragua","Niger","Nigeria","North Korea","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Puerto Rico","Qatar","Reunion","Romania","Russia","Rwanda","Saint Pierre & Miquelon","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","St Kitts & Nevis","St Lucia","St Vincent","Sudan","Suriname","Swaziland","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor L'Este","Togo","Tonga","Trinidad & Tobago","Tunisia","Turkey","Turkmenistan","Turks & Caicos","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States of America","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Virgin Islands (US)","Yemen","Zambia","Zimbabwe"];
 
-let currenFocus;
+let focusedIndex;
 
-ipInputEl.addEventListener("input", function(e) {
-  var a, b, i, val = this.value;
-  /*close any already open lists of autocompleted values*/
-  closeAllLists();
-  if (!val) { return false;}
-  currentFocus = -1;
-  /*create a DIV element that will contain the items (values):*/
-  a = document.createElement("div");
-  a.setAttribute("id", this.id + "autocomplete-list");
-  a.setAttribute("class", "autocomplete-items");
-  /*append the DIV element as a child of the autocomplete container:*/
-  this.parentNode.appendChild(a);
-  /*for each item in the array...*/
-  for (i = 0; i < names.length; i++) {
-    if (names[i].toLowerCase().includes(val.toLowerCase())) {
-      /*create a DIV element for each matching element:*/
+ipInputEl.addEventListener("input", function() {
+  var b;
+  autocompleteList.innerHTML = ""; 
+  if (!ipInputEl.value) { return false;}
+  focusedIndex = -1;
+  for (let i = 0; i < names.length; i++) {
+    if (names[i].toLowerCase().includes(ipInputEl.value.toLowerCase())) {
       b = document.createElement("div");
-      b.innerHTML = names[i];
-      /*insert a input field that will hold the current array item's value:*/
-      b.innerHTML += "<input type='hidden' value='" + names[i] + "'>";
-      /*execute a function when someone clicks on the item value (DIV element):*/
-      b.addEventListener("click", function(e) {
-          /*insert the value for the autocomplete text field:*/
-          ipInputEl.value = this.getElementsByTagName("input")[0].value;
-          closeAllLists();
+      b.textContent = names[i];
+      // b.innerHTML += "<input type='hidden' value='" + names[i] + "'>";
+      b.addEventListener("click", function() {
+        ipInputEl.value = this.textContent
       });
-      a.appendChild(b);
+      autocompleteList.appendChild(b);
     }
   }
 });
 
-/*execute a function presses a key on the keyboard:*/
 ipInputEl.addEventListener("keydown", function(e) {
-  var x = document.getElementById(this.id + "autocomplete-list");
-  if (x) x = x.getElementsByTagName("div");
-  if (e.keyCode == 40) {
-    currentFocus++;
-    addActive(x);
-  } else if (e.keyCode == 38) { //up
-    currentFocus--;
-    addActive(x);
-  } else if (e.keyCode == 13) {
-    if (currentFocus > -1) {
-      /*and simulate a click on the "active" item:*/
-      if (x) x[currentFocus].click();
-    }
+  x = autocompleteList.getElementsByTagName("div");
+  switch (e.keyCode) {
+    case 40:
+      focusedIndex++;
+      addActive(x);
+      break;
+    case 38:
+      focusedIndex--;
+      addActive(x);
+      break;
+    case 13:
+      if (focusedIndex > -1) {
+        x[focusedIndex].click();
+      }
   }
+});
+
+document.addEventListener("click", function (e) {
+  autocompleteList.innerHTML = "";
 });
 
 function addActive(x) {
-  /*a function to classify an item as "active":*/
   if (!x) return false;
-  /*start by removing the "active" class on all items:*/
-  /*a function to remove the "active" class from all autocomplete items:*/
+
   for (var i = 0; i < x.length; i++) {
     x[i].classList.remove("autocomplete-active");
   }
-  if (currentFocus >= x.length) currentFocus = 0;
-  if (currentFocus < 0) currentFocus = (x.length - 1);
-  /*add class "autocomplete-active":*/
-  x[currentFocus].classList.add("autocomplete-active");
+  if (focusedIndex >= x.length) focusedIndex = 0;
+  if (focusedIndex < 0) focusedIndex = (x.length - 1);
+
+  x[focusedIndex].classList.add("autocomplete-active");
 }
-function closeAllLists(elmnt) {
-  /*close all autocomplete lists in the document,
-  except the one passed as an argument:*/
-  var x = document.getElementsByClassName("autocomplete-items");
-  for (var i = 0; i < x.length; i++) {
-    if (elmnt != x[i] && elmnt != inp) {
-      x[i].parentNode.removeChild(x[i]);
-    }
-  }
-}
-/*execute a function when someone clicks in the document:*/
-document.addEventListener("click", function (e) {
-    closeAllLists(e.target);
-});
-
-
-
-
-
-
 
 async function logIn() {
   invoke("log_in", { ip: ipInputEl.value, password: passwordInputEl.value });
