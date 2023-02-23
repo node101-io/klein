@@ -28,6 +28,18 @@ function showItems() {
   }
 }
 
+async function logIn() {
+  invoke("log_in", { ip: document.getElementById("ip-input").value, password: document.getElementById("password-input").value });
+}
+
+function loadNewPage(pagename) {
+  fetch(`/${pagename}.html`)
+    .then(response => response.text())
+    .then(html => {
+      document.querySelector('html').innerHTML = html;
+    });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
 
   let ipInputEl = document.getElementById("ip-input");
@@ -115,18 +127,6 @@ window.addEventListener("DOMContentLoaded", () => {
     if (focusedIndex < 0) focusedIndex = (x.length - 1);
 
     x[focusedIndex].classList.add("autocomplete-active");
-  }
-
-  async function logIn() {
-    invoke("log_in", { ip: ipInputEl.value, password: passwordInputEl.value });
-  }
-
-  function loadNewPage(pagename) {
-    fetch(`/${pagename}.html`)
-      .then(response => response.text())
-      .then(html => {
-        document.querySelector('html').innerHTML = html;
-      });
   }
 
 });
