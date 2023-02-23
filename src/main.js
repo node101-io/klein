@@ -3,15 +3,13 @@ const { readTextFile, writeFile } = window.__TAURI__.fs;
 
 const observer = new MutationObserver((mutations) => {
   if (document.getElementById('ip-input-autocomplete-list').innerText === '') {
-    document.getElementById('menu-toggle').src = "assets/down_arrowhead.png";
+    document.getElementById('menu-toggle').src = "assets/down-arrowhead.png";
   }
   else {
-    document.getElementById('menu-toggle').src = "assets/up_arrowhead.png";
+    document.getElementById('menu-toggle').src = "assets/up-arrowhead.png";
   }
 });
-
 observer.observe(document.getElementById('ip-input-autocomplete-list'), { childList: true });
-
 
 function passwordVisibility() {
   visibilityToggleEl = document.getElementById("visibility-toggle");
@@ -19,29 +17,23 @@ function passwordVisibility() {
 
   if (passwordInputEl.type === "password") {
     passwordInputEl.type = "text";
-    visibilityToggleEl.src = "assets/eye_on.png";
+    visibilityToggleEl.src = "assets/eye-on.png";
   } else {
     passwordInputEl.type = "password";
-    visibilityToggleEl.src = "assets/eye_off.png";
+    visibilityToggleEl.src = "assets/eye-off.png";
   }
 }
 
 function showItems() {
-  autocompleteList = document.getElementById("ip-input-autocomplete-list");
-  showItemsEl = document.getElementById("menu-toggle");
-  if (document.getElementById('menu-toggle').src = "assets/up_arrowhead.png") {
-    console.log("hiding items");
-    autocompleteList.innerHTML = "";
+  if (document.getElementById('menu-toggle').src.includes("up-arrowhead")) {
+    document.getElementById("ip-input-autocomplete-list").innerHTML = "";
   }
   else {
-    console.log("showing items");
-    var event = new Event('input', { 'bubbles': true, 'cancelable': true });
-    var el = document.getElementById("ip-input");
-    el.dispatchEvent(event);
+    document.getElementById("ip-input").dispatchEvent(new Event('input', { 'bubbles': true, 'cancelable': true }));
   }
 }
 
-async function logIn() {
+function logIn() {
   invoke("log_in", { ip: document.getElementById("ip-input").value, password: document.getElementById("password-input").value });
 }
 
@@ -68,25 +60,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
   let focusedIndex;
 
-  passwordInputEl.addEventListener("input", function() {
-    if (passwordInputEl.value.length > 0) {
-      passwordInputEl.style.backgroundColor = "#393939";
-    }
-    else {
-      passwordInputEl.style.backgroundColor = "#262626";
-    }
-  });
-
   ipInputEl.addEventListener("input", function() {
-    if (ipInputEl.value.length > 0) {
-      ipInputEl.style.backgroundColor = "#393939";
-    }
-    else {
-      ipInputEl.style.backgroundColor = "#262626";
-    }
     var b;
     autocompleteList.innerHTML = "";
-    // if (!ipInputEl.value) { return false;}
     focusedIndex = -1;
     for (let i = 0; i < ipAddresses.length; i++) {
       if (ipAddresses[i].ip.toLowerCase().includes(ipInputEl.value.toLowerCase()) || ipAddresses[i].icon.toLowerCase().includes(ipInputEl.value.toLowerCase())) {

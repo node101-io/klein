@@ -124,6 +124,18 @@ body {
   border-color: #0F62FE;
 }
 
+.each-login-page-text-field:not(:placeholder-shown) {
+  background-color: #393939;
+}
+
+.each-login-page-toggle {
+  vertical-align: middle;
+  cursor: pointer;
+  margin-left: -30px;
+  width: 16px;
+  height: 16px;
+}
+
 .login-page-login-button {
   display: flex;
   background-color: #0F62FE;
@@ -145,6 +157,7 @@ body {
   align-items: center;
   margin-top: 50px;
   margin-bottom: 30px;
+  cursor: pointer;
 }
 .login-page-checkbox-label:hover {
   opacity: 0.9;

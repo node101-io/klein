@@ -12,7 +12,7 @@ use tauri::{PhysicalSize, Manager};
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
-            app.get_window("main").unwrap().set_min_size(Some(PhysicalSize::new(1280, 720)));
+            app.get_window("main").unwrap().set_min_size(Some(PhysicalSize::new(1280, 720))).unwrap();
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![log_in])
