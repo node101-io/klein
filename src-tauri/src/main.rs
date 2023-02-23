@@ -7,12 +7,17 @@ use ssh2::{Session};
 // use ssh2::{Session, Channel};
 use std::io::{Read};
 // use std::io::{Read, Write};
+use tauri::{PhysicalSize, Manager};
 
 fn main() {
     tauri::Builder::default()
+        .setup(|app| {
+            app.get_window("main").unwrap().set_min_size(Some(PhysicalSize::new(1280, 720)));
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![log_in])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application")
+        .expect("error while running tauri application");
 }
 
 #[tauri::command]

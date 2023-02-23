@@ -12,6 +12,18 @@
   },
   "tauri": {
     "allowlist": {
+      "fs": {
+        "all": true,
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "copyFile": true,
+        "createDir": true,
+        "removeDir": true,
+        "removeFile": true,
+        "renameFile": true,
+        "scope": ["**"]
+      },
       "all": false,
       "shell": {
         "all": false,
@@ -62,7 +74,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "wizardproject",
+        "title": "Wizard",
         "width": 800
       }
     ]

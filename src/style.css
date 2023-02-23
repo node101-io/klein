@@ -22,7 +22,6 @@ body {
   overflow-x: hidden;
   overflow-y: scroll;
 }
-
 .display-none {
   display: none;
 }
@@ -35,26 +34,35 @@ body {
   overflow: scroll;
 }
 
+.all-header-wrapper {
+  margin-left: 10%;
+  margin-top: 5%;
+}
+
 .all-content-wrapper {
-  margin-top: 80px;
-  width: 100vw;
   height: fit-content;
   min-height: fit-content;
+  margin-top: auto;
+}
+
+.all-footer-wrapper {
+  margin-top: auto;
+  margin-left: 10%;
+  margin-bottom: 5%;
 }
 
 .login-page-wrapper {
   width: 100vw;
-  height: calc(100vh - 80px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 60px;
-  padding-bottom: 80px;
+  padding-right: 15%;
+  padding-left: 10%;
 }
 
 .login-page-left-wrapper {
   width: auto;
-  padding-right: 30px;
+  margin-right: 10%;
   display: flex;
   flex-direction: column;
 }
@@ -64,8 +72,6 @@ body {
   flex-direction: column;
   align-items: flex;
   justify-content: center;
-  width: 310px;
-  min-width: 310px;
 }
 
 .login-page-motto {
@@ -74,41 +80,35 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
   font-size: 32px;
-  line-height: 160%;
 }
 
 .login-page-heading {
   color: #FFFFFF;
   font-size: 32px;
+  padding-bottom: 50px;
 }
 
 .each-footer-anchor {
+  text-decoration: none;
   align-items: center;
+  margin-right: 16px;
 }
 
 .each-footer-icon {
-  width: 32px;
+  width: 24px;
   cursor: pointer;
 }
 
-.login-page-label {
+.each-login-page-label {
   display: inline-flex;
   color: #C6C6C6;
   font-size: 14px;
-  margin-top: 20px;
+  margin-top: 30px;
   margin-bottom: 10px;
   line-height: 22px;
 }
 
-.all-footer-wrapper {
-  width: 100%;
-  height: fit-content;
-  min-height: fit-content;
-  display: flex;
-  margin-top: auto;
-}
-
-input[type="text"], input[type="password"] {
+.each-login-page-text-field {
   background-color: #262626;
   border: 0px;
   border-bottom: 2px solid #6F6F6F;
@@ -119,57 +119,71 @@ input[type="text"], input[type="password"] {
   padding-left: 16px;
   padding-right: 40px;
 }
+.each-login-page-text-field:focus {
+  outline: none;
+  border-color: #0F62FE;
+}
 
-button {
+.login-page-login-button {
+  display: flex;
   background-color: #0F62FE;
   color: #FFFFFF;
   border: 0px;
   width: 208px;
   height: 48px;
+  padding-left: 13px;
+  padding-right: 13px;
+  align-items: center;
+  justify-content: space-between;
+}
+.login-page-login-button:hover {
+  opacity: 0.9;
 }
 
-input[type="checkbox"] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  margin: 0;
+.login-page-checkbox-label {
+  align-items: center;
+  margin-top: 50px;
+  margin-bottom: 30px;
+}
+.login-page-checkbox-label:hover {
+  opacity: 0.9;
 }
 
 .login-page-checkbox {
-  margin: 0px;
-  width: 22px;
-  height: 22px;
-}
-
-.login-page-checkbox:hover {
-  opacity: 0.8;
-}
-
-label input[type="checkbox"]:checked + svg {
-  /* stroke: #007bff; */
-  fill: #007bff;
-}
-
-/* 
-input[type="checkbox"] {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
   display: inline-block;
   position: relative;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   vertical-align: middle;
   background-color: #121212;
   border: 1px solid #C6C6C6;
+  border-radius: 3px;
   cursor: pointer;
   margin-right: 8px;
-} */
-
-/* input[type="checkbox"]:checked {
+}
+.login-page-checkbox:hover {
+  opacity: 0.9;
+}
+.login-page-checkbox:checked {
   background-image: url("assets/checked.png");
-  background-size: 16px 16px;
-} */
+  background-size: 17px 17px;
+}
+
+.login-page-warning {
+  position: relative;
+  padding-top: 40px;
+  align-items: center;
+  display: flex;
+}
+
+.login-page-warning-text {
+  color: white;
+  font-size: 16px;
+  margin-left: 10px;
+}
 
 .autocomplete {
   position: relative;
@@ -180,19 +194,29 @@ input[type="checkbox"] {
   position: absolute;
   border: none;
   z-index: 99;
-  top: 100%;
   left: 0;
   right: 0;
 }
 
-.autocomplete-items div {
+.each-autocomplete-item {
   cursor: pointer;
-  background-color: #393939;
+  background: rgb(38, 38, 38);
   height: 48px;
+  display: flex;
+  align-items: center;
+  color: #BCBCBC;
 }
 
-.autocomplete-items div:hover {
-  background-color: #e9e9e9;
+.each-autocomplete-item:hover {
+  background-color: #1e1e1e;
+}
+
+.each-autocomplete-item-icon {
+  margin-left: 37px;
+  margin-right: 18px;
+  width: 25px;
+  height: 25px; 
+  vertical-align: middle;
 }
 
 .autocomplete-active {
