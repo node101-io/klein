@@ -1,8 +1,17 @@
 const { invoke } = window.__TAURI__.tauri;
 const { readTextFile, writeFile } = window.__TAURI__.fs;
 
-// check the existance of menu-toggle
-document.getElementById("menu-toggle").addEventListener("click", showItems);
+const observer = new MutationObserver((mutations) => {
+  if (document.getElementById('ip-input-autocomplete-list').innerText === '') {
+    document.getElementById('menu-toggle').src = "assets/down_arrowhead.png";
+  }
+  else {
+    document.getElementById('menu-toggle').src = "assets/up_arrowhead.png";
+  }
+});
+
+observer.observe(document.getElementById('ip-input-autocomplete-list'), { childList: true });
+
 
 function passwordVisibility() {
   visibilityToggleEl = document.getElementById("visibility-toggle");
@@ -20,11 +29,15 @@ function passwordVisibility() {
 function showItems() {
   autocompleteList = document.getElementById("ip-input-autocomplete-list");
   showItemsEl = document.getElementById("menu-toggle");
-  if (autocompleteList.innerHTML) {
-    showItemsEl.src = "assets/down_arrowhead.png";
+  if (document.getElementById('menu-toggle').src = "assets/up_arrowhead.png") {
+    console.log("hiding items");
     autocompleteList.innerHTML = "";
-  } else {
-    showItemsEl.src = "assets/up_arrowhead.png";
+  }
+  else {
+    console.log("showing items");
+    var event = new Event('input', { 'bubbles': true, 'cancelable': true });
+    var el = document.getElementById("ip-input");
+    el.dispatchEvent(event);
   }
 }
 
@@ -73,7 +86,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     var b;
     autocompleteList.innerHTML = "";
-    if (!ipInputEl.value) { return false;}
+    // if (!ipInputEl.value) { return false;}
     focusedIndex = -1;
     for (let i = 0; i < ipAddresses.length; i++) {
       if (ipAddresses[i].ip.toLowerCase().includes(ipInputEl.value.toLowerCase()) || ipAddresses[i].icon.toLowerCase().includes(ipInputEl.value.toLowerCase())) {
