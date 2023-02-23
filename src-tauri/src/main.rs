@@ -34,7 +34,7 @@ async fn log_in(ip: String, password: String, window: tauri::Window) -> () {
     channel.read_to_string(&mut s).unwrap();
     print!("{}", s);
 
-    window.eval("window['loadNewPage']('newpage')").unwrap();
+    window.eval("window['loadNewPage']('mainpage')").unwrap();
 }
 
 // #[tauri::command]
