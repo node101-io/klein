@@ -135,6 +135,7 @@ body {
   padding-right: 13px;
   align-items: center;
   justify-content: space-between;
+  cursor: pointer;
 }
 .login-page-login-button:hover {
   opacity: 0.9;
