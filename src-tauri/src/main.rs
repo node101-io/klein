@@ -28,7 +28,7 @@ fn modify_session(session:Session,manager: &mut SessionManager) {
 
 
 #[tauri::command]
-async fn log_in(ip: String, password: String, window: tauri::Window) -> () {
+async fn log_in(ip: String, password: String, remember: bool, window: tauri::Window) -> () {
     let tcp = std::net::TcpStream::connect(format!("{}:22", ip)).unwrap();
     let mut sess = Session::new().unwrap();
     sess.set_tcp_stream(tcp);
@@ -46,15 +46,15 @@ async fn log_in(ip: String, password: String, window: tauri::Window) -> () {
         let mut s = String::new();
         x.read_to_string(&mut s).unwrap();
         print!("{}", s);
+        if remember {
+            println!("Remembering password");
+        }
     }
         window.eval("window['loadNewPage']('mainpage/mainpage')").unwrap();
     }
     else{
-        // Javascript hata bastıracak.
-        // window.eval("window['login_error']").unwrap();
+        window.eval("window['showLoginError']()").unwrap();
     }
-
-}
 
 #[tauri::command]
 fn did_i_logged_in(){
@@ -83,4 +83,3 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
