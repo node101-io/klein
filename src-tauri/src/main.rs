@@ -55,23 +55,22 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
     else{
         window.eval("window['showLoginError']()").unwrap();
     }
+}
 
 #[tauri::command]
 fn did_i_logged_in(){
     unsafe{
-    println!("YO I AM HERE");
-    if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref(){
-    let mut channel = (*my_boxed_session).open_session.channel_session().unwrap();
-    channel.exec("ls").unwrap();
-    let mut s = String::new();
-    channel.read_to_string(&mut s).unwrap();
-    print!("{}", s);   
+        println!("YO I AM HERE");
+
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref(){
+            let mut channel = (*my_boxed_session).open_session.channel_session().unwrap();
+            channel.exec("ls").unwrap();
+            let mut s = String::new();
+            channel.read_to_string(&mut s).unwrap();
+            print!("{}", s);   
+        }
     }
-
-    window.eval("window['loadNewPage']('/mainpage/mainpage.html')").unwrap();
-    // window.eval("window['showLoginError']()").unwrap(); //HATA MESAJINI GÖSTERMEK İÇİN
 }
-
 
 fn main() {
     tauri::Builder::default()
