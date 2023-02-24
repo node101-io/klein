@@ -61,6 +61,9 @@ body {
     background-clip: text;
   font-size: 32px;}
 
+.login-page-right-wrapper {
+  max-width: 450px;}
+
 .login-page-heading {
   color: #FFFFFF;
   font-size: 32px;
