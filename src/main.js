@@ -1,53 +1,29 @@
 const { invoke } = window.__TAURI__.tauri;
 const { readTextFile, writeFile } = window.__TAURI__.fs;
+let ipAddresses;
 
-const observer = new MutationObserver((mutations) => {
-  if (document.getElementById('ip-input-autocomplete-list').innerText === '') {
-    document.getElementById('menu-toggle').src = "assets/down-arrowhead.png";
-  }
-  else {
-    document.getElementById('menu-toggle').src = "assets/up-arrowhead.png";
-  }
+readTextFile('ipaddresses.json').then((data) => {
+  ipAddresses = JSON.parse(data);
 });
-observer.observe(document.getElementById('ip-input-autocomplete-list'), { childList: true });
 
-function passwordVisibility() {
-  visibilityToggleEl = document.getElementById("visibility-toggle");
-  passwordInputEl = document.getElementById("password-input");
-
-  if (passwordInputEl.type === "password") {
-    passwordInputEl.type = "text";
-    visibilityToggleEl.src = "assets/eye-on.png";
-  } else {
-    passwordInputEl.type = "password";
-    visibilityToggleEl.src = "assets/eye-off.png";
-  }
-}
-
-function showItems() {
-  if (document.getElementById('menu-toggle').src.includes("up-arrowhead")) {
-    document.getElementById("ip-input-autocomplete-list").innerHTML = "";
-  }
-  else {
-    document.getElementById("ip-input").dispatchEvent(new Event('input', { 'bubbles': true, 'cancelable': true }));
-  }
+function passwordVisibility(passwordInputEl) {
+  passwordInputEl.type = passwordInputEl.type === "password" ? "text" : "password";
+  document.getElementById('visibility-toggle').src = passwordInputEl.type === "password" ? "assets/eye-off.png" : "assets/eye-on.png";
 }
 
 function logIn() {
   invoke("log_in", { ip: document.getElementById("ip-input").value, password: document.getElementById("password-input").value, remember: document.getElementById("checkbox-input").checked });
 }
-
 function showLoginError() {
   document.getElementsByClassName("login-page-warning")[0].style = "display: ''";
 }
-
 function loadNewPage(pagename) {
   window.location.href = pagename;
 }
 
 function showSelectedItem(ip, icon) {
-  ipInputEl = document.getElementById("ip-input");
-  selectedItemEl = document.getElementById("selected-item");
+  let ipInputEl = document.getElementById("ip-input");
+  let selectedItemEl = document.getElementById("selected-item");
   
   ipInputEl.value = this.children[2].textContent
   ipInputEl.style.display = 'none'
@@ -56,50 +32,37 @@ function showSelectedItem(ip, icon) {
   selectedItemEl.children[1].textContent = icon
   selectedItemEl.children[2].textContent = ip
 }
-
-function hideSelectedItem(obj) {
-  obj.style.display = 'none'
+function hideSelectedItem() {
+  document.getElementById("selected-item").style.display = 'none'
   document.getElementById('ip-input').style.display = ''
   document.getElementById('ip-input').focus()
 }
+function createDropdownItems(autocompleteListEl, ipInputEl) {
+  autocompleteListEl.innerHTML = "";
+  focusedIndex = 0;
+  for (let i = 0; i < ipAddresses.length; i++) {
+    if (ipAddresses[i].ip.toLowerCase().includes(ipInputEl.value.toLowerCase()) || ipAddresses[i].icon.toLowerCase().includes(ipInputEl.value.toLowerCase())) {
+      b = document.createElement("div");
+      b.innerHTML += `
+        <img class="each-autocomplete-item-icon" src="assets/${ipAddresses[i].icon.toLowerCase()}.png">
+        <div>${ipAddresses[i].icon}</div>
+        <div style="margin-left: auto; margin-right: 120px">${ipAddresses[i].ip}</div>`;
+      b.setAttribute("class", "each-autocomplete-item");
+      b.setAttribute("onclick", "showSelectedItem.call(this, '" + ipAddresses[i].ip + "', '" + ipAddresses[i].icon + "')");
+      autocompleteListEl.appendChild(b);
+    }
+  }
+};
 
 window.addEventListener("DOMContentLoaded", () => {
-
   let ipInputEl = document.getElementById("ip-input");
-  let autocompleteList = document.getElementById("ip-input-autocomplete-list");
+  let autocompleteListEl = document.getElementById("ip-input-autocomplete-list");
+  let dropdownToggleEl = document.getElementById("menu-toggle");
 
-  let ipAddresses;
-
-  readTextFile('ipaddresses.json').then((data) => {
-    ipAddresses = JSON.parse(data);
-    // writeFile('ipaddresses.json', JSON.stringify(ipAddresses));
-  });
-
-  let focusedIndex;
-
-
-
-  ipInputEl.addEventListener("input", function() {
-    var b;
-    autocompleteList.innerHTML = "";
-    focusedIndex = -1;
-    for (let i = 0; i < ipAddresses.length; i++) {
-      if (ipAddresses[i].ip.toLowerCase().includes(ipInputEl.value.toLowerCase()) || ipAddresses[i].icon.toLowerCase().includes(ipInputEl.value.toLowerCase())) {
-        b = document.createElement("div");
-        b.innerHTML += `
-          <img class="each-autocomplete-item-icon" src="assets/${ipAddresses[i].icon.toLowerCase()}.png">
-          <div>${ipAddresses[i].icon}</div>
-          <div style="margin-left: auto; margin-right: 120px">${ipAddresses[i].ip}</div>
-        `;
-        b.setAttribute("class", "each-autocomplete-item");
-        b.setAttribute("onclick", "showSelectedItem.call(this, '" + ipAddresses[i].ip + "', '" + ipAddresses[i].icon + "')");
-        autocompleteList.appendChild(b);
-      }
-    }
-  });
-
+  new MutationObserver(() => { dropdownToggleEl.src = (autocompleteListEl.innerText === '') ? "assets/down-arrowhead.png" : "assets/up-arrowhead.png"; }).observe(autocompleteListEl, { childList: true });
+  
   ipInputEl.addEventListener("keydown", function(e) {
-    x = autocompleteList.getElementsByClassName("each-autocomplete-item");
+    x = document.getElementsByClassName("each-autocomplete-item");
     switch (e.keyCode) {
       case 40:
         focusedIndex++;
@@ -116,27 +79,31 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  document.addEventListener("click", function (e) {
-    switch (e.target) {
-      case document.getElementById("menu-toggle"):
-        showItems();
-        break;
-      case document.getElementById("selected-item"):
-        hideSelectedItem(e.target);
-      default:
-        autocompleteList.innerHTML = "";
-        break;
-    }
-  });
-
   function addActive(x) {
-    if (!x) return false;
+    console.log(x)
+    if (x == undefined) return false;
     for (var i = 0; i < x.length; i++) {
       x[i].classList.remove("autocomplete-active");
     }
-    if (focusedIndex >= x.length) focusedIndex = 0;
-    if (focusedIndex < 0) focusedIndex = (x.length - 1);
+    if (focusedIndex >= x.length) focusedIndex = 1;
+    else if (focusedIndex < 1) focusedIndex = (x.length - 1);
 
     x[focusedIndex].classList.add("autocomplete-active");
-  }
+  }  
+
+  document.addEventListener("click", function (e) {
+    switch (e.target) {
+      case dropdownToggleEl:
+        if (dropdownToggleEl.src.includes("up-arrowhead")) {
+          autocompleteListEl.innerHTML = "";
+        }
+        else {
+          createDropdownItems(autocompleteListEl, ipInputEl);
+        }
+        break;
+      default:
+        autocompleteListEl.innerHTML = "";
+        break;
+    }
+  });
 });

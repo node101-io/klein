@@ -27,8 +27,8 @@
             <div class="login-page-heading">Sign in to continue!</div>
 
             <label class="each-login-page-label">IP Address</label>
-            <input class="each-login-page-text-field" autocomplete="off" type="text" id="ip-input" placeholder=" ">
-            <div class="each-autocomplete-item selected-item-modify" id="selected-item">
+            <input class="each-login-page-text-field" oninput="createDropdownItems(document.getElementById('ip-input-autocomplete-list'), document.getElementById('ip-input'))" autocomplete="off" type="text" id="ip-input" placeholder=" ">
+            <div class="each-autocomplete-item selected-item-modify" onclick="hideSelectedItem()" id="selected-item">
               <img class="each-autocomplete-item-icon" src="assets/shentu.png">
               <div></div>
               <div style="margin-left: auto; margin-right: 120px"></div>
@@ -38,7 +38,7 @@
             
             <label class="each-login-page-label">Password</label>
             <input class="each-login-page-text-field" type="password" id="password-input" placeholder=" ">
-            <img class="each-login-page-toggle" onclick="passwordVisibility()" src="assets/eye-off.png" id="visibility-toggle">
+            <img class="each-login-page-toggle" onclick="passwordVisibility(document.getElementById('password-input'))" src="assets/eye-off.png" id="visibility-toggle">
             
             <label class="each-login-page-label login-page-checkbox-label">
               <input class="login-page-checkbox" type="checkbox" id="checkbox-input">
