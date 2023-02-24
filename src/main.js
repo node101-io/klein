@@ -42,11 +42,7 @@ function showLoginError() {
 }
 
 function loadNewPage(pagename) {
-  fetch(`/${pagename}.html`)
-    .then(response => response.text())
-    .then(html => {
-      document.querySelector('html').innerHTML = html;
-    });
+  window.location.href = pagename;
 }
 
 function showSelectedItem(ip, icon) {

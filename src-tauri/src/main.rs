@@ -67,7 +67,9 @@ fn did_i_logged_in(){
     channel.read_to_string(&mut s).unwrap();
     print!("{}", s);   
     }
-}
+
+    window.eval("window['loadNewPage']('/mainpage/mainpage.html')").unwrap();
+    // window.eval("window['showLoginError']()").unwrap(); //HATA MESAJINI GÖSTERMEK İÇİN
 }
 
 
