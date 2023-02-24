@@ -34,7 +34,11 @@ function showItems() {
 }
 
 function logIn() {
-  invoke("log_in", { ip: document.getElementById("ip-input").value, password: document.getElementById("password-input").value });
+  invoke("log_in", { ip: document.getElementById("ip-input").value, password: document.getElementById("password-input").value, remember: document.getElementById("checkbox-input").checked });
+}
+
+function showLoginError() {
+  document.getElementsByClassName("login-page-warning")[0].style = "display: ''";
 }
 
 function loadNewPage(pagename) {
@@ -45,10 +49,27 @@ function loadNewPage(pagename) {
     });
 }
 
+function showSelectedItem(ip, icon) {
+  ipInputEl = document.getElementById("ip-input");
+  selectedItemEl = document.getElementById("selected-item");
+  
+  ipInputEl.value = this.children[2].textContent
+  ipInputEl.style.display = 'none'
+  selectedItemEl.style.display = 'inline-flex'
+  selectedItemEl.children[0].src = `assets/${icon.toLowerCase()}.png`
+  selectedItemEl.children[1].textContent = icon
+  selectedItemEl.children[2].textContent = ip
+}
+
+function hideSelectedItem(obj) {
+  obj.style.display = 'none'
+  document.getElementById('ip-input').style.display = ''
+  document.getElementById('ip-input').focus()
+}
+
 window.addEventListener("DOMContentLoaded", () => {
 
   let ipInputEl = document.getElementById("ip-input");
-  let passwordInputEl = document.getElementById("password-input");
   let autocompleteList = document.getElementById("ip-input-autocomplete-list");
 
   let ipAddresses;
@@ -59,6 +80,8 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   let focusedIndex;
+
+
 
   ipInputEl.addEventListener("input", function() {
     var b;
@@ -73,8 +96,7 @@ window.addEventListener("DOMContentLoaded", () => {
           <div style="margin-left: auto; margin-right: 120px">${ipAddresses[i].ip}</div>
         `;
         b.setAttribute("class", "each-autocomplete-item");
-        b.setAttribute("onclick", "document.getElementById('ip-input').value = this.children[2].textContent");
-
+        b.setAttribute("onclick", "showSelectedItem.call(this, '" + ipAddresses[i].ip + "', '" + ipAddresses[i].icon + "')");
         autocompleteList.appendChild(b);
       }
     }
@@ -99,11 +121,15 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("click", function (e) {
-    if (e.target != document.getElementById("menu-toggle")) {
-      autocompleteList.innerHTML = "";
-    }
-    else {
-      showItems();
+    switch (e.target) {
+      case document.getElementById("menu-toggle"):
+        showItems();
+        break;
+      case document.getElementById("selected-item"):
+        hideSelectedItem(e.target);
+      default:
+        autocompleteList.innerHTML = "";
+        break;
     }
   });
 
@@ -117,5 +143,4 @@ window.addEventListener("DOMContentLoaded", () => {
 
     x[focusedIndex].classList.add("autocomplete-active");
   }
-
 });

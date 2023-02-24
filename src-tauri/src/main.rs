@@ -21,7 +21,7 @@ fn main() {
 }
 
 #[tauri::command]
-async fn log_in(ip: String, password: String, window: tauri::Window) -> () {
+async fn log_in(ip: String, password: String, remember: bool, window: tauri::Window) -> () {
     let tcp = std::net::TcpStream::connect(format!("{}:22", ip)).unwrap();
     let mut sess = Session::new().unwrap();
     sess.set_tcp_stream(tcp);
@@ -33,8 +33,12 @@ async fn log_in(ip: String, password: String, window: tauri::Window) -> () {
     let mut s = String::new();
     channel.read_to_string(&mut s).unwrap();
     print!("{}", s);
+    if remember {
+        println!("Remembering password");
+    }
 
     window.eval("window['loadNewPage']('mainpage/mainpage')").unwrap();
+    // window.eval("window['showLoginError']()").unwrap(); //HATA MESAJINI GÖSTERMEK İÇİN
 }
 
 // #[tauri::command]

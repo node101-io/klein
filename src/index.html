@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="stylesheet" href="style.css">
 </head>
-  <body>
+  <body class="prevent-select">
     <div class="all-wrapper">
       <div class="all-header-wrapper">
         <svg class="all-header-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 779 150" fill="white" width="128px">
@@ -23,24 +23,28 @@
         <div class="login-page-wrapper">
           <div class="login-page-left-wrapper login-page-motto">Stay up to date about important governance decisions, airdrops, and much more!</div>
           
-          <div class="login-page-right-wrapper">
+          <div>
             <div class="login-page-heading">Sign in to continue!</div>
 
             <label class="each-login-page-label">IP Address</label><br>
-            <div class="autocomplete">
-              <input class="each-login-page-text-field" autocomplete="off" type="text" id="ip-input" placeholder=" ">
-              <img class="each-login-page-toggle" src="assets/down-arrowhead.png" id="menu-toggle">
-              <div id="ip-input-autocomplete-list" class="autocomplete-items"></div>
-            </div><br>
-            <label class="each-login-page-label">Password</label><br>
-            <div>
-              <input class="each-login-page-text-field" type="password" id="password-input" placeholder=" ">
-              <img class="each-login-page-toggle" onclick="passwordVisibility()" src="assets/eye-off.png" id="visibility-toggle"><br>
+            <input class="each-login-page-text-field" autocomplete="off" type="text" id="ip-input" placeholder=" ">
+            <div class="each-autocomplete-item selected-item-modify" id="selected-item">
+              <img class="each-autocomplete-item-icon" src="assets/shentu.png">
+              <div></div>
+              <div style="margin-left: auto; margin-right: 120px"></div>
             </div>
-            <label class="each-login-page-label login-page-checkbox-label" for="checkbox-input">
+            <img class="each-login-page-toggle" src="assets/down-arrowhead.png" id="menu-toggle"><br>
+            <div class="autocomplete-items" id="ip-input-autocomplete-list"></div>
+            
+            <label class="each-login-page-label">Password</label><br>
+            <input class="each-login-page-text-field" type="password" id="password-input" placeholder=" ">
+            <img class="each-login-page-toggle" onclick="passwordVisibility()" src="assets/eye-off.png" id="visibility-toggle"><br>
+            
+            <label class="each-login-page-label login-page-checkbox-label">
               <input class="login-page-checkbox" type="checkbox" id="checkbox-input">
-              Remember me!
+              <div>Remember me!</div>
             </label><br>
+
             <div class="login-page-login-button" onclick="logIn()">
               <div>Expecto Patronum</div>
               <div>
@@ -52,8 +56,8 @@
                 </svg>
               </div>
             </div>
-            <div class="login-page-warning">
-              <svg width="17" height="15" viewBox="0 0 17 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div class="login-page-warning" style="display: none;">
+              <svg width="17" height="15" viewBox="0 0 17 15" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M0.750968 15C0.193431 15 -0.169191 14.4499 0.0801473 13.9824L7.33015 0.388678C7.60654 -0.129559 8.3954 -0.129559 8.67179 0.388678L15.9218 13.9824C16.1711 14.4499 15.8085 15 15.251 15H0.750968ZM7.25097 5.625H8.75097V10.3125H7.25097V5.625ZM8.75097 11.9531C8.75097 12.3415 8.41518 12.6563 8.00097 12.6563C7.58675 12.6563 7.25097 12.3415 7.25097 11.9531C7.25097 11.5648 7.58675 11.25 8.00097 11.25C8.41518 11.25 8.75097 11.5648 8.75097 11.9531Z" fill="#DB0000"/>
               </svg>
               <div class="login-page-warning-text" id="warning-el">Please check your IP Address and password!</div>
@@ -63,33 +67,33 @@
       </div>
 
       <div class="all-footer-wrapper">
-        <a class="each-footer-anchor" target="_blank" href="https://web.telegram.org" >
-          <svg class="each-footer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="white">
+        <a class="each-footer-anchor" target="_blank" href="https://t.me/node101" >
+          <svg class="each-footer-anchor-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="white">
             <path d="M248,8C111.033,8,0,119.033,0,256S111.033,504,248,504,496,392.967,496,256,384.967,8,248,8ZM362.952,176.66c-3.732,39.215-19.881,134.378-28.1,178.3-3.476,18.584-10.322,24.816-16.948,25.425-14.4,1.326-25.338-9.517-39.287-18.661-21.827-14.308-34.158-23.215-55.346-37.177-24.485-16.135-8.612-25,5.342-39.5,3.652-3.793,67.107-61.51,68.335-66.746.153-.655.3-3.1-1.154-4.384s-3.59-.849-5.135-.5q-3.283.746-104.608,69.142-14.845,10.194-26.894,9.934c-8.855-.191-25.888-5.006-38.551-9.123-15.531-5.048-27.875-7.717-26.8-16.291q.84-6.7,18.45-13.7,108.446-47.248,144.628-62.3c68.872-28.647,83.183-33.623,92.511-33.789,2.052-.034,6.639.474,9.61,2.885a10.452,10.452,0,0,1,3.53,6.716A43.765,43.765,0,0,1,362.952,176.66Z"></path>
           </svg>
         </a>
-        <a class="each-footer-anchor" target="_blank" href="https://twitter.com">
-          <svg class="each-footer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="white">
+        <a class="each-footer-anchor" target="_blank" href="https://twitter.com/node_101">
+          <svg class="each-footer-anchor-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="white">
             <path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"></path>
           </svg>
         </a>
-        <a class="each-footer-anchor" target="_blank" href="https://github.com">
-          <svg class="each-footer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="white">
+        <a class="each-footer-anchor" target="_blank" href="https://github.com/node101-io">
+          <svg class="each-footer-anchor-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="white">
             <path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path>
           </svg>
         </a>
-        <a class="each-footer-anchor" target="_blank" href="https://node101.io">
-          <svg class="each-footer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 -64 256 256" fill="white">
+        <a class="each-footer-anchor" target="_blank" href="https://medium.com/node101">
+          <svg class="each-footer-anchor-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 -64 256 256" fill="white">
             <path d="M72.2009141,1.42108547e-14 C112.076502,1.42108547e-14 144.399375,32.5485469 144.399375,72.6964154 C144.399375,112.844284 112.074049,145.390378 72.2009141,145.390378 C32.327779,145.390378 0,112.844284 0,72.6964154 C0,32.5485469 32.325326,1.42108547e-14 72.2009141,1.42108547e-14 Z M187.500628,4.25836743 C207.438422,4.25836743 223.601085,34.8960455 223.601085,72.6964154 L223.603538,72.6964154 C223.603538,110.486973 207.440875,141.134463 187.503081,141.134463 C167.565287,141.134463 151.402624,110.486973 151.402624,72.6964154 C151.402624,34.9058574 167.562834,4.25836743 187.500628,4.25836743 Z M243.303393,11.3867175 C250.314,11.3867175 256,38.835526 256,72.6964154 C256,106.547493 250.316453,134.006113 243.303393,134.006113 C236.290333,134.006113 230.609239,106.554852 230.609239,72.6964154 C230.609239,38.837979 236.292786,11.3867175 243.303393,11.3867175 Z"></path>
           </svg>
         </a>
-        <a class="each-footer-anchor" target="_blank" href="https://www.youtube.com">
-          <svg class="each-footer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 32 576 512" fill="white">
+        <a class="each-footer-anchor" target="_blank" href="https://www.youtube.com/@node101">
+          <svg class="each-footer-anchor-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 32 576 512" fill="white">
             <path d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"></path>
           </svg>
         </a>
-        <a class="each-footer-anchor" target="_blank" href="https://open.spotify.com">
-          <svg class="each-footer-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 168" fill="white">
+        <a class="each-footer-anchor" target="_blank" href="https://open.spotify.com/show/5qQyR3JUUOYYfSJsulb9A7">
+          <svg class="each-footer-anchor-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 168" fill="white">
             <path d="m83.996 0.277c-46.249 0-83.743 37.493-83.743 83.742 0 46.251 37.494 83.741 83.743 83.741 46.254 0 83.744-37.49 83.744-83.741 0-46.246-37.49-83.738-83.745-83.738l0.001-0.004zm38.404 120.78c-1.5 2.46-4.72 3.24-7.18 1.73-19.662-12.01-44.414-14.73-73.564-8.07-2.809 0.64-5.609-1.12-6.249-3.93-0.643-2.81 1.11-5.61 3.926-6.25 31.9-7.291 59.263-4.15 81.337 9.34 2.46 1.51 3.24 4.72 1.73 7.18zm10.25-22.805c-1.89 3.075-5.91 4.045-8.98 2.155-22.51-13.839-56.823-17.846-83.448-9.764-3.453 1.043-7.1-0.903-8.148-4.35-1.04-3.453 0.907-7.093 4.354-8.143 30.413-9.228 68.222-4.758 94.072 11.127 3.07 1.89 4.04 5.91 2.15 8.976v-0.001zm0.88-23.744c-26.99-16.031-71.52-17.505-97.289-9.684-4.138 1.255-8.514-1.081-9.768-5.219-1.254-4.14 1.08-8.513 5.221-9.771 29.581-8.98 78.756-7.245 109.83 11.202 3.73 2.209 4.95 7.016 2.74 10.733-2.2 3.722-7.02 4.949-10.73 2.739z"/>
           </svg>
         </a>
