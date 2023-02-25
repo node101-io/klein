@@ -2,6 +2,9 @@ const { invoke } = window.__TAURI__.tauri;
 const { readTextFile, writeFile } = window.__TAURI__.fs;
 let ipAddresses;
 
+// Disable right click
+// document.addEventListener('contextmenu', event => event.preventDefault());
+
 readTextFile('ipaddresses.json').then((data) => {
   ipAddresses = JSON.parse(data);
 });
