@@ -49,8 +49,8 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
         if remember {
             println!("Remembering password");
         }
-    }
-        window.eval("window['loadNewPage']('mainpage/mainpage')").unwrap();
+        }
+        window.eval("window['loadNewPage']('/mainpage/mainpage.html')").unwrap();
     }
     else{
         window.eval("window['showLoginError']()").unwrap();
