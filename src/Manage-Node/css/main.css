@@ -1,0 +1,193 @@
+* {
+    color: white;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+a {
+    text-decoration: none;
+    color: white;
+}
+
+html {
+    font-family: 'Open Sans', sans-serif;
+}
+
+/* Navbar  */
+
+#navbar {
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0.75rem;
+    height: 70px;
+}
+
+#navbar ul {
+    list-style-type: none;
+    display: flex;
+    align-items: center;
+}
+
+#navbar ul li a {
+    padding: 0.5rem;
+}
+
+#navbar ul li a:hover {
+    background: #336ea2;
+    border-radius: 4px;
+}
+
+#navbar .language-part{
+    display: flex;
+    margin: 40px;
+}
+
+
+#navbar .project-image {
+    height: 60px;
+    width: 60px;
+    border: 1px solid black;
+    border-radius: 100%;
+    overflow: hidden;
+    background-color: #1e1e1e;
+} 
+
+/* Page */
+
+#page {
+    background: black;
+    justify-content: left;
+    align-items: center;
+    display: flex;
+}
+
+#page .left-side-of-page {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 360px;
+    height: 100%;
+    border-right:1px solid whitesmoke;  
+    padding-top: 100px;
+    padding-bottom: 300px;
+    padding-left: 40px;
+    padding-right: 40px;
+}
+
+#page .right-side-of-page {
+    display: flex;  
+    align-items: center;
+    flex-direction: column;
+    width: calc(100% - 360px);;
+    height: auto; 
+}
+
+/* Sidebar project info part */
+
+#page .left-side-of-page .item-of-sidebar {
+    width: 100%;
+    margin: 40px 0;
+    flex-direction: column;
+}
+
+#page .left-side-of-page .item-of-sidebar .node-info {
+    bottom: 0;
+    left: 0;
+}
+
+#page .left-side-of-page .item-of-sidebar .node-info .node-status-sign {
+    display: inline-block;
+    border: 1px solid white;
+    padding: 3px 20px;
+    border-radius: 10px;
+    background: #c9ef94;
+    color: #2f6514;
+}
+
+#page .left-side-of-page .item-of-sidebar .node-info .node-version-sign {
+    display: inline-block;
+    border: 1px solid white;
+    padding: 3px 20px;
+    border-radius: 10px;
+    background: #fed695;
+    color: #a3382a;
+}
+
+/*Sidebar Menu Part */
+#page .left-side-of-page .item-of-sidebar .menu-element {
+    display: block;
+    margin: 20px 0;
+}
+
+
+/* Sidebar Buttons part */
+
+#page .left-side-of-page .item-of-sidebar .buttons .main-buttons{
+    box-sizing: border-box;
+    background: #313131;
+    width: 240px;
+    height: 38px;
+    border-left: 3px solid white;
+    line-height: 18px;
+    font-size: 16px;
+    padding-left: 40px;
+    text-align: left;
+    outline: none;
+}
+
+#page .left-side-of-page .item-of-sidebar .buttons .main-buttons:hover {
+    background: rgb(143, 141, 141);
+}
+
+#page .left-side-of-page .item-of-sidebar .buttons #sub-buttons{
+    display: none;
+    list-style: none;
+    padding-left: 0px;
+    padding: 10px 0;
+}
+
+#page .left-side-of-page .item-of-sidebar .buttons .subbuttons li {
+    margin: 15px;
+    padding: 5px;
+    text-align: left;
+}
+
+#page .left-side-of-page .item-of-sidebar .buttons .subbuttons li:hover{
+    border: 1px solid #313131;
+
+}
+
+
+
+/* Sidebar Footer part */
+
+#page .left-side-of-page .item-of-sidebar .icon {
+    font-size: 20px;
+    margin: 6px;
+}
+
+/* **** Right side of Page CSS **** */
+
+
+/* progress bars */
+#page .right-side-of-page .progress-bars {
+    
+}
+
+/* first progress bar */
+
+#page .right-side-of-page .progress-bars .first-progress-bar{
+    display: flex;
+    box-sizing: border-box;
+    border: 5px solid green;
+    height: 200px;
+    width: 200px;
+    border-radius: 100%;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+
