@@ -21,7 +21,6 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/global.css" />
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/navbar.css" />
     <link rel="stylesheet" href="css/progress-bar.css" />
@@ -50,7 +49,7 @@
       </div>
     </header>
 
-    <section id="page">
+    <div id="page">
       <div class="left-side-of-page">
         <div class="item-of-sidebar">
           <div>
@@ -219,31 +218,10 @@
         </div>
       </div>
       <div class="right-side-of-page"></div>
-    </section>
+    </div>
 
-    <script>
-      // Functions
-      function toggleVisibilityOfValidatorOpeation() {
-        let subButtons = document.getElementById("sub-buttons");
-        if (subButtons.style.display === "none") {
-          subButtons.style.display = "block";
-        } else {
-          subButtons.style.display = "none";
-        }
-      }
-      function copyWalletAddress() {
-        var button = document.getElementsByClassName("wallet-address");
-        var text = button.innerHTML;
-        console.log(text);
-        navigator.clipboard
-          .writeText(text)
-          .then(function () {
-            console.log("Text copied to clipboard");
-          })
-          .catch(function (err) {
-            console.error("Error copying text: ", err);
-          });
-      }
+    <script src="page3.js">
+
     </script>
   </body>
 </html>
