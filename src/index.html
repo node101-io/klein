@@ -6,6 +6,28 @@
   <link rel="stylesheet" href="style.css">
 </head>
   <body class="prevent-select">
+    <div class="boxes" style="display: none;">
+      <div class="box">
+          <div></div>
+          <div></div>
+          <div></div>
+      </div>
+      <div class="box">
+          <div></div>
+          <div></div>
+          <div></div>
+      </div>
+      <div class="box">
+          <div></div>
+          <div></div>
+          <div></div>
+      </div>
+      <div class="box">
+          <div></div>
+          <div></div>
+          <div></div>
+      </div>
+    </div>
     <div class="all-wrapper">
       <div class="all-header-wrapper">
         <svg class="all-header-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 779 150">
@@ -26,15 +48,15 @@
             <div class="each-login-page-label">IP Address</div>
             <input class="each-login-page-text-field" autocomplete="off" type="text" placeholder=" " id="ip-input">
             <div class="each-autocomplete-item selected-item-modify" id="selected-item">
-              <img class="each-autocomplete-item-icon" src="assets/shentu.png">
+              <img class="each-autocomplete-item-icon">
               <div></div>
-              <div style="margin-left: auto; margin-right: 120px"></div>
+              <div class="each-autocomplete-item-ip"></div>
             </div>
-            <img class="each-login-page-toggle" src="assets/down-arrowhead.png" id="menu-toggle">
+            <img class="each-login-page-toggle" id="menu-toggle">
             <div class="autocomplete-items" id="ip-input-autocomplete-list"></div>
             <div class="each-login-page-label">Password</div>
             <input class="each-login-page-text-field" type="password" id="password-input" placeholder=" ">
-            <img class="each-login-page-toggle" src="assets/eye-off.png" id="visibility-toggle">
+            <img class="each-login-page-toggle" id="visibility-toggle">
             <label class="each-login-page-label login-page-checkbox-label" for="checkbox-input">
               <input class="login-page-checkbox" type="checkbox" id="checkbox-input">
               <div>Remember me!</div>
