@@ -16,6 +16,7 @@ readTextFile("ipaddresses.json").then((data) => {
 
 // Functions to be called from Rust
 function loadNewPage(pagename) {
+  hideLoadingAnimation();
   window.location.href = pagename;
 }
 function showLoginError() {

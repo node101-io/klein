@@ -3,10 +3,8 @@
     windows_subsystem = "windows"
 )]
 
-use ssh2::{Session, DisconnectCode};
-// use ssh2::{Session, Channel};
-use std::{io::{Read}};
-// use std::io::{Read, Write};
+use ssh2::{Session, Channel, DisconnectCode};
+use std::{io::{Read, Write}};
 use tauri::{PhysicalSize, Manager};
 use std::fs::File;
 use std::io::{self, BufRead};
@@ -41,13 +39,13 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
     let res = sess.userauth_password("root", &password);
     println!("arrived here,");
     println!("{}",res.is_ok());
-    assert!(sess.authenticated());
+    assert!(sess.authenticated()); // bunun error handlingi yok
     
     if res.is_ok(){
         unsafe{
         GLOBAL_STRUCT = Some(create_session(sess));
         let mut channel = (GLOBAL_STRUCT.as_ref().unwrap()).open_session.channel_session().unwrap();
-
+        
         channel.exec("ls").unwrap();
         let mut s = String::new();
         channel.read_to_string(&mut s).unwrap();
