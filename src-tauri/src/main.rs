@@ -59,7 +59,7 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
             println!("Remembering password");
         }   
     }
-        window.eval("window['loadNewPage']('mainpage/mainpage')").unwrap();
+        window.eval("window['loadNewPage']('mainpage/mainpage.html')").unwrap();
         ()
     }
     else{
@@ -79,7 +79,7 @@ async fn logout(window: tauri::Window){
             print!("{}", s);
             println!("hey");
             my_boxed_session.open_session.disconnect(Some(DisconnectCode::AuthCancelledByUser), "Disconnecting from server", None).unwrap();
-            window.eval("window['loadNewPage']('index.html')").unwrap();
+            window.eval("window['loadNewPage']('../index.html')").unwrap();
 
         }
         
