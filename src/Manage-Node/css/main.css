@@ -11,6 +11,7 @@ a {
 html {
     font-family: 'Open Sans', sans-serif;
     min-height: 720px;
+    background-color: black;
 }
 .all-wrapper {
     background: black;
@@ -70,12 +71,13 @@ html {
     flex-direction: column;
     width: 360px;
     min-height: 720px;
-    height: 100%;
+    height: 1380px;
     border-right: 1px solid whitesmoke;
     padding-top: 20px;
     padding-bottom: 60px;
     padding-left: 40px;
     padding-right: 40px;
+    /* overflow-y: scroll; */
 }
 .all-wrapper .sidebar .item-of-sidebar {
     width: 100%;
@@ -200,6 +202,7 @@ html {
     padding-top: 100px;
     display: flex;
     justify-content: center;
+    min-width: 100%;
 }
 .container {
     display: grid;
@@ -212,13 +215,14 @@ html {
 }
 .container .box .chart {
     position: relative;
-    width: 100%;
+    width: 200px;
     height: 100%;
     text-align: center;
-    font-size: 48px;
-    line-height: 240px;
+    font-size: 32px;
+    line-height: 200px;
     height: 240px;
     color: #5a6872;
+    margin-left: 20px;
 }   
 .container .box canvas {
     position: absolute;
@@ -230,7 +234,7 @@ html {
 .text-of-progress-bars {
     text-align: center;
     font-size: 24px;
-    margin-top: 24px;
+    margin-top: 12px;
     color: #5a6872;
 }
 
@@ -242,6 +246,7 @@ html {
     height: max-content;
     width: calc(100% - 360px);
     margin-top: 80px;
+    min-width: 800px;
     
 }
 .node-manage-buttons .node-manage-button{
@@ -284,4 +289,20 @@ html {
 
 .straight-progress-bar{
     margin-top: 100px;
+}
+
+@media only screen and (max-width: 1350px) {
+    .w3-light-grey{
+        width: 800px;
+        text-align: center;
+    }
+    .w3-container {
+        width: 800px;
+    }
+    .text-of-straight-progress-bar {
+        width: 800px;
+    }
+    .straight-progress-bar{
+        width: 800px;
+    }
 }
