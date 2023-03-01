@@ -18,6 +18,7 @@
 ::-webkit-scrollbar-track {
   background: var(--third-color);
   border-radius: 5px;
+  margin-bottom: 20vh;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--main-color);
@@ -82,29 +83,27 @@ body {
 
 .header-node-icons {
   display: flex;
+  margin-right: 50px;
+  position: relative;
+}
+.header-node-icons:hover > span {
+  scale: 1.2;
 }
 
 .header-node-icon {
   width: 44px;
   height: 44px;
-  margin-right: 50px;
 }
 
 .header-node-icon-notification {
-  position: relative;
-  top: 30px;
-  left: 44px;
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
   height: 18px;
   width: 18px;
   border: var(--second-color) solid 3px;
   background-color: var(--main-color);
   border-radius: 50%;
-}
-.header-node-icon-notification:hover {
-  width: 24px;
-  height: 24px;
-  left: 47px;
-  top: 27px;
 }
 
 .each-header-language {
@@ -159,16 +158,18 @@ body {
 .nodes-page-projects {
   display: flex;
   flex-wrap: wrap;
-  height: calc(95vh - 92px - 140px);
-  margin-top: 50px;
+  height: calc(97vh - 92px - 140px);
+  margin-top: 30px;
   margin-left: 5vw;
   margin-right: 5vw;
+  padding-top: 30px;
   overflow-x: hidden;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .each-node-page-project {
   width: calc(30vw - 45px);
+  height: fit-content;
   margin-bottom: 50px;
   margin-right: 40px;
 }
@@ -272,4 +273,26 @@ body {
 
 .each-project-button-svg {
   fill: var(--logo-color);
+}
+
+.overlay-top {
+  position: absolute;
+  top: 212px;
+  margin-right: calc(5vw + 20px);
+  margin-left: 5vw;
+  width: calc(90vw - 20px);
+  height: 3vh;
+  background: linear-gradient(180deg, rgba(18,18,18,1) 0%, rgba(18,18,18,0.5) 50%, rgba(18,18,18,0) 100%); 
+  z-index: 99;
+}
+
+.overlay-bottom {
+  position: absolute;
+  top: 91vh;
+  margin-right: calc(5vw + 20px);
+  margin-left: 5vw;
+  width: calc(90vw - 20px);
+  height: 5vh;
+  background: linear-gradient(0deg, rgba(18,18,18,1) 0%, rgba(18,18,18,0.5) 50%, rgba(18,18,18,0) 100%); 
+  z-index: 99;
 }

@@ -18,20 +18,34 @@
           <path d="M200.23 28.25C185.859 28.2527 171.959 33.3805 161.03 42.7119C150.1 52.0434 142.856 64.9668 140.6 79.16H162.12C164.43 69.8553 170.065 61.7175 177.962 56.2814C185.859 50.8453 195.472 48.4866 204.989 49.6503C214.505 50.8139 223.266 55.4195 229.621 62.5982C235.975 69.777 239.483 79.0328 239.483 88.62C239.483 98.2072 235.975 107.463 229.621 114.642C223.266 121.821 214.505 126.426 204.989 127.59C195.472 128.753 185.859 126.395 177.962 120.959C170.065 115.523 164.43 107.385 162.12 98.08H140.6C142.408 109.473 147.442 120.11 155.106 128.731C162.771 137.352 172.745 143.597 183.848 146.726C194.951 149.856 206.718 149.738 217.756 146.388C228.795 143.038 238.642 136.596 246.133 127.823C253.624 119.051 258.445 108.316 260.025 96.889C261.605 85.4621 259.878 73.8218 255.049 63.3458C250.22 52.8698 242.49 43.9968 232.775 37.777C223.059 31.5572 211.766 28.2511 200.23 28.25V28.25Z"></path>
         </svg>
         <div class="header-node-icons">
-          <span class="header-node-icon-notification"></span>
           <img class="header-node-icon" src="../assets/canto.png">
+          <span class="header-node-icon-notification"></span>
         </div>
         <button class="each-header-language">ENG</button>
         <div class="header-language-divider"></div>
         <button class="each-header-language">TR</button>
+        <div class="header-menu" style="position: absolute; color: aliceblue; top: 92px; right: 0px; border: white solid 2px; width: calc(5vw + 210px);">
+          <div class="header-menu-ip-list-button" style="display: flex;">
+            <img src="../assets/arrowhead-down.png" width="16px" height="16px">
+            <img src="../assets/canto.png" width="32px" height="32px">
+            <div>Canto</div>
+            <div>
+              <div>144.91.93.154</div>
+              <img src="">
+            </div>
+          </div>
+          <div class="each-header-menu-item"></div>
+          <div class="each-header-menu-item"></div>
+        </div>
       </div>
       <div class="all-content-wrapper">
+        <div class="overlay-top"></div>
         <div class="nodes-page-wrapper">
           <div class="nodes-page-tabs">
             <button class="each-nodes-page-tab active-tab" id="testnet-tab-button">Testnet</button>
             <button class="each-nodes-page-tab" id="mainnet-tab-button">Mainnet</button>
           </div>
-          <div class="nodes-page-projects">
+          <div class="nodes-page-projects" id="testnet-tab-content">
             <div class="each-node-page-project">
               <div class="each-project-header">
                 <img class="each-project-icon" src="../assets/canto.png">
@@ -657,7 +671,202 @@
               </div>            
             </div>
           </div>
+          <div class="nodes-page-projects" id="mainnet-tab-content" style="display: none;">
+            <div class="each-node-page-project">
+              <div class="each-project-header">
+                <img class="each-project-icon" src="../assets/canto.png">
+                <div class="each-project-details">
+                  <div class="each-project-details-heading">CANTO</div>
+                  <div class="each-project-details-tags">
+                    <span class="each-project-detail-tag" style="background-color: green;">Upcoming</span>
+                    <span class="each-project-detail-tag" style="background-color: purple;">Archive</span>
+                  </div>
+                  <div class="each-project-rating">
+                    <div class="each-project-rating-heading">Rating</div>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: none;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: none;"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="each-project-description">
+                  Stake your coins to our validators in the projects you choose. node101
+                  gives you the opportunity to stake the best projects.
+              </div>
+              <div class="each-project-buttons">
+                <button class="each-project-button" style="background-color: rgba(15, 98, 254, 1);">
+                  <div>Install Node</div>
+                  <svg class="each-project-button-svg" width="14" height="14" viewBox="0 0 14 14">
+                    <path d="M 12.656854,8.1649583 11.949748,7.4578515 7.4985105,11.909089 V 0.17818725 H 6.5014899 V 11.909089 L 2.0502527,7.4578515 1.343146,8.1649583 7.0000002,13.821813 Z"/>
+                  </svg>
+                </button>
+                <button class="each-project-button" style="background-color: rgba(90, 104, 114, 1);">
+                  <div>Discover</div>
+                  <svg class="each-project-button-svg" width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 0V1H8.295L0 9.295L0.705 10L9 1.705V8H10V0H2Z"/>
+                  </svg>
+                </button>
+              </div>            
+            </div>
+            <div class="each-node-page-project">
+              <div class="each-project-header">
+                <img class="each-project-icon" src="../assets/canto.png">
+                <div class="each-project-details">
+                  <div class="each-project-details-heading">CANTO</div>
+                  <div class="each-project-details-tags">
+                    <span class="each-project-detail-tag" style="background-color: green;">Upcoming</span>
+                    <span class="each-project-detail-tag" style="background-color: purple;">Archive</span>
+                  </div>
+                  <div class="each-project-rating">
+                    <div class="each-project-rating-heading">Rating</div>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: none;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: none;"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="each-project-description">
+                  Stake your coins to our validators in the projects you choose. node101
+                  gives you the opportunity to stake the best projects.
+              </div>
+              <div class="each-project-buttons">
+                <button class="each-project-button" style="background-color: rgba(15, 98, 254, 1);">
+                  <div>Install Node</div>
+                  <svg class="each-project-button-svg" width="14" height="14" viewBox="0 0 14 14">
+                    <path d="M 12.656854,8.1649583 11.949748,7.4578515 7.4985105,11.909089 V 0.17818725 H 6.5014899 V 11.909089 L 2.0502527,7.4578515 1.343146,8.1649583 7.0000002,13.821813 Z"/>
+                  </svg>
+                </button>
+                <button class="each-project-button" style="background-color: rgba(90, 104, 114, 1);">
+                  <div>Discover</div>
+                  <svg class="each-project-button-svg" width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 0V1H8.295L0 9.295L0.705 10L9 1.705V8H10V0H2Z"/>
+                  </svg>
+                </button>
+              </div>            
+            </div>
+            <div class="each-node-page-project">
+              <div class="each-project-header">
+                <img class="each-project-icon" src="../assets/canto.png">
+                <div class="each-project-details">
+                  <div class="each-project-details-heading">CANTO</div>
+                  <div class="each-project-details-tags">
+                    <span class="each-project-detail-tag" style="background-color: green;">Upcoming</span>
+                    <span class="each-project-detail-tag" style="background-color: purple;">Archive</span>
+                  </div>
+                  <div class="each-project-rating">
+                    <div class="each-project-rating-heading">Rating</div>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: none;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: none;"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="each-project-description">
+                  Stake your coins to our validators in the projects you choose. node101
+                  gives you the opportunity to stake the best projects.
+              </div>
+              <div class="each-project-buttons">
+                <button class="each-project-button" style="background-color: rgba(15, 98, 254, 1);">
+                  <div>Install Node</div>
+                  <svg class="each-project-button-svg" width="14" height="14" viewBox="0 0 14 14">
+                    <path d="M 12.656854,8.1649583 11.949748,7.4578515 7.4985105,11.909089 V 0.17818725 H 6.5014899 V 11.909089 L 2.0502527,7.4578515 1.343146,8.1649583 7.0000002,13.821813 Z"/>
+                  </svg>
+                </button>
+                <button class="each-project-button" style="background-color: rgba(90, 104, 114, 1);">
+                  <div>Discover</div>
+                  <svg class="each-project-button-svg" width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 0V1H8.295L0 9.295L0.705 10L9 1.705V8H10V0H2Z"/>
+                  </svg>
+                </button>
+              </div>            
+            </div>
+            <div class="each-node-page-project">
+              <div class="each-project-header">
+                <img class="each-project-icon" src="../assets/canto.png">
+                <div class="each-project-details">
+                  <div class="each-project-details-heading">CANTO</div>
+                  <div class="each-project-details-tags">
+                    <span class="each-project-detail-tag" style="background-color: green;">Upcoming</span>
+                    <span class="each-project-detail-tag" style="background-color: purple;">Archive</span>
+                  </div>
+                  <div class="each-project-rating">
+                    <div class="each-project-rating-heading">Rating</div>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: unset;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: none;"></span>
+                    </span>
+                    <span class="each-project-rating-value">
+                      <span class="each-project-rating-value-on" style="display: none;"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="each-project-description">
+                  Stake your coins to our validators in the projects you choose. node101
+                  gives you the opportunity to stake the best projects.
+              </div>
+              <div class="each-project-buttons">
+                <button class="each-project-button" style="background-color: rgba(15, 98, 254, 1);">
+                  <div>Install Node</div>
+                  <svg class="each-project-button-svg" width="14" height="14" viewBox="0 0 14 14">
+                    <path d="M 12.656854,8.1649583 11.949748,7.4578515 7.4985105,11.909089 V 0.17818725 H 6.5014899 V 11.909089 L 2.0502527,7.4578515 1.343146,8.1649583 7.0000002,13.821813 Z"/>
+                  </svg>
+                </button>
+                <button class="each-project-button" style="background-color: rgba(90, 104, 114, 1);">
+                  <div>Discover</div>
+                  <svg class="each-project-button-svg" width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 0V1H8.295L0 9.295L0.705 10L9 1.705V8H10V0H2Z"/>
+                  </svg>
+                </button>
+              </div>            
+            </div>            
+          </div>
         </div>
+        <div class="overlay-bottom"></div>
       </div>
     </div>
     <script src="mainpage.js"></script>
