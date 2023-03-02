@@ -12,6 +12,9 @@
   },
   "tauri": {
     "allowlist": {
+      "window": {
+        "center": true
+      },
       "fs": {
         "all": true,
         "readFile": true,
