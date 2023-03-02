@@ -42,6 +42,18 @@ function setOldStyleForDeleteButton() {
     deleteButtonIcon.style.color = "red";
 }
 
+function openCreateValidatorPage() {
+    let content = document.getElementById('content-of-page');
+    fetch('createValidator.html')
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading file:', error);
+    });
+}
+
 
 document.getElementById('validator-operations').addEventListener('click', function() {
     toggleVisibilityOfValidatorOpeation()
@@ -57,4 +69,7 @@ document.getElementsByClassName('node-delete-button')[0].addEventListener('mouse
 })
 document.getElementsByClassName('node-delete-button')[0].addEventListener('mouseout', function () {
     setOldStyleForDeleteButton()
+})
+document.getElementById('create').addEventListener('click', function() {
+    openCreateValidatorPage()
 })

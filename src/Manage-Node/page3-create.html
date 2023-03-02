@@ -20,6 +20,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/create-validator.css" />
   </head>
   <body>
     <header>
@@ -345,37 +346,162 @@
             </div>
           </div>
         </div>
-        <div class="node-manage-buttons">
-          <button class="node-manage-button">
-            <i class="fa-solid fa-play icon-of-buttons"></i>Start Node
-          </button>
-          <button class="node-manage-button">
-            <i class="fa-solid fa-stop icon-of-buttons"></i>Stop Node
-          </button>
-          <button class="node-manage-button">
-            <i class="fa-solid fa-arrow-rotate-right icon-of-buttons"></i
-            >Restart Node
-          </button>
-          <button class="node-manage-button">
-            <i class="fa-solid fa-angles-up icon-of-buttons"></i>Update Node
-          </button>
-          <button class="node-delete-button">
-            <i class="fa-solid fa-trash delete-icon"></i>Delete Node
-          </button>
-        </div>
-        <div class="straight-progress-bar">
-          <div class="text-of-straight-progress-bar">
-            <div>Loading</div>
-            <div>50%</div>
-          </div>
-          <div class="w3-container" style="width: 1000px">
-            <div class="w3-light-grey">
-              <div
-                id="myBar"
-                class="w3-container w3-blue"
-                style="height: 4px; width: 50%"
-              ></div>
+        <div class="create-validator-main">
+          <div class="text-of-node-management-titles">Create Validator</div>
+          <div class="two-form-items-horizontally">
+            <div class="form-item">
+              <div>
+                <label for="amount"><b class="form-item-text">Amount</b></label>
+              </div>
+              <input
+                class="input-of-create-validator-form"
+                type="text"
+                placeholder=" Amount"
+                name="amount"
+                id="amount"
+                required
+              />
             </div>
+            <div class="form-item">
+              <div>
+                <label for="walletName"
+                  ><b class="form-item-text">Wallet Name</b></label
+                >
+              </div>
+              <input
+                class="input-of-create-validator-form"
+                type="text"
+                placeholder=" Wallet name"
+                name="amount"
+                id="amount"
+                required
+              />
+            </div>
+          </div>
+          <div class="two-form-items-horizontally">
+            <div class="form-item">
+              <div>
+                <label for="amount"
+                  ><b class="form-item-text">Moniker Name</b></label
+                >
+              </div>
+              <input
+                class="input-of-create-validator-form"
+                type="text"
+                placeholder=" Moniker name"
+                name="amount"
+                id="amount"
+                required
+              />
+            </div>
+            <div class="form-item">
+              <div>
+                <label for="walletName"
+                  ><b class="form-item-text">Wallet Password</b></label
+                >
+              </div>
+              <input
+                class="input-of-create-validator-form"
+                type="text"
+                placeholder=" Wallet password"
+                name="amount"
+                id="amount"
+                required
+              />
+            </div>
+          </div>
+          <div class="two-form-items-horizontally">
+            <div class="form-item">
+              <div>
+                <label for="amount"
+                  ><b class="form-item-text">Website</b></label
+                >
+              </div>
+              <input
+                class="input-of-create-validator-form"
+                type="text"
+                placeholder=" Website"
+                name="amount"
+                id="amount"
+                required
+              />
+            </div>
+            <div class="form-item">
+              <div>
+                <label for="walletName"
+                  ><b class="form-item-text">Keybase Identity</b></label
+                >
+              </div>
+              <input
+                class="input-of-create-validator-form"
+                type="text"
+                placeholder=" Keybase identity"
+                name="amount"
+                id="amount"
+                required
+              />
+            </div>
+          </div>
+          <div class="two-form-items-horizontally">
+            <div class="form-item">
+              <div>
+                <label for="amount"
+                  ><b class="form-item-text">Security Contact</b></label
+                >
+              </div>
+              <input
+                class="input-of-create-validator-form"
+                type="text"
+                placeholder=" Security contact"
+                name="amount"
+                id="amount"
+                required
+              />
+            </div>
+            <div class="form-item">
+              <div>
+                <label for="walletName"
+                  ><b class="form-item-text">Commission Rate</b></label
+                >
+              </div>
+              <input
+                class="input-of-create-validator-form"
+                type="text"
+                placeholder=" Commission rate"
+                name="amount"
+                id="amount"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-item" style="margin-top: 25px">
+            <div>
+              <label for="walletName"><b class="form-item-text">Fees</b></label>
+            </div>
+            <input
+              class="input-of-create-validator-form"
+              type="text"
+              placeholder=" Fees"
+              name="amount"
+              id="amount"
+              required
+            />
+          </div>
+          <div class="form-item" style="margin-top: 25px">
+            <div>
+              <label for="walletName"
+                ><b class="form-item-text">Details</b></label
+              >
+            </div>
+            <input
+              class="input-of-create-validator-form"
+              style="width: 100%"
+              type="text"
+              placeholder=" Details"
+              name="amount"
+              id="amount"
+              required
+            />
           </div>
         </div>
       </div>

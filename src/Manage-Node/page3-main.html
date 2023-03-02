@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Node101</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css"
+      integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjk/bSuGGKHEyjSoQ1zVisanQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/create-validator.css" />
+  </head>
+  <body>
+    <header>
+      <div id="navbar">
+        <nav class="navbar">
+          <img src="images/node101.png" alt="Node101" />
+          <div class="right-side-of-navbar">
+            <div class="project-image">
+              <img
+                src="images/aleo.png"
+                alt="Aleo"
+                height="60px"
+                width="60px"
+              />
+            </div>
+            <div class="language-part">
+              <a href="#" class="language">EN</a>
+              <a href="#" class="language">TR</a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <div class="all-wrapper">
+      <div class="sidebar">
+        <div class="item-of-sidebar">
+          <div>
+            <img
+              src="images/aleo.png"
+              width="56px"
+              height="56px"
+              style="float: left; border-radius: 6px"
+            />
+            <div style="height: 56px; margin-bottom: 20px">
+              <div class="text-project-name">Aleo Testnet Guide</div>
+              <button class="wallet-address">
+                0xcDA86eAbE89B4B7D46c0a147dc206ACbA4Fd900B
+              </button>
+              <i
+                class="fa-solid fa-copy"
+                style="cursor: pointer"
+                onclick="copyWalletAddress()"
+              ></i>
+            </div>
+          </div>
+          <div class="node-info">
+            <div class="node-status-sign">Active</div>
+            <div class="node-version-sign">Version V2.4.1</div>
+          </div>
+        </div>
+        <div class="item-of-sidebar">
+          <div class="menu-element">
+            <a href="#"
+              ><svg
+                style="margin-right: 20px"
+                width="20"
+                height="18"
+                viewBox="0 0 20 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M19.625 6.25V0.75H14.125V2.8125H11.375C11.0105 2.81292 10.661 2.95792 10.4032 3.21569C10.1454 3.47346 10.0004 3.82296 10 4.1875V8.3125H5.875V6.25H0.375V11.75H5.875V9.6875H10V13.8125C10.0004 14.177 10.1454 14.5265 10.4032 14.7843C10.661 15.0421 11.0105 15.1871 11.375 15.1875H14.125V17.25H19.625V11.75H14.125V13.8125H11.375V4.1875H14.125V6.25H19.625ZM4.5 10.375H1.75V7.625H4.5V10.375ZM15.5 13.125H18.25V15.875H15.5V13.125ZM15.5 2.125H18.25V4.875H15.5V2.125Z"
+                  fill="#F3F3F3"
+                />
+              </svg>
+              Node Operations</a
+            >
+          </div>
+          <div class="menu-element">
+            <a href="#"
+              ><svg
+                style="margin-right: 20px"
+                width="20"
+                height="22"
+                viewBox="0 0 20 22"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  width="20"
+                  height="22"
+                  fill="white"
+                  style="mix-blend-mode: multiply"
+                />
+                <path
+                  d="M10.3827 1.52207C10.2717 1.42684 10.1351 1.37512 9.99434 1.37512C9.85362 1.37512 9.71694 1.42684 9.606 1.52207L0.625 9.22592L1.40169 10.3065L2.5 9.36445V17.8751C2.50068 18.2395 2.63259 18.5888 2.86686 18.8465C3.10114 19.1042 3.41869 19.2493 3.75 19.2501H16.25C16.5813 19.2494 16.8989 19.1043 17.1332 18.8466C17.3675 18.5889 17.4994 18.2395 17.5 17.8751V9.37071L18.5983 10.3126L19.375 9.23197L10.3827 1.52207ZM11.25 17.8751H8.75V12.3751H11.25V17.8751ZM12.5 17.8751V12.3751C12.4996 12.0105 12.3678 11.661 12.1335 11.4033C11.8991 11.1455 11.5814 11.0005 11.25 11.0001H8.75C8.41858 11.0004 8.10083 11.1454 7.86648 11.4032C7.63213 11.661 7.50033 12.0105 7.5 12.3751V17.8751H3.75V8.29236L10 2.93674L16.25 8.29958V17.8751H12.5Z"
+                  fill="#F3F3F3"
+                />
+              </svg>
+              Home Page</a
+            >
+          </div>
+          <div class="menu-element">
+            <a href="#"
+              ><svg
+                style="margin-right: 20px"
+                width="22"
+                height="22"
+                viewBox="0 0 22 22"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  width="22"
+                  height="22"
+                  fill="white"
+                  style="mix-blend-mode: multiply"
+                />
+                <path
+                  d="M17.875 1.375H5.5C5.13533 1.375 4.78559 1.51987 4.52773 1.77773C4.26987 2.03559 4.125 2.38533 4.125 2.75V5.5H2.75V6.875H4.125V10.3125H2.75V11.6875H4.125V15.125H2.75V16.5H4.125V19.25C4.125 19.6147 4.26987 19.9644 4.52773 20.2223C4.78559 20.4801 5.13533 20.625 5.5 20.625H17.875C18.2397 20.625 18.5894 20.4801 18.8473 20.2223C19.1051 19.9644 19.25 19.6147 19.25 19.25V2.75C19.25 2.38533 19.1051 2.03559 18.8473 1.77773C18.5894 1.51987 18.2397 1.375 17.875 1.375ZM17.875 19.25H5.5V16.5H6.875V15.125H5.5V11.6875H6.875V10.3125H5.5V6.875H6.875V5.5H5.5V2.75H17.875V19.25Z"
+                  fill="#F3F3F3"
+                />
+                <path d="M15.125 5.5H9.625V6.875H15.125V5.5Z" fill="#F3F3F3" />
+                <path
+                  d="M15.125 10.3125H9.625V11.6875H15.125V10.3125Z"
+                  fill="#F3F3F3"
+                />
+                <path
+                  d="M15.125 15.125H9.625V16.5H15.125V15.125Z"
+                  fill="#F3F3F3"
+                />
+              </svg>
+              FAQ</a
+            >
+          </div>
+        </div>
+        <div class="item-of-sidebar">
+          <div class="buttons">
+            <div>
+              <button
+                id="validator-operations"
+                class="main-buttons"
+                type="button"
+              >
+                Validator Operation<svg
+                  style="margin-left: 25px"
+                  width="21"
+                  height="14"
+                  viewBox="0 0 21 14"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11.002 9.16429L16.2696 3.6143L16.9961 4.29922L11.0026 10.614L4.9999 4.2995L5.72582 3.61401L11.002 9.16429Z"
+                    fill="#5A6872"
+                  />
+                </svg>
+              </button>
+              <div class="subbuttons-div">
+                <ul id="subbuttons-ul">
+                  <li id="create"><a>Create</a></li>
+                  <li><a href="#">Edit</a></li>
+                  <li><a href="#">Withdraw Reward</a></li>
+                  <li><a href="#">Delegate</a></li>
+                  <li><a href="#">Redelegate</a></li>
+                  <li><a href="#">Vote</a></li>
+                  <li><a href="#">Unjail</a></li>
+                  <li><a href="#">Add new wallet</a></li>
+                  <li><a href="#">Recover wallet</a></li>
+                  <li><a href="#">Active valiator</a></li>
+                  <li><a href="#">Inactive validator</a></li>
+                  <li><a href="#">Wallets</a></li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <button class="main-buttons" type="button">
+                Node Information
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="item-of-sidebar">
+          <a href="https://t.me/node101"
+            ><i class="icon fa-brands fa-telegram"></i
+          ></a>
+          <a href="https://twitter.com/node_101"
+            ><i class="icon fa-brands fa-twitter"></i
+          ></a>
+          <a href="https://www.youtube.com/@node101turkiye"
+            ><i class="icon fa-brands fa-youtube"></i
+          ></a>
+          <a href="https://medium.com/node101"
+            ><i class="icon fa-brands fa-medium"></i
+          ></a>
+          <a href="https://github.com/node101-io"
+            ><i class="icon fa-brands fa-github"></i
+          ></a>
+          <a
+            href="https://open.spotify.com/show/0ocAj5RGbBVXcABbGV2ZC9?si=2648ec3536714171"
+            ><i class="icon fa-brands fa-spotify"></i
+          ></a>
+        </div>
+      </div>
+      <div class="all-content-wrapper">
+        <div class="hardware-bars">
+          <div class="container">
+            <div class="box">
+              <div class="chart" data-percent="100" data-scale-color="#ffb400">
+                100%
+              </div>
+              <div class="text-of-progress-bars">
+                Sync Status
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    width="16"
+                    height="16"
+                    fill="#1C669B"
+                    style="mix-blend-mode: multiply"
+                  />
+                  <rect
+                    width="16"
+                    height="16"
+                    fill="white"
+                    style="mix-blend-mode: multiply"
+                  />
+                  <path
+                    d="M8.5 11V7H6.5V8H7.5V11H6V12H10V11H8.5Z"
+                    fill="#C6C6C6"
+                  />
+                  <path
+                    d="M8 4C7.85167 4 7.70666 4.04399 7.58333 4.1264C7.45999 4.20881 7.36386 4.32595 7.30709 4.46299C7.25033 4.60004 7.23548 4.75084 7.26441 4.89632C7.29335 5.04181 7.36478 5.17544 7.46967 5.28033C7.57456 5.38522 7.7082 5.45665 7.85369 5.48559C7.99917 5.51453 8.14997 5.49968 8.28701 5.44291C8.42406 5.38615 8.54119 5.29002 8.6236 5.16668C8.70602 5.04334 8.75 4.89834 8.75 4.75C8.75 4.55109 8.67098 4.36033 8.53033 4.21967C8.38968 4.07902 8.19892 4 8 4Z"
+                    fill="#C6C6C6"
+                  />
+                  <path
+                    d="M8 15C6.61553 15 5.26216 14.5895 4.11101 13.8203C2.95987 13.0511 2.06266 11.9579 1.53285 10.6788C1.00303 9.3997 0.86441 7.99224 1.13451 6.63437C1.4046 5.2765 2.07129 4.02922 3.05026 3.05026C4.02922 2.07129 5.2765 1.4046 6.63437 1.13451C7.99224 0.86441 9.3997 1.00303 10.6788 1.53285C11.9579 2.06266 13.0511 2.95987 13.8203 4.11101C14.5895 5.26216 15 6.61553 15 8C15 9.85652 14.2625 11.637 12.9497 12.9497C11.637 14.2625 9.85652 15 8 15ZM8 2C6.81332 2 5.65328 2.3519 4.66658 3.01119C3.67989 3.67047 2.91085 4.60755 2.45673 5.7039C2.0026 6.80026 1.88378 8.00666 2.11529 9.17054C2.3468 10.3344 2.91825 11.4035 3.75736 12.2426C4.59648 13.0818 5.66558 13.6532 6.82946 13.8847C7.99335 14.1162 9.19975 13.9974 10.2961 13.5433C11.3925 13.0892 12.3295 12.3201 12.9888 11.3334C13.6481 10.3467 14 9.18669 14 8C14 6.4087 13.3679 4.88258 12.2426 3.75736C11.1174 2.63214 9.5913 2 8 2Z"
+                    fill="#C6C6C6"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="container">
+            <div class="box">
+              <div class="chart" data-percent="73" data-scale-color="#ffb400">
+                73%
+              </div>
+              <div class="text-of-progress-bars">
+                Memmory
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    width="16"
+                    height="16"
+                    fill="#1C669B"
+                    style="mix-blend-mode: multiply"
+                  />
+                  <rect
+                    width="16"
+                    height="16"
+                    fill="white"
+                    style="mix-blend-mode: multiply"
+                  />
+                  <path
+                    d="M8.5 11V7H6.5V8H7.5V11H6V12H10V11H8.5Z"
+                    fill="#C6C6C6"
+                  />
+                  <path
+                    d="M8 4C7.85167 4 7.70666 4.04399 7.58333 4.1264C7.45999 4.20881 7.36386 4.32595 7.30709 4.46299C7.25033 4.60004 7.23548 4.75084 7.26441 4.89632C7.29335 5.04181 7.36478 5.17544 7.46967 5.28033C7.57456 5.38522 7.7082 5.45665 7.85369 5.48559C7.99917 5.51453 8.14997 5.49968 8.28701 5.44291C8.42406 5.38615 8.54119 5.29002 8.6236 5.16668C8.70602 5.04334 8.75 4.89834 8.75 4.75C8.75 4.55109 8.67098 4.36033 8.53033 4.21967C8.38968 4.07902 8.19892 4 8 4Z"
+                    fill="#C6C6C6"
+                  />
+                  <path
+                    d="M8 15C6.61553 15 5.26216 14.5895 4.11101 13.8203C2.95987 13.0511 2.06266 11.9579 1.53285 10.6788C1.00303 9.3997 0.86441 7.99224 1.13451 6.63437C1.4046 5.2765 2.07129 4.02922 3.05026 3.05026C4.02922 2.07129 5.2765 1.4046 6.63437 1.13451C7.99224 0.86441 9.3997 1.00303 10.6788 1.53285C11.9579 2.06266 13.0511 2.95987 13.8203 4.11101C14.5895 5.26216 15 6.61553 15 8C15 9.85652 14.2625 11.637 12.9497 12.9497C11.637 14.2625 9.85652 15 8 15ZM8 2C6.81332 2 5.65328 2.3519 4.66658 3.01119C3.67989 3.67047 2.91085 4.60755 2.45673 5.7039C2.0026 6.80026 1.88378 8.00666 2.11529 9.17054C2.3468 10.3344 2.91825 11.4035 3.75736 12.2426C4.59648 13.0818 5.66558 13.6532 6.82946 13.8847C7.99335 14.1162 9.19975 13.9974 10.2961 13.5433C11.3925 13.0892 12.3295 12.3201 12.9888 11.3334C13.6481 10.3467 14 9.18669 14 8C14 6.4087 13.3679 4.88258 12.2426 3.75736C11.1174 2.63214 9.5913 2 8 2Z"
+                    fill="#C6C6C6"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="container">
+            <div class="box">
+              <div class="chart" data-percent="36" data-scale-color="#ffb400">
+                36%
+              </div>
+              <div class="text-of-progress-bars">
+                Cpu
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    width="16"
+                    height="16"
+                    fill="#1C669B"
+                    style="mix-blend-mode: multiply"
+                  />
+                  <rect
+                    width="16"
+                    height="16"
+                    fill="white"
+                    style="mix-blend-mode: multiply"
+                  />
+                  <path
+                    d="M8.5 11V7H6.5V8H7.5V11H6V12H10V11H8.5Z"
+                    fill="#C6C6C6"
+                  />
+                  <path
+                    d="M8 4C7.85167 4 7.70666 4.04399 7.58333 4.1264C7.45999 4.20881 7.36386 4.32595 7.30709 4.46299C7.25033 4.60004 7.23548 4.75084 7.26441 4.89632C7.29335 5.04181 7.36478 5.17544 7.46967 5.28033C7.57456 5.38522 7.7082 5.45665 7.85369 5.48559C7.99917 5.51453 8.14997 5.49968 8.28701 5.44291C8.42406 5.38615 8.54119 5.29002 8.6236 5.16668C8.70602 5.04334 8.75 4.89834 8.75 4.75C8.75 4.55109 8.67098 4.36033 8.53033 4.21967C8.38968 4.07902 8.19892 4 8 4Z"
+                    fill="#C6C6C6"
+                  />
+                  <path
+                    d="M8 15C6.61553 15 5.26216 14.5895 4.11101 13.8203C2.95987 13.0511 2.06266 11.9579 1.53285 10.6788C1.00303 9.3997 0.86441 7.99224 1.13451 6.63437C1.4046 5.2765 2.07129 4.02922 3.05026 3.05026C4.02922 2.07129 5.2765 1.4046 6.63437 1.13451C7.99224 0.86441 9.3997 1.00303 10.6788 1.53285C11.9579 2.06266 13.0511 2.95987 13.8203 4.11101C14.5895 5.26216 15 6.61553 15 8C15 9.85652 14.2625 11.637 12.9497 12.9497C11.637 14.2625 9.85652 15 8 15ZM8 2C6.81332 2 5.65328 2.3519 4.66658 3.01119C3.67989 3.67047 2.91085 4.60755 2.45673 5.7039C2.0026 6.80026 1.88378 8.00666 2.11529 9.17054C2.3468 10.3344 2.91825 11.4035 3.75736 12.2426C4.59648 13.0818 5.66558 13.6532 6.82946 13.8847C7.99335 14.1162 9.19975 13.9974 10.2961 13.5433C11.3925 13.0892 12.3295 12.3201 12.9888 11.3334C13.6481 10.3467 14 9.18669 14 8C14 6.4087 13.3679 4.88258 12.2426 3.75736C11.1174 2.63214 9.5913 2 8 2Z"
+                    fill="#C6C6C6"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="content-of-page">
+          <!-- inner HTML -->
+          <div class="node-manage-buttons">
+            <button class="node-manage-button">
+              <i class="fa-solid fa-play icon-of-buttons"></i>Start Node
+            </button>
+            <button class="node-manage-button">
+              <i class="fa-solid fa-stop icon-of-buttons"></i>Stop Node
+            </button>
+            <button class="node-manage-button">
+              <i class="fa-solid fa-arrow-rotate-right icon-of-buttons"></i
+              >Restart Node
+            </button>
+            <button class="node-manage-button">
+              <i class="fa-solid fa-angles-up icon-of-buttons"></i>Update Node
+            </button>
+            <button class="node-delete-button">
+              <i class="fa-solid fa-trash delete-icon"></i>Delete Node
+            </button>
+          </div>
+          <div class="straight-progress-bar">
+            <div class="text-of-straight-progress-bar">
+              <div>Loading</div>
+              <div>50%</div>
+            </div>
+            <div class="w3-container" style="width: 1000px">
+              <div class="w3-light-grey">
+                <div
+                  id="myBar"
+                  class="w3-container w3-blue"
+                  style="height: 4px; width: 50%"
+                ></div>
+              </div>
+            </div>
+          </div>
+          <!-- inner HTML -->
+        </div>
+      </div>
+    </div>
+
+    <script src="page3.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.3.js"></script>
+    <script src="jquery.easypiechart.js"></script>
+    <script>
+      $(function () {
+        $(".chart").easyPieChart({
+          size: 160,
+          barColor: "#43BE66",
+          scaleLength: 0,
+          lineWidth: 6,
+          trackColor: "#373737",
+          lineCap: "circle",
+          animate: 2000,
+        });
+      });
+    </script>
+  </body>
+</html>
