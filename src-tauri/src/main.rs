@@ -310,7 +310,8 @@ async fn send_token(wallet_name: String, receiver_address: String, amount: Strin
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
-            app.get_window("main").unwrap().set_min_size(Some(PhysicalSize::new(1280, 720))).unwrap();
+            app.get_window("main").unwrap().set_min_size(Some(LogicalSize::new(1280, 720))).unwrap();
+            app.get_window("main").unwrap().center().unwrap();
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![log_in,logout,cpu_mem,node_info,am_i_logged_out])
