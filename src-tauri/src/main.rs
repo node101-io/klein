@@ -3,7 +3,7 @@
   windows_subsystem = "windows"
 )]
 
-use ssh2::{Session, Channel, DisconnectCode};
+use ssh2::{Session, DisconnectCode};
 use std::io::{Read, Write};
 use tauri::{Manager, LogicalSize, Position};
 use std::fs::File;
