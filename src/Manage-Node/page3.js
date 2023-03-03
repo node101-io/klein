@@ -44,7 +44,7 @@ function setOldStyleForDeleteButton() {
 
 function openCreateValidatorPage() {
     let content = document.getElementById('content-of-page');
-    fetch('createValidator.html')
+    fetch('Validator-Operations/createValidator.html')
         .then(response => response.text())
         .then(html => {
             content.innerHTML = html;
@@ -53,7 +53,61 @@ function openCreateValidatorPage() {
             console.error('Error loading file:', error);
     });
 }
-
+function openEditValidatorPage() {
+    let content = document.getElementById('content-of-page');
+    fetch('Validator-Operations/editValidator.html')
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading file:', error);
+    });
+}
+function openDelegateTokenPage() {
+    let content = document.getElementById('content-of-page');
+    fetch('Validator-Operations/delegateToken.html')
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading file:', error);
+    });
+}
+function openWithdrawRewardsPage() {
+    let content = document.getElementById('content-of-page');
+    fetch('Validator-Operations/withdrawRewards.html')
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading file:', error);
+    });
+}
+function openRedelegateTokenPage() {
+    let content = document.getElementById('content-of-page');
+    fetch('Validator-Operations/redelegateToken.html')
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading file:', error);
+    });
+}
+function openVotePage() {
+    let content = document.getElementById('content-of-page');
+    fetch('Validator-Operations/vote.html')
+        .then(response => response.text())
+        .then(html => {
+            content.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading file:', error);
+    });
+}
 
 document.getElementById('validator-operations').addEventListener('click', function() {
     toggleVisibilityOfValidatorOpeation()
@@ -72,4 +126,19 @@ document.getElementsByClassName('node-delete-button')[0].addEventListener('mouse
 })
 document.getElementById('create').addEventListener('click', function() {
     openCreateValidatorPage()
+})
+document.getElementById('edit').addEventListener('click', function() {
+    openEditValidatorPage()
+})
+document.getElementById('delegate').addEventListener('click', function() {
+    openDelegateTokenPage()
+})
+document.getElementById('withdraw').addEventListener('click', function() {
+    openWithdrawRewardsPage()
+})
+document.getElementById('redelegate').addEventListener('click', function() {
+    openRedelegateTokenPage()
+})
+document.getElementById('vote').addEventListener('click', function() {
+    openVotePage()
 })
