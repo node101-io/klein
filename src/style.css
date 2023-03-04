@@ -87,12 +87,14 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
   font-size: 32px;
+  cursor: default;
 }
 
 .login-page-heading {
   color: var(--text-color);
   font-size: 32px;
   padding-bottom: 50px;
+  cursor: default;
 }
 
 .each-login-page-label {
@@ -102,6 +104,7 @@ body {
   margin-top: 30px;
   margin-bottom: 10px;
   line-height: 22px;
+  cursor: default;
 }
 
 .each-login-page-text-field {

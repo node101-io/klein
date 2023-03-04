@@ -15,7 +15,16 @@ readTextFile("ipaddresses.json").then((data) => {
 });
 
 // Functions to be called from Rust
-function loadNewPage(pagename) {
+function loadNewPage(pagename, remember) {
+  console.log(typeof remember);
+  console.log(remember);
+  if (remember) {
+    ipAddresses.push({
+      ip: "31",
+      icon: "test",
+    });
+    writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
+  }
   hideLoadingAnimation();
   window.location.href = pagename;
 }

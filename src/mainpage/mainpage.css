@@ -7,7 +7,7 @@
   --fifth-color: rgba(35, 34, 34, 1);
   --background-color: rgba(18, 18, 18, 1);
   --logo-color: rgba(255, 255, 255, 1);
-  --border-color: rgba(111, 111, 111, 1);
+  --border-color: rgba(88, 88, 88, 1);
   --text-color: rgba(255, 255, 255, 1);
   --second-text-color: rgba(244, 244, 244, 1);
   --divider-color: rgba(217, 217, 217, 1);
@@ -82,15 +82,17 @@ body {
 }
 
 .header-node-icons {
+  position: relative;
   display: flex;
   margin-right: 50px;
-  position: relative;
+  cursor: pointer;
 }
 .header-node-icons:hover > span {
   scale: 1.2;
 }
 
 .header-node-icon {
+  stroke: var(--divider-color);
   width: 44px;
   height: 44px;
 }
@@ -121,11 +123,11 @@ body {
 }
 
 .header-menu {
+  display: none;
   position: absolute;
   color: aliceblue;
   top: 92px;
   right: 0px;
-  /* border: white solid 2px; */
   width: calc(5vw + 210px);
   z-index: 100;
 }
@@ -135,6 +137,7 @@ body {
   align-items: center;
   height: 60px;
   background: var(--fifth-color);
+  cursor: pointer;
 }
 .header-menu-ip-list-button:hover {
   background: var(--third-color-hover);
@@ -177,6 +180,7 @@ body {
   height: 50px;
   background: var(--second-color);
   padding-left: 16px;
+  cursor: pointer;
 }
 .each-header-menu-item:hover {
   background: var(--third-color-hover);
@@ -186,6 +190,129 @@ body {
   width: 20px; 
   height: 20px;
   fill: var(--fourth-color);
+  margin-right: 12px;
+}
+
+.each-header-menu-item-notification {
+  position: absolute;
+  top: 86px;
+  left: 29px;
+  height: 8px;
+  width: 8px;
+  background-color: var(--main-color);
+  border-radius: 50%;
+}
+
+.header-submenu-ip-list {
+  display: none;
+  position: absolute;
+  max-height: 240px;
+  top: 92px;
+  right: calc(5vw + 225px);
+  width: calc(6vw + 200px);
+  z-index: 100;
+  overflow: auto;
+}
+.header-submenu-ip-list::-webkit-scrollbar-track {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.each-header-submenu-ip-list-item {
+  display: flex;
+  align-items: center;
+  height: 60px;
+  background: var(--fifth-color);
+  padding-left: 16px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+.each-header-submenu-ip-list-item:hover {
+  background: var(--third-color-hover);
+}
+
+.each-header-submenu-ip-list-item-icon {
+  width: 28px;
+  height: 28px;
+  margin-right: 12px;
+}
+
+.each-header-submenu-ip-list-item-name {
+  color: var(--fourth-color);
+  font-size: 16px;
+  margin-right: auto;
+}
+
+.each-header-submenu-ip-list-item-ip {
+  color: var(--fourth-color);
+  font-size: 16px;
+  font-size: 14px;
+}
+
+.header-menu-scroll-background {
+  position: absolute;
+  display: none;
+  top: 92px;
+  width: 30px;
+  right: calc(5vw + 210px);
+  z-index: 100;
+}
+
+.each-header-menu-scroll-background-item {
+  background-color: var(--fifth-color);
+  width: 30px;
+  height: 60px;
+  z-index: 101;
+}
+
+.header-submenu-notifications {
+  display: none;
+  position: absolute;
+  top: 92px;
+  max-height: 240px;
+  right: calc(5vw + 225px);
+  width: calc(6vw + 200px);
+  overflow: auto;
+  z-index: 100;
+}
+
+.header-submenu-notifications::-webkit-scrollbar-track {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.each-header-submenu-notifications-item {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  background: var(--fifth-color);
+  padding-left: 18px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+.each-header-submenu-notifications-item:hover {
+  background: var(--third-color-hover);
+}
+
+.each-notification-icon {
+  width: 12px;
+  height: 12px;
+  background: var(--main-color);
+  border-radius: 50%;
+  margin-right: 12px;
+}
+
+.each-notification-icon-seen {
+  width: 12px;
+  height: 12px;
+  background: var(--border-color);
+  border-radius: 50%;
+  margin-right: 12px;
+}
+
+.each-notification-content {
+  color: var(--fourth-color);
+  font-size: 14px;
 }
 
 .all-content-wrapper {
@@ -226,7 +353,7 @@ body {
 .nodes-page-projects {
   display: flex;
   flex-wrap: wrap;
-  height: calc(97vh - 92px - 140px);
+  height: calc(97vh - 92px - 120px);
   margin-top: 30px;
   margin-left: 5vw;
   margin-right: 5vw;
@@ -242,48 +369,63 @@ body {
   margin-right: 40px;
 }
 
-.each-project-header {
+.project-header {
   display: flex;
   margin-bottom: 18px;
 }
 
-.each-project-icon {
+.project-icon {
   margin-right: 20px;
   width: 100px;
   height: 100px;
 }
 
-.each-project-details {
+.project-details {
   display: flex;
   flex-direction: column;
   height: 100px;
   justify-content: space-between;
 }
 
-.each-project-details-heading {
-  font-size: 32px;
+.project-details-heading {
+  font-size: 26px;
   color: var(--logo-color);
 }
 
-.each-project-details-tags {
+.project-details-tags {
   display: flex;
 }
 
 .each-project-detail-tag {
-  color: #E2F8D7;
+  display: flex;
+  font-size: 14px;
   height: 24px;
   padding-left: 15px;
   padding-right: 15px;
-  border-radius: 12px;
   margin-right: 12px;
+  border-radius: 12px;
+  align-items: center;
 }
 
-.each-project-rating {
+.active-tag {
+  color: rgba(226, 248, 215, 1);
+  background-color: rgba(0, 93, 93, 1);
+}
+.upcoming-tag {
+  color: var(--main-color);
+  background-color: var(--divider-color);
+}
+.incentivized-tag {
+  color: var(--divider-color);
+  background-color: var(--main-color);
+}
+
+.project-rating {
   display: flex;
   align-items: center;
 }
 
-.each-project-rating span {
+.project-rating span {
   margin-right: 6px;
 }
 
@@ -306,19 +448,19 @@ body {
   border-radius: 50%;
 }
 
-.each-project-rating-heading {
+.project-rating-heading {
   font-size: 16px;
   margin-right: 10px;
   color: var(--logo-color);
 }
 
-.each-project-description {
+.project-description {
   margin-top: 20px;
   color: var(--logo-color);
   font-size: 16px;
 }
 
-.each-project-buttons {
+.project-buttons {
   display: flex;
   margin-top: 20px;
 }
@@ -327,7 +469,7 @@ body {
   color: var(--logo-color);
   display: flex;
   align-items: center;
-  width:180px;
+  width: 180px;
   height: 36px;
   border: none;
   margin-right: 10px;
@@ -339,13 +481,20 @@ body {
   opacity: 0.8;
 }
 
+.install-button {
+  background-color: var(--main-color);
+}
+.discover-button {
+  background-color: rgba(90, 104, 114, 1);
+}
+
 .each-project-button-svg {
   fill: var(--logo-color);
 }
 
 .overlay-top {
   position: absolute;
-  top: 212px;
+  top: 209px;
   margin-right: calc(5vw + 20px);
   margin-left: 5vw;
   width: calc(90vw - 20px);
@@ -356,7 +505,7 @@ body {
 
 .overlay-bottom {
   position: absolute;
-  top: 90vh;
+  top: 92vh;
   margin-right: calc(5vw + 20px);
   margin-left: 5vw;
   width: calc(90vw - 20px);
