@@ -51,7 +51,8 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
         }
 
         window
-            .eval(&format!(r#"window['loadNewPage']('mainpage/mainpage.html',{})"#, remember))
+            .eval(&format!(r#"window['loadNewPage']('Manage-Node/page3-main.html',{})"#, remember))
+            // .eval(&format!(r#"window['loadNewPage']('mainpage/mainpage.html',{})"#, remember))
             .unwrap();
         ()
     } else {
