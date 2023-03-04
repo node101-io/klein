@@ -16,12 +16,10 @@ readTextFile("ipaddresses.json").then((data) => {
 
 // Functions to be called from Rust
 function loadNewPage(pagename, remember) {
-  console.log(typeof remember);
-  console.log(remember);
-  if (remember) {
+  if (remember && ipAddresses.some((ip) => ip.ip == document.getElementById("ip-input").value)) {
     ipAddresses.push({
-      ip: "31",
-      icon: "test",
+      ip: document.getElementById("ip-input").value,
+      icon: "",
     });
     writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
   }
