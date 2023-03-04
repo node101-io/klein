@@ -165,6 +165,7 @@ html {
     list-style: none;
     padding-left: 0px;
     padding: 10px 0;
+    cursor: pointer;
 }
 .all-wrapper .sidebar .item-of-sidebar .buttons .subbuttons-div li {
     margin: 15px;
@@ -315,3 +316,4 @@ html {
     align-items: center;
     flex-direction: column;
 }
+
