@@ -78,3 +78,73 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+function loadNewPage(pagename) {
+  window.location.href = pagename;
+}
+
+function logout(){
+  invoke("log_out");
+}
+
+function cpu_mem(){
+  invoke("cpu_mem");
+}
+
+function current_node(){
+  invoke("current_node").then((res)=>{
+    console.log(res);
+  }).catch((e)=>{
+    console.log(e);
+  });
+}
+
+function logged_out(){
+  invoke("am_i_logged_out");
+}
+
+function node_info(){
+  invoke("node_info")
+  .then((res) => {
+    console.log(res);
+  }).catch((e)=>{
+    console.log("oy hata.");
+  }); 
+}
+
+function install_node(){
+  invoke("install_node",{monikerName:"haciabi",nodeName:"lava"}).then((res) => {
+    console.log(res);
+  }).catch((e)=>{
+    console.log("oy hata.");
+  });
+
+}
+
+function show_wallets(){
+  invoke("show_wallets")
+  .then((res) => {
+    console.log(res);
+  }).catch((e)=>{
+    console.log("oy hata.");
+  }); 
+}
+
+function create_wallet(){
+  invoke("create_wallet",{walletName:"modapalas"})
+  .then((res) => {
+    console.log(res);
+  }).catch((e)=>{
+    console.log("oy hata.");
+  }); 
+}
+
+function delete_wallet(){
+  invoke("delete_wallet",{walletName:"modapalas"})
+  .then((res) => {
+    console.log(res);
+  }).catch((e)=>{
+    console.log("oy hata.");
+  }); 
+}
+
