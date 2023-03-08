@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css?family=Space+Grotesk&display=swap');
+
 :root {
   --main-color: rgba(15, 98, 254, 1);
   --second-color: rgba(38, 38, 38, 1);
@@ -11,6 +13,7 @@
   --text-color: rgba(255, 255, 255, 1);
   --second-text-color: rgba(244, 244, 244, 1);
 }
+
 * {
   -webkit-font-smoothing: antialiased;
   -webkit-box-sizing: border-box;
@@ -18,14 +21,16 @@
   box-sizing: border-box;
   font-family: 'Space Grotesk', sans-serif, Arial, Helvetica, monospace;
 }
+
 html {
   width: 100vw;
   height: 100vh;
   margin: 0px;
   padding: 0px;
   overflow: hidden;
-	background: var(--background-color);
+  background: var(--background-color);
 }
+
 body {
   margin: 0px;
   padding: 0px;
@@ -34,10 +39,14 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
 }
+
 .prevent-select {
-  -webkit-user-select: none; /* Safari */
-  -ms-user-select: none; /* IE 10 and IE 11 */
-  user-select: none; /* Standard syntax */
+  -webkit-user-select: none;
+  /* Safari */
+  -ms-user-select: none;
+  /* IE 10 and IE 11 */
+  user-select: none;
+  /* Standard syntax */
 }
 
 .all-wrapper {
@@ -83,9 +92,9 @@ body {
 
 .login-page-motto {
   background: linear-gradient(111deg, var(--main-color) -140%, rgba(148, 185, 255, 1) 83%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 32px;
   cursor: default;
 }
@@ -118,10 +127,12 @@ body {
   padding-left: 16px;
   padding-right: 40px;
 }
+
 .each-login-page-text-field:focus {
   outline: none;
   border-color: var(--main-color);
 }
+
 .each-login-page-text-field:not(:placeholder-shown) {
   background-color: var(--third-color);
 }
@@ -138,6 +149,7 @@ body {
 .autocomplete {
   position: relative;
 }
+
 .autocomplete-items {
   position: absolute;
   border: none;
@@ -161,16 +173,19 @@ body {
   color: rgba(188, 188, 188, 1);
   width: 420px;
 }
+
 .each-autocomplete-item:hover {
   background-color: var(--second-color-hover);
 }
+
 .each-autocomplete-item-icon {
   margin-left: 37px;
   margin-right: 18px;
   width: 25px;
-  height: 25px; 
+  height: 25px;
   vertical-align: middle;
 }
+
 .each-autocomplete-item-ip {
   margin-left: auto;
   margin-right: 120px;
@@ -181,6 +196,7 @@ body {
   display: none;
   background-color: var(--third-color);
 }
+
 .selected-item-modify:hover {
   background-color: var(--third-color-hover);
 }
@@ -198,6 +214,7 @@ body {
   justify-content: space-between;
   cursor: pointer;
 }
+
 .login-page-login-button:hover {
   opacity: 0.9;
 }
@@ -219,6 +236,7 @@ body {
   margin-right: 10px;
   cursor: pointer;
 }
+
 .login-page-checkbox:checked {
   background-image: url("assets/checked.png");
   background-size: 17px 17px;
@@ -230,6 +248,7 @@ body {
   margin-bottom: 30px;
   cursor: pointer;
 }
+
 .login-page-checkbox-label:hover {
   opacity: 0.9;
 }
@@ -240,10 +259,12 @@ body {
   align-items: center;
   display: flex;
 }
+
 .login-page-warning-svg {
   height: 16px;
   fill: rgba(219, 0, 0, 1);
 }
+
 .login-page-warning-text {
   color: var(--text-color);
   font-size: 16px;
@@ -261,6 +282,7 @@ body {
   align-items: center;
   margin-right: 16px;
 }
+
 .each-footer-anchor-icon {
   width: 24px;
   fill: var(--logo-color);
@@ -281,6 +303,7 @@ body {
   top: calc(50vh);
   left: calc(50vw - 48px);
 }
+
 .boxes .box {
   width: var(--size);
   height: var(--size);
@@ -289,23 +312,28 @@ body {
   position: absolute;
   transform-style: preserve-3d;
 }
+
 .boxes .box:nth-child(1) {
   -webkit-animation: box1 var(--duration) linear infinite;
   animation: box1 var(--duration) linear infinite;
 }
+
 .boxes .box:nth-child(2) {
   -webkit-animation: box2 var(--duration) linear infinite;
   animation: box2 var(--duration) linear infinite;
 }
+
 .boxes .box:nth-child(3) {
   -webkit-animation: box3 var(--duration) linear infinite;
   animation: box3 var(--duration) linear infinite;
 }
+
 .boxes .box:nth-child(4) {
   -webkit-animation: box4 var(--duration) linear infinite;
   animation: box4 var(--duration) linear infinite;
 }
-.boxes .box > div {
+
+.boxes .box>div {
   --background: #5C8DF6;
   --top: auto;
   --right: auto;
@@ -324,21 +352,27 @@ body {
   left: var(--left);
   transform: rotateY(var(--rotateY)) rotateX(var(--rotateX)) translateZ(var(--translateZ));
 }
-.boxes .box > div:nth-child(1) {
+
+.boxes .box>div:nth-child(1) {
   --top: 0;
   --left: 0;
 }
-.boxes .box > div:nth-child(2) {
+
+.boxes .box>div:nth-child(2) {
   --background: #145af2;
   --right: 0;
   --rotateY: 90deg;
 }
-.boxes .box > div:nth-child(3) {
+
+.boxes .box>div:nth-child(3) {
   --background: #447cf5;
   --rotateX: -90deg;
 }
+
 @-webkit-keyframes box1 {
-  0%, 50% {
+
+  0%,
+  50% {
     transform: translate(100%, 0);
   }
 
@@ -346,8 +380,11 @@ body {
     transform: translate(200%, 0);
   }
 }
+
 @keyframes box1 {
-  0%, 50% {
+
+  0%,
+  50% {
     transform: translate(100%, 0);
   }
 
@@ -355,6 +392,7 @@ body {
     transform: translate(200%, 0);
   }
 }
+
 @-webkit-keyframes box2 {
   0% {
     transform: translate(0, 100%);
@@ -368,6 +406,7 @@ body {
     transform: translate(100%, 0);
   }
 }
+
 @keyframes box2 {
   0% {
     transform: translate(0, 100%);
@@ -381,8 +420,11 @@ body {
     transform: translate(100%, 0);
   }
 }
+
 @-webkit-keyframes box3 {
-  0%, 50% {
+
+  0%,
+  50% {
     transform: translate(100%, 100%);
   }
 
@@ -390,8 +432,11 @@ body {
     transform: translate(0, 100%);
   }
 }
+
 @keyframes box3 {
-  0%, 50% {
+
+  0%,
+  50% {
     transform: translate(100%, 100%);
   }
 
@@ -399,6 +444,7 @@ body {
     transform: translate(0, 100%);
   }
 }
+
 @-webkit-keyframes box4 {
   0% {
     transform: translate(200%, 0);
@@ -412,6 +458,7 @@ body {
     transform: translate(100%, 100%);
   }
 }
+
 @keyframes box4 {
   0% {
     transform: translate(200%, 0);

@@ -12,6 +12,9 @@
   },
   "tauri": {
     "allowlist": {
+      "clipboard": {
+        "all": true
+      },
       "window": {
         "center": true
       },
@@ -67,7 +70,7 @@
       }
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; frame-src https://*;"
     },
     "updater": {
       "active": false
@@ -75,10 +78,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 720,
         "resizable": true,
         "title": "Wizard",
-        "width": 800
+        "width": 1280
       }
     ]
   }

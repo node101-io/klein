@@ -51,15 +51,16 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
         GLOBAL_STRUCT = Some(create_session(sess));
         let mut channel = (GLOBAL_STRUCT.as_ref().unwrap()).open_session.channel_session().unwrap();
 
-        channel.exec("ls").unwrap();
-        let mut s = String::new();
-        channel.read_to_string(&mut s).unwrap();
-        print!("{}", s);
-        if remember {
-            println!("Remembering password");
-        }   
-    }
-        window.eval("window['loadNewPage']('mainpage/mainpage.html')").unwrap();
+            channel.exec("ls").unwrap();
+            let mut s = String::new();
+            channel.read_to_string(&mut s).unwrap();
+            print!("{}", s);
+        }
+
+        window
+            .eval(&format!(r#"window['loadNewPage']('manage-node/manage-node.html',{})"#, remember))
+            // .eval(&format!(r#"window['loadNewPage']('mainpage/mainpage.html',{})"#, remember))
+            .unwrap();
         ()
     }
     else{

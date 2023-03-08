@@ -5,18 +5,18 @@ let ipAddresses;
 // document.addEventListener("contextmenu", event => event.preventDefault());
 
 window.addEventListener("DOMContentLoaded", () => {
-  let testnetTabButton = document.getElementById("testnet-tab-button");
-  let mainnetTabButton = document.getElementById("mainnet-tab-button");
-  let testnetTabContent = document.getElementById("testnet-tab-content");
-  let mainnetTabContent = document.getElementById("mainnet-tab-content");
-  let nodeIcons = document.querySelector(".header-node-icons");
-  let headerMenu = document.querySelector(".header-menu");
-  let headerMenuIpButton = document.querySelector(".header-menu-ip-list-button");
-  let notificationsButton = document.getElementById("notifications-button");
-  let logoutButton = document.getElementById("logout-button");
-  let submenuIpList = document.querySelector(".header-submenu-ip-list");
-  let scrollbarBackground = document.querySelector(".header-menu-scroll-background");
-  let submenuNotifications = document.querySelector(".header-submenu-notifications");
+  const testnetTabButton = document.getElementById("testnet-tab-button");
+  const mainnetTabButton = document.getElementById("mainnet-tab-button");
+  const testnetTabContent = document.getElementById("testnet-tab-content");
+  const mainnetTabContent = document.getElementById("mainnet-tab-content");
+  const nodeIcons = document.querySelector(".header-node-icons");
+  const headerMenu = document.querySelector(".header-menu");
+  const headerMenuIpButton = document.querySelector(".header-menu-ip-list-button");
+  const notificationsButton = document.getElementById("notifications-button");
+  const logoutButton = document.getElementById("logout-button");
+  const submenuIpList = document.querySelector(".header-submenu-ip-list");
+  const scrollbarBackground = document.querySelector(".header-menu-scroll-background");
+  const submenuNotifications = document.querySelector(".header-submenu-notifications");
 
   testnetTabButton.addEventListener("click", () => {
     testnetTabButton.setAttribute("class", "each-nodes-page-tab active-tab");
@@ -40,7 +40,7 @@ window.addEventListener("DOMContentLoaded", () => {
         submenuIpList.setAttribute("style", "display: none;");
         submenuNotifications.setAttribute("style", "display: none;");
         scrollbarBackground.setAttribute("style", "display: none;");
-      } 
+      }
       else {
         headerMenu.setAttribute("style", "display: block;");
       }
