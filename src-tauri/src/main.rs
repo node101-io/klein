@@ -5,7 +5,7 @@
 
 use ssh2::{Session, DisconnectCode};
 
-use std::{io::{Read}};
+use std::{io::{Read, Write}};
 // use std::io::{Read, Write};
 use tauri::{Manager, LogicalSize, Position};
 use std::fs::File;
@@ -40,6 +40,7 @@ fn create_session(session: Session) -> Box<SessionManager>{
 #[tauri::command]
 async fn log_in(ip: String, password: String, remember: bool, window: tauri::Window) -> () {
     let tcp = std::net::TcpStream::connect(format!("{}:22", ip)).unwrap();
+    tcp.set_read_timeout(Some(std::time::Duration::from_secs(1))).unwrap();
     let mut sess = Session::new().unwrap();
     sess.set_tcp_stream(tcp);
     sess.handshake().unwrap();
@@ -51,16 +52,15 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
         GLOBAL_STRUCT = Some(create_session(sess));
         let mut channel = (GLOBAL_STRUCT.as_ref().unwrap()).open_session.channel_session().unwrap();
 
-            channel.exec("ls").unwrap();
-            let mut s = String::new();
-            channel.read_to_string(&mut s).unwrap();
-            print!("{}", s);
-        }
-
-        window
-            .eval(&format!(r#"window['loadNewPage']('manage-node/manage-node.html',{})"#, remember))
-            // .eval(&format!(r#"window['loadNewPage']('mainpage/mainpage.html',{})"#, remember))
-            .unwrap();
+        channel.exec("ls").unwrap();
+        let mut s = String::new();
+        channel.read_to_string(&mut s).unwrap();
+        print!("{}", s);
+        if remember {
+            println!("Remembering password");
+        }   
+    }
+        window.eval("window['loadNewPage']('mainpage/mainpage.html')").unwrap();
         ()
     }
     else{
@@ -74,7 +74,7 @@ async fn log_out(window: tauri::Window){
         unsafe{
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref(){
             let mut channel = (*my_boxed_session).open_session.channel_session().unwrap();
-            channel.exec("echo ").unwrap();
+            channel.exec("ls").unwrap();
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             print!("{}", s);
@@ -86,7 +86,6 @@ async fn log_out(window: tauri::Window){
         }
     
 }
-
 
 
 
@@ -236,19 +235,6 @@ async fn remove_node(node_name: String,window: tauri::Window) -> String {
 }
 
 #[tauri::command]
-async fn rdwndw(){
-    unsafe{
-        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref(){
-            let mut channel = (my_boxed_session).open_session.channel_session().unwrap();
-            channel.read_window();
-        }
-        else{
-            println!("upsi");
-        }
-}
-}
-
-#[tauri::command]
 async fn create_validator(amount: String,wallet_name: String,moniker_name: String, website:String,password:String,contact:String,keybase_id:String,com_rate:String,fees:String,details:String) -> Result<String,String>{
     Ok("Will create a validator".into())
 
@@ -313,24 +299,23 @@ async fn install_node(moniker_name: String, node_name: String, window: tauri::Wi
 
 //Should give first wallet's password if created before.
 #[tauri::command]
-async fn create_wallet(wallet_name:String) -> String {
+async fn create_wallet(wallet_name:String, password:String) -> String {
     unsafe{
         if GLOBAL_STRUCT.is_some(){
-          
         
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref(){
-                
                 let mut channel = (my_boxed_session).open_session.channel_session().unwrap();
-                println!("arrived here.");
-                let command: String = format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; lavad keys add {wallet_name} --output json;");
-                channel.exec(&*command).unwrap();
-                let mut s = String::new();
-                channel.read_to_string(&mut s).unwrap();
-                println!("{}",s);
-                String::from(s)
+                channel.shell().unwrap();
+                let mut stream = channel.stream(0);
+                
+                stream.write_all(b"tgrade keys add something \n").unwrap();
+                stream.write_all(b"node101bos\n").unwrap();
+                stream.write_all(b"node101bos\n").unwrap();
+                stream.flush().unwrap();
+                String::from("NICE")
             }
             else{
-                String::from("Problem")
+                String::from("ah fuck")
             }
         }
         else{
@@ -457,3 +442,5 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 } 
+
+
