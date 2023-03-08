@@ -706,6 +706,13 @@ progress::-webkit-progress-value {
   margin-bottom: 10px;
 }
 
+.each-small-input-label {
+  font-size: 12px;
+  color: rgba(149, 149, 149, 1);
+  margin-bottom: 10px;
+  margin-top: 4px;
+}
+
 .each-input-field {
   outline: none;
   border: none;
@@ -717,6 +724,30 @@ progress::-webkit-progress-value {
   font-size: 16px;
   color: rgba(149, 149, 149, 1);
   overflow: auto;
+}
+
+.each-password-input-field {
+  outline: none;
+  border: none;
+  background-color: var(--third-color);
+  width: 320px;
+  height: 44px;
+  padding-left: 16px;
+  padding-right: 32px;
+  font-size: 16px;
+  color: rgba(149, 149, 149, 1);
+  overflow: auto;
+}
+
+.each-password-open-eye-icon {
+  transform: translateY(-50%);
+  width: 20px;
+  /* Set the width of the icon */
+  height: 20px;
+  /* Set the height of the icon */
+  background-image: url('../assets/eye-on.png');
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 .each-mnemonic-input-field {
@@ -763,6 +794,9 @@ progress::-webkit-progress-value {
 }
 
 .each-input-field:focus+.each-input-field-border {
+  width: 100%;
+}
+.each-password-input-field:focus+.each-input-field-border {
   width: 100%;
 }
 

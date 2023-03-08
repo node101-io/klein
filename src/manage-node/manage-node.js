@@ -1,5 +1,5 @@
-const { invoke } = window.__TAURI__.tauri;
-const { writeText } = window.__TAURI__.clipboard;
+// const { invoke } = window.__TAURI__.tauri;
+// const { writeText } = window.__TAURI__.clipboard;
 const contentOfPage = document.getElementById('content-of-page');
 
 function changePage(page) {
@@ -41,6 +41,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const sendTokenButton = document.getElementById("send-token-button");
   const redelegateTokenButton = document.getElementById("redelegate-token-button");
   const voteButton = document.getElementById("vote-button");
+  const walletsButton = document.getElementById("wallets-button");
+  const wallets2Button = document.getElementById("wallets2-button");
   const nodeIcons = document.querySelector(".header-node-icons");
   const headerMenu = document.querySelector(".header-menu");
   const headerMenuIpButton = document.querySelector(".header-menu-ip-list-button");
@@ -85,6 +87,12 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   voteButton.addEventListener('click', function () {
     changePage('page-content/vote.html');
+  });
+  walletsButton.addEventListener('click', function () {
+    changePage('page-content/wallets-login.html')
+  });
+  wallets2Button.addEventListener('click', function () {
+    changePage('page-content/wallets.html');
   });
   validatorOperationsButton.addEventListener('click', function () {
     if (window.getComputedStyle(subButtonsDiv).getPropertyValue("display") == "none") {
