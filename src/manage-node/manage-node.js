@@ -35,7 +35,10 @@ window.addEventListener('DOMContentLoaded', () => {
   const createValidatorButton = document.getElementById("create-validator-button");
   const editValidatorButton = document.getElementById("edit-validator-button");
   const withdrawRewardsButton = document.getElementById("withdraw-rewards-button");
+  const unjailButton = document.getElementById("unjail-button");
+  const recoverWalletButton = document.getElementById("recover-wallet-button");
   const delegateTokenButton = document.getElementById("delegate-token-button");
+  const sendTokenButton = document.getElementById("send-token-button");
   const redelegateTokenButton = document.getElementById("redelegate-token-button");
   const voteButton = document.getElementById("vote-button");
   const nodeIcons = document.querySelector(".header-node-icons");
@@ -65,8 +68,17 @@ window.addEventListener('DOMContentLoaded', () => {
   withdrawRewardsButton.addEventListener('click', function () {
     changePage('page-content/withdraw-rewards.html');
   });
+  unjailButton.addEventListener('click', function () {
+    changePage('page-content/unjail.html');
+  });
+  recoverWalletButton.addEventListener('click', function () {
+    changePage('page-content/recover-wallet.html');
+  });
   delegateTokenButton.addEventListener('click', function () {
     changePage('page-content/delegate-token.html');
+  });
+    sendTokenButton.addEventListener('click', function () {
+    changePage('page-content/send-token.html');
   });
   redelegateTokenButton.addEventListener('click', function () {
     changePage('page-content/redelegate-token.html');

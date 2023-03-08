@@ -719,6 +719,19 @@ progress::-webkit-progress-value {
   overflow: auto;
 }
 
+.each-mnemonic-input-field {
+  outline: none;
+  border: none;
+  background-color: var(--third-color);
+  width: 160px;
+  height: 44px;
+  padding-left: 16px;
+  padding-right: 16px;
+  font-size: 16px;
+  color: rgba(149, 149, 149, 1);
+  overflow: auto;
+}
+
 .each-output-group {
   display: flex;
   gap: 10px;
@@ -752,6 +765,13 @@ progress::-webkit-progress-value {
 .each-input-field:focus+.each-input-field-border {
   width: 100%;
 }
+
+.each-mnemonic-input-field-border {
+  height: 1px;
+  width: 100%;
+  border: none;
+  background-color: var(--main-color);
+} 
 
 .each-input-radio {
   display: flex;
