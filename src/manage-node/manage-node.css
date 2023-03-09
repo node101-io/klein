@@ -2,7 +2,7 @@
 
 :root {
   --main-color: rgba(15, 98, 254, 1);
-  --second-color: rgba(30, 30, 30, 1);
+  --second-color: rgba(38, 38, 38, 1);
   --third-color: rgba(57, 57, 57, 1);
   --third-color-hover: rgba(49, 49, 49, 1);
   --fourth-color: rgba(198, 198, 198, 1);
@@ -617,13 +617,13 @@ html {
   align-items: center;
   height: 48px;
   padding: 0 20px;
-  border: 1px solid red;
+  border: 1px solid rgba(255, 0, 0, 1);
   background: transparent;
   cursor: pointer;
 }
 
 .delete-node-button:hover {
-  background: red;
+  background: rgba(255, 0, 0, 1);
 }
 
 .delete-node-button:hover>div {
@@ -635,7 +635,7 @@ html {
 }
 
 .delete-node-button-name {
-  color: red;
+  color: rgba(255, 0, 0, 1);
 }
 
 .page-progress-bar {
@@ -690,9 +690,12 @@ progress::-webkit-progress-value {
 }
 
 .page-heading {
+  display: flex;
+  align-items: center;
   font-size: 32px;
   color: rgba(224, 224, 224, 1);
   margin-bottom: 30px;
+  gap: 20px;
 }
 
 .each-input {
@@ -726,28 +729,8 @@ progress::-webkit-progress-value {
   overflow: auto;
 }
 
-.each-password-input-field {
-  outline: none;
-  border: none;
-  background-color: var(--third-color);
-  width: 320px;
-  height: 44px;
-  padding-left: 16px;
-  padding-right: 32px;
-  font-size: 16px;
-  color: rgba(149, 149, 149, 1);
-  overflow: auto;
-}
-
-.each-password-open-eye-icon {
-  transform: translateY(-50%);
-  width: 20px;
-  /* Set the width of the icon */
-  height: 20px;
-  /* Set the height of the icon */
-  background-image: url('../assets/eye-on.png');
-  background-repeat: no-repeat;
-  background-position: center center;
+.each-input-field:not(:placeholder-shown) {
+  background-color: var(--second-color);
 }
 
 .mnemonic-input-div {
@@ -772,7 +755,9 @@ progress::-webkit-progress-value {
 }
 
 .each-output-group {
+  position: relative;
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
@@ -790,9 +775,24 @@ progress::-webkit-progress-value {
   overflow: auto;
 }
 
-/* .each-input-field:not(:placeholder-shown) {
-  background-color: rgba(38, 38, 38, 1);
-} */
+.each-output-field-icon-copy {
+  position: absolute;
+  fill: rgba(179, 179, 179, 1); 
+  right: 60px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.each-output-field-icon-delete {
+  position: absolute;
+  fill: rgba(255, 0, 0, 1);
+  right: 20px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
 .each-input-field-border {
   height: 1px;
   width: 240px;

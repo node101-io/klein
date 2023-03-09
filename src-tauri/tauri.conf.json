@@ -12,6 +12,7 @@
   },
   "tauri": {
     "allowlist": {
+      "all": false,
       "clipboard": {
         "all": true
       },
@@ -30,10 +31,12 @@
         "renameFile": true,
         "scope": ["**"]
       },
-      "all": false,
       "shell": {
         "all": false,
         "open": true
+      },
+      "protocol": {
+        "all": true
       }
     },
     "bundle": {
@@ -70,7 +73,7 @@
       }
     },
     "security": {
-      "csp": "default-src 'self'; frame-src https://*;"
+      "csp": null
     },
     "updater": {
       "active": false

@@ -1,6 +1,8 @@
-// const { invoke } = window.__TAURI__.tauri;
-// const { writeText } = window.__TAURI__.clipboard;
+const { invoke } = window.__TAURI__.tauri;
+const { writeText } = window.__TAURI__.clipboard;
 const contentOfPage = document.getElementById('content-of-page');
+
+// invoke('cpu_mem');
 
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.each-page-chart').forEach((element) => {
@@ -25,7 +27,7 @@ window.addEventListener('DOMContentLoaded', () => {
       .catch(err => console.log(err));
   }
 
-  changePage('page-content/node-operations.html');
+  changePage('page-content/node-operations.html')
 
   const validatorAddress = document.querySelector(".sidebar-info-details-copy");
   const validatorAddressText = document.querySelector(".sidebar-info-details-copy-address");
@@ -45,7 +47,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const redelegateTokenButton = document.getElementById("redelegate-token-button");
   const voteButton = document.getElementById("vote-button");
   const walletsButton = document.getElementById("wallets-button");
-  const wallets2Button = document.getElementById("wallets2-button");
   const nodeIcons = document.querySelector(".header-node-icons");
   const headerMenu = document.querySelector(".header-menu");
   const headerMenuIpButton = document.querySelector(".header-menu-ip-list-button");
@@ -93,9 +94,6 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   walletsButton.addEventListener('click', function () {
     changePage('page-content/wallets-login.html')
-  });
-  wallets2Button.addEventListener('click', function () {
-    changePage('page-content/wallets.html');
   });
   validatorOperationsButton.addEventListener('click', function () {
     if (window.getComputedStyle(subButtonsDiv).getPropertyValue("display") == "none") {
@@ -156,7 +154,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (submitButton && submitButton.contains(e.target)) {
-      let page = document.querySelector(".page-heading").textContent;
+      let page = document.querySelector(".page-heading").innerText;
       if (page == "Create Validator") {
         console.log("create validator")
       }
@@ -185,7 +183,7 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log("recover wallet")
       }
       else if (page == "See Wallets") {
-        console.log("wallets login")
+        changePage('page-content/wallets.html');
       }
       else if (page == "Create Wallet") {
         console.log("wallets")
