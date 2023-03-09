@@ -706,7 +706,7 @@ progress::-webkit-progress-value {
   margin-bottom: 10px;
 }
 
-.each-small-input-label {
+.each-input-helper-text {
   font-size: 12px;
   color: rgba(149, 149, 149, 1);
   margin-bottom: 10px;
@@ -750,17 +750,25 @@ progress::-webkit-progress-value {
   background-position: center center;
 }
 
+.mnemonic-input-div {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  background-color: var(--third-color);
+}
+
 .each-mnemonic-input-field {
+  display: flex;
   outline: none;
   border: none;
   background-color: var(--third-color);
-  width: 160px;
+  min-width: 160px;
   height: 44px;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding: 0 16px;
   font-size: 16px;
   color: rgba(149, 149, 149, 1);
   overflow: auto;
+  flex-grow: 1;
 }
 
 .each-output-group {
@@ -796,16 +804,10 @@ progress::-webkit-progress-value {
 .each-input-field:focus+.each-input-field-border {
   width: 100%;
 }
+
 .each-password-input-field:focus+.each-input-field-border {
   width: 100%;
 }
-
-.each-mnemonic-input-field-border {
-  height: 1px;
-  width: 100%;
-  border: none;
-  background-color: var(--main-color);
-} 
 
 .each-input-radio {
   display: flex;
@@ -866,6 +868,7 @@ progress::-webkit-progress-value {
   padding-right: 16px;
   height: 44px;
   width: 128px;
+  cursor: pointer;
 }
 
 .each-button:hover {

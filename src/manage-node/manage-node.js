@@ -2,16 +2,9 @@
 // const { writeText } = window.__TAURI__.clipboard;
 const contentOfPage = document.getElementById('content-of-page');
 
-function changePage(page) {
-  fetch(page)
-    .then(response => response.text())
-    .then(html => { contentOfPage.innerHTML = html; })
-    .catch(err => console.log(err));
-}
-
 window.addEventListener('DOMContentLoaded', () => {
-  $(function () {
-    $(".each-page-chart").easyPieChart({
+  document.querySelectorAll('.each-page-chart').forEach((element) => {
+    new EasyPieChart(element, {
       size: 160,
       barColor: "rgba(15, 98, 254, 1)",
       scaleLength: 0,
@@ -21,6 +14,16 @@ window.addEventListener('DOMContentLoaded', () => {
       animate: 2000,
     });
   });
+
+  function changePage(page) {
+    fetch(page)
+      .then(response => response.text())
+      .then(html => {
+        contentOfPage.innerHTML = html;
+        submitButton = document.getElementById('submit-button');
+      })
+      .catch(err => console.log(err));
+  }
 
   changePage('page-content/node-operations.html');
 
@@ -79,7 +82,7 @@ window.addEventListener('DOMContentLoaded', () => {
   delegateTokenButton.addEventListener('click', function () {
     changePage('page-content/delegate-token.html');
   });
-    sendTokenButton.addEventListener('click', function () {
+  sendTokenButton.addEventListener('click', function () {
     changePage('page-content/send-token.html');
   });
   redelegateTokenButton.addEventListener('click', function () {
@@ -109,7 +112,6 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener("click", (e) => {
-    console.log(e.target.parentNode);
     if (nodeIcons.contains(e.target)) {
       if (headerMenu.style.display == "block") {
         headerMenu.setAttribute("style", "display: none;");
@@ -151,6 +153,43 @@ window.addEventListener('DOMContentLoaded', () => {
       submenuIpList.setAttribute("style", "display: none;");
       scrollbarBackground.setAttribute("style", "display: none;");
       submenuNotifications.setAttribute("style", "display: none;");
+    }
+
+    if (submitButton && submitButton.contains(e.target)) {
+      let page = document.querySelector(".page-heading").textContent;
+      if (page == "Create Validator") {
+        console.log("create validator")
+      }
+      else if (page == "Edit Validator") {
+        console.log("edit validator")
+      }
+      else if (page == "Withdraw Rewards") {
+        console.log("withdraw rewards")
+      }
+      else if (page == "Delegate Token") {
+        console.log("delegate token")
+      }
+      else if (page == "Redelegate Token") {
+        console.log("redelegate token")
+      }
+      else if (page == "Voting") {
+        console.log("voting")
+      }
+      else if (page == "Unjail") {
+        console.log("unjail")
+      }
+      else if (page == "Send Token") {
+        console.log("send token")
+      }
+      else if (page == "Recover Wallet") {
+        console.log("recover wallet")
+      }
+      else if (page == "See Wallets") {
+        console.log("wallets login")
+      }
+      else if (page == "Create Wallet") {
+        console.log("wallets")
+      }
     }
   });
 });
