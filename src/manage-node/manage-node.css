@@ -85,7 +85,7 @@ html {
 }
 
 .header-node-icon {
-  stroke: var(--divider-color);
+  border-radius: 50%;
   width: 44px;
   height: 44px;
 }
@@ -149,6 +149,7 @@ html {
 .header-menu-ip-list-button-icon {
   width: 36px;
   height: 36px;
+  border-radius: 50%;
 }
 
 .header-menu-ip-list-button-details {
@@ -237,6 +238,7 @@ html {
   width: 28px;
   height: 28px;
   margin-right: 12px;
+  border-radius: 50%;
 }
 
 .each-header-submenu-ip-list-item-name {
@@ -647,6 +649,8 @@ html {
 
 .progress-bar-text {
   display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 16px;
 }
 
@@ -670,6 +674,13 @@ progress::-webkit-progress-bar {
 progress::-webkit-progress-value {
   background-color: var(--main-color);
   border-radius: 5px;
+}
+
+.page-video {
+  width: 100%;
+  border: none;
+  aspect-ratio: 16 / 9;
+  color: white;
 }
 
 

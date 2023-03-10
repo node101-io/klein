@@ -3,6 +3,10 @@ const { writeText } = window.__TAURI__.clipboard;
 const contentOfPage = document.getElementById('content-of-page');
 
 // invoke('cpu_mem');
+// const worker = new Worker("worker.js");
+// worker.onmessage = function (e) {
+  invoke('cpu_mem');
+// };
 
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.each-page-chart').forEach((element) => {

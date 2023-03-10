@@ -8,6 +8,7 @@ use tauri::{ Manager, LogicalSize, Position };
 use std::fs::File;
 use std::io::{ self, BufRead };
 use std::path::Path;
+use std::{ thread, time };
 
 //SESSION OPERATIONS
 struct SessionManager {
@@ -92,20 +93,23 @@ fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>> wher
     Ok(io::BufReader::new(file).lines())
 }
 
-#[tauri::command]
-async fn cpu_mem() -> String {
+#[tauri::command(async)]
+fn cpu_mem() -> String {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
-            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-            channel
-                .exec(
-                    "free | grep Mem | awk '{print $3/$2 * 100.0}' ; ps aux --sort -%cpu | head -10 | awk '{ total += $3} END {print total}'"
-                )
-                .unwrap();
-            let mut s = String::new();
-            channel.read_to_string(&mut s).unwrap();
-            println!("{}", s);
-            s
+            loop {
+                let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+                channel
+                    .exec(
+                        "free | grep Mem | awk '{print $3/$2 * 100.0}' ; ps aux --sort -%cpu | head -10 | awk '{ total += $3} END {print total}'"
+                    )
+                    .unwrap();
+                let mut s = String::new();
+                channel.read_to_string(&mut s).unwrap();
+                println!("{}", s);
+
+                thread::sleep(time::Duration::from_secs(5));
+            }
         } else {
             println!("!");
             String::from("!")
