@@ -20,6 +20,7 @@
 ::-webkit-scrollbar-track {
   background: var(--third-color);
   border-radius: 5px;
+
 }
 
 ::-webkit-scrollbar-thumb {
@@ -58,11 +59,11 @@ html {
 
 /* NAVBAR */
 .all-header-wrapper {
-  min-height: 92px;
+  height: 92px;
   display: flex;
   padding-left: 5vw;
   padding-right: 5vw;
-  background: #1E1E1E;
+  background: rgba(30, 30, 30, 1);
   align-items: center;
 }
 
@@ -96,7 +97,7 @@ html {
   right: 0px;
   height: 18px;
   width: 18px;
-  border: var(--second-color) solid 3px;
+  border: rgba(30, 30, 30, 1) solid 3px;
   background-color: var(--main-color);
   border-radius: 50%;
 }
@@ -203,12 +204,13 @@ html {
 .header-submenu-ip-list {
   display: none;
   position: absolute;
-  max-height: 240px;
+  max-height: 180px;
   top: 92px;
-  right: calc(5vw + 225px);
+  right: calc(5vw + 216px);
   width: calc(6vw + 200px);
   z-index: 100;
-  overflow: auto;
+  overflow-y: scroll;
+  padding-right: 6px;
 }
 
 .header-submenu-ip-list::-webkit-scrollbar {
@@ -254,30 +256,26 @@ html {
 }
 
 .header-menu-scroll-background {
-  position: absolute;
   display: none;
-  top: 92px;
-  width: 30px;
-  right: calc(5vw + 210px);
-  z-index: 100;
-}
-
-.each-header-menu-scroll-background-item {
+  position: absolute;
   background-color: var(--fifth-color);
-  width: 30px;
-  height: 60px;
-  z-index: 101;
+  top: 92px;
+  width: 20px;
+  height: 180px;
+  right: calc(5vw + 210px);
+  z-index: 90;
 }
 
 .header-submenu-notifications {
   display: none;
   position: absolute;
+  max-height: 216px;
   top: 92px;
-  max-height: 240px;
-  right: calc(5vw + 225px);
+  right: calc(5vw + 216px);
   width: calc(6vw + 200px);
-  overflow: auto;
   z-index: 100;
+  overflow-y: scroll;
+  padding-right: 6px;
 }
 
 .header-submenu-notifications::-webkit-scrollbar {
@@ -499,7 +497,7 @@ html {
   position: absolute;
   left: var(--sidebar-width);
   min-height: calc(100vh - 92px);
-  width: calc(100vw - var(--sidebar-width));
+  width: calc(99vw - var(--sidebar-width));
   background-color: var(--background-color);
   padding: 80px 100px;
 }
