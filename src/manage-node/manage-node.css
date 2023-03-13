@@ -528,6 +528,11 @@ html {
   justify-content: center;
   width: 160px;
   height: 160px;
+  /* font-size: 34px;
+  color: rgba(90, 104, 114, 1); */
+}
+
+.container .box .each-page-chart .each-page-chart-percentage {
   font-size: 34px;
   color: rgba(90, 104, 114, 1);
 }

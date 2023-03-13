@@ -5,23 +5,27 @@ const contentOfPage = document.getElementById('content-of-page');
 let ipAddresses;
 let notifications;
 
-// invoke('cpu_mem');
-// const worker = new Worker("worker.js");
-// worker.onmessage = function (e) {
-  invoke('cpu_mem');
-// };
+// invoke('create_wallet', { walletname: 'test', password: 'test' });
+
+function updateCpuMem(cpu, mem) {
+  charts_to_update[1].update(Math.floor(mem));
+  charts_to_update[2].update(Math.floor(cpu));
+  document.querySelectorAll('.each-page-chart-percentage')[1].textContent = Math.floor(mem) + "%";
+  document.querySelectorAll('.each-page-chart-percentage')[2].textContent = Math.floor(cpu) + "%";
+}
 
 window.addEventListener('DOMContentLoaded', () => {
+  charts_to_update = [];
   document.querySelectorAll('.each-page-chart').forEach((element) => {
-    new EasyPieChart(element, {
+    charts_to_update.push(new EasyPieChart(element, {
       size: 160,
       barColor: "rgba(15, 98, 254, 1)",
       scaleLength: 0,
       lineWidth: 6,
       trackColor: "#373737",
       lineCap: "circle",
-      animate: 2000,
-    });
+      animate: 1000,
+    }))
   });
 
   function changePage(page) {
@@ -34,6 +38,7 @@ window.addEventListener('DOMContentLoaded', () => {
       .catch(err => console.log(err));
   }
 
+  invoke("cpu_mem_start_stop", { a: true });
   changePage('page-content/node-operations.html')
 
   const validatorAddress = document.querySelector(".sidebar-info-details-copy");
@@ -160,9 +165,7 @@ window.addEventListener('DOMContentLoaded', () => {
         scrollbarBackground.setAttribute("style", "display: none;");
       }
       else {
-        console.log("here");
         submenuIpList.setAttribute("style", "display: block;");
-        console.log(scrollbarBackground);
         scrollbarBackground.setAttribute("style", `display: block; height: ${Math.min(ipAddresses.length, 3) * 60}px;`);
       }
     }
