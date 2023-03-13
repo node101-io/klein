@@ -5,13 +5,15 @@ const contentOfPage = document.getElementById('content-of-page');
 let ipAddresses;
 let notifications;
 
-// invoke('create_wallet', { walletname: 'test', password: 'test' });
+invoke('create_wallet', { walletname: 'test', password: 'test' });
 
 function updateCpuMem(cpu, mem) {
   charts_to_update[1].update(Math.floor(mem));
-  charts_to_update[2].update(Math.floor(cpu));
   document.querySelectorAll('.each-page-chart-percentage')[1].textContent = Math.floor(mem) + "%";
-  document.querySelectorAll('.each-page-chart-percentage')[2].textContent = Math.floor(cpu) + "%";
+  if (cpu < 100) {
+    charts_to_update[2].update(Math.floor(cpu));
+    document.querySelectorAll('.each-page-chart-percentage')[2].textContent = Math.floor(cpu) + "%";
+  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
