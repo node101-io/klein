@@ -13,16 +13,18 @@ use std::time;
 //SESSION OPERATIONS
 struct SessionManager {
     open_session: Session,
+    stop_cpu_mem:bool
 }
 
-static mut GLOBAL_STRUCT: Option<Box<SessionManager>> = None;
-static mut STOP_CPU_MEM: bool = false;
+static mut GLOBAL_STRUCT: Option<SessionManager> = None;
 
-fn create_session(session: Session) -> Box<SessionManager> {
+
+fn create_session(session: Session) -> SessionManager {
     let mut alive_session = SessionManager {
         open_session: session,
+        stop_cpu_mem: false,
     };
-    Box::new(alive_session)
+    alive_session
 }
 
 // DON'T KNOW IF THAT WILL BE NECESSARY.
@@ -98,7 +100,9 @@ fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>> wher
 #[tauri::command]
 fn cpu_mem_start_stop(a: bool) {
     unsafe {
-        STOP_CPU_MEM = a;
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
+            (my_boxed_session).stop_cpu_mem= a;
+        }
     }
 }
 
@@ -107,15 +111,14 @@ fn cpu_mem(window: tauri::Window) -> String {
     unsafe {
         println!("arrived here.");
         if GLOBAL_STRUCT.is_some() {
-            if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+            if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
                 let mut channel = my_boxed_session.open_session.channel_session().unwrap();
                 channel.shell().unwrap();
                 let mut stream = channel.stream(0);
-
-                STOP_CPU_MEM = false;
+                my_boxed_session.stop_cpu_mem = false; 
 
                 loop {
-                    if STOP_CPU_MEM {
+                    if my_boxed_session.stop_cpu_mem {
                         break;
                     }
 
@@ -150,7 +153,7 @@ fn cpu_mem(window: tauri::Window) -> String {
 #[tauri::command]
 async fn current_node(window: tauri::Window) -> String {
     unsafe {
-        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let mut file = File::open("../cosmos.txt").unwrap();
             let mut contents = String::new();
@@ -197,7 +200,7 @@ async fn current_node(window: tauri::Window) -> String {
 #[tauri::command]
 async fn node_info() -> String {
     unsafe {
-        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             channel.exec("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; lavad status").unwrap();
             let mut s = String::new();
@@ -225,7 +228,7 @@ async fn am_i_logged_out() {
 async fn remove_node(node_name: String, window: tauri::Window) -> String {
     unsafe {
         if GLOBAL_STRUCT.is_some() {
-            if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+            if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
                 let mut channel = my_boxed_session.open_session.channel_session().unwrap();
                 println!("arrived here.");
                 let command: String = format!("rm -rf $");
@@ -433,6 +436,76 @@ async fn vote(
 ) -> Result<String, String> {
     Ok("Should print result, in a json if possible.".into())
 }
+
+#[tauri::command]
+async fn start_node(node_name: String) -> String{
+    unsafe {
+        if GLOBAL_STRUCT.is_some() {
+            if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+                let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+                println!("arrived here.");
+                let command: String = format!(
+                    "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; systemctl start {node_name}"
+                );
+                channel.exec(&*command).unwrap();
+                let mut s = String::new();
+                channel.read_to_string(&mut s).unwrap();
+                String::from(s)
+            } else {
+                String::from("Problem")
+            }
+        } else {
+            String::from("No session found.")
+        }
+    }
+}
+
+#[tauri::command]
+async fn stop_node(node_name: String) -> String{
+    unsafe {
+        if GLOBAL_STRUCT.is_some() {
+            if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+                let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+                println!("arrived here.");
+                let command: String = format!(
+                    "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; systemctl stop {node_name}"
+                );
+                channel.exec(&*command).unwrap();
+                let mut s = String::new();
+                channel.read_to_string(&mut s).unwrap();
+                String::from(s)
+            } else {
+                String::from("Problem")
+            }
+        } else {
+            String::from("No session found.")
+        }
+    }
+}
+
+#[tauri::command]
+async fn restart_node(node_name: String) -> String{
+    unsafe {
+        if GLOBAL_STRUCT.is_some() {
+            if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+                let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+                println!("arrived here.");
+                let command: String = format!(
+                    "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; systemctl restart {node_name}"
+                );
+                channel.exec(&*command).unwrap();
+                let mut s = String::new();
+                channel.read_to_string(&mut s).unwrap();
+                String::from(s)
+            } else {
+                String::from("Problem")
+            }
+        } else {
+            String::from("No session found.")
+        }
+    }
+}
+
 
 #[tauri::command]
 async fn unjail(node_name: String, wallet_name: String, password: String, fees: String) -> String {
