@@ -10,6 +10,7 @@ invoke('create_wallet', { walletname: 'test', password: 'test' });
 function updateCpuMem(cpu, mem) {
   charts_to_update[1].update(Math.floor(mem));
   document.querySelectorAll('.each-page-chart-percentage')[1].textContent = Math.floor(mem) + "%";
+  
   if (cpu < 100) {
     charts_to_update[2].update(Math.floor(cpu));
     document.querySelectorAll('.each-page-chart-percentage')[2].textContent = Math.floor(cpu) + "%";
