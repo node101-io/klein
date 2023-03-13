@@ -1,12 +1,16 @@
 #![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
 
 use ssh2::{ Session, DisconnectCode };
+
 use std::{ io::{ Read, Write } };
+// use std::io::{Read, Write};
 use tauri::{ Manager, LogicalSize, Position };
 use std::fs::File;
 use std::io::{ self, BufRead };
 use std::path::Path;
-use std::{ thread, time };
+use std::io::BufReader;
+use std::thread;
+
 
 //SESSION OPERATIONS
 struct SessionManager {
@@ -14,7 +18,6 @@ struct SessionManager {
 }
 
 static mut GLOBAL_STRUCT: Option<Box<SessionManager>> = None;
-static mut STOP_CPU_MEM: bool = false;
 
 fn create_session(session: Session) -> Box<SessionManager> {
     let mut alive_session = SessionManager {
@@ -56,7 +59,6 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
             }
         }
         window.eval("window['loadNewPage']('manage-node/manage-node.html')").unwrap();
-        cpu_mem(window.clone());
         ()
     } else {
         window.eval("window['showLoginError']()").unwrap();
@@ -94,43 +96,22 @@ fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>> wher
 }
 
 #[tauri::command]
-fn cpu_mem_start_stop(a: bool) {
+async fn cpu_mem() -> String {
     unsafe {
-        STOP_CPU_MEM = a;
-    }
-}
-
-#[tauri::command(async)]
-fn cpu_mem(window: tauri::Window) -> String {
-    unsafe {
-        println!("arrived here.");
-        if GLOBAL_STRUCT.is_some() {
-            if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
-                let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-                channel.shell().unwrap();
-                let mut stream = channel.stream(0);
-
-                STOP_CPU_MEM = false;
-                
-                loop {
-                    if STOP_CPU_MEM { break; }
-                    
-                    let mut s = String::new();
-                    stream.write_all(b"echo $(top -b -n1 | awk '/Cpu\\(s\\)/{print 100-$8} /MiB Mem/{print ($4-$6)/$4*100}') \n").unwrap();
-                    let mut buf = [0; 2048];
-                    let size = stream.read(&mut buf).unwrap();
-                    s.push_str(std::str::from_utf8(&buf[..size]).unwrap());
-
-                    if buf[size - 1] == b'\n' {
-                        let func = format!("window.updateCpuMem({});", s.trim().split_whitespace().collect::<Vec<&str>>().join(","));
-                        window.eval(&func).unwrap();
-                    }
-                    thread::sleep(time::Duration::from_secs(5));
-                }
-            }
-            String::from("NICE")
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            channel
+                .exec(
+                    "free | grep Mem | awk '{print $3/$2 * 100.0}' ; ps aux --sort -%cpu | head -10 | awk '{ total += $3} END {print total}'"
+                )
+                .unwrap();
+            let mut s = String::new();
+            channel.read_to_string(&mut s).unwrap();
+            println!("{}", s);
+            s
         } else {
-            String::from("No session found.")
+            println!("!");
+            String::from("!")
         }
     }
 }
@@ -325,21 +306,17 @@ async fn install_node(moniker_name: String, node_name: String, window: tauri::Wi
 
 //Should give first wallet's password if created before.
 #[tauri::command]
-async fn create_wallet(walletname: String, password: String) -> String {
+async fn create_wallet(wallet_name: String, password: String) -> String {
     unsafe {
         if GLOBAL_STRUCT.is_some() {
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
                 let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-                channel.shell().unwrap();
-                let mut stream = channel.stream(0);
-                let mut s = String::new();
                 println!("asdf");
-                stream.write_all(b"tgrade keys add something \n").unwrap();
-                stream.read_to_string(&mut s).unwrap();
-                println!("{}", s);
-                stream.write_all(b"node101bos\n").unwrap();
-                stream.write_all(b"node101bos\n").unwrap();
-                stream.flush().unwrap();
+                let mut s = String::new();
+                channel.exec("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"deneme11\" | tgrade keys add something --output json").unwrap();
+                channel.read_to_string(&mut s).unwrap();
+                println!("{}",s);
+                println!("done probably");
                 String::from("NICE")
             } else {
                 String::from("ah fuck")
@@ -349,8 +326,8 @@ async fn create_wallet(walletname: String, password: String) -> String {
         }
     }
 
-    // export PATH=$PATH:/usr/local/go/bin:/root/go/bin; " + command
 }
+   // export PATH=$PATH:/usr/local/go/bin:/root/go/bin; " + command
 #[tauri::command]
 async fn show_wallets() -> String {
     unsafe {
@@ -475,7 +452,6 @@ fn main() {
                 log_in,
                 log_out,
                 cpu_mem,
-                cpu_mem_start_stop,
                 node_info,
                 am_i_logged_out,
                 current_node,
