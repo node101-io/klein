@@ -1,7 +1,7 @@
 #![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
 
 use ssh2::{ Session, DisconnectCode };
-use std::{ io::{ Read, Write } };
+use std::{ io::{ Read, Write }, thread::current };
 use tauri::{ Manager, LogicalSize, Position };
 use std::fs::File;
 use std::io::{ self, BufRead };
@@ -10,7 +10,7 @@ use std::io::BufReader;
 use std::thread;
 use std::time;
 use serde_json::Value;
-
+use serde_json;
 //SESSION OPERATIONS
 struct SessionManager {
     open_session: Session,
@@ -27,12 +27,6 @@ fn create_session(session: Session) -> SessionManager {
     alive_session
 }
 
-// DON'T KNOW IF THAT WILL BE NECESSARY.
-// fn modify_session(session:Session,manager: &mut SessionManager) {
-//     manager.open_session = session;
-// }
-
-// LOGIN --- LOGOUT FUNCTUONS
 #[tauri::command]
 async fn log_in(ip: String, password: String, remember: bool, window: tauri::Window) -> () {
     let tcp = std::net::TcpStream::connect(format!("{}:22", ip)).unwrap();
@@ -42,7 +36,7 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
     sess.handshake().unwrap();
     let res = sess.userauth_password("root", &password);
     println!("arrived here,");
-    println!("{}", res.is_ok());
+
     if res.is_ok() {
         unsafe {
             GLOBAL_STRUCT = Some(create_session(sess));
@@ -50,14 +44,10 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
                 .unwrap()
                 .open_session.channel_session()
                 .unwrap();
-
-            channel.exec("ls").unwrap();
-            let mut s = String::new();
-            channel.read_to_string(&mut s).unwrap();
-            print!("{}", s);
             if remember {
                 println!("Remembering password");
             }
+            systemctl_statusnode(String::from("lavad"));
         }
         window.eval("window['loadNewPage']('manage-node/manage-node.html')").unwrap();
         cpu_mem(window.clone());
@@ -68,16 +58,12 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
     }
 }
 
-#[tauri::command]
-async fn log_out(window: tauri::Window) {
+#[tauri::command(async)]
+fn log_out(window: tauri::Window) -> String {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = (*my_boxed_session).open_session.channel_session().unwrap();
-            channel.exec("ls").unwrap();
-            let mut s = String::new();
-            channel.read_to_string(&mut s).unwrap();
-            print!("{}", s);
-            println!("hey");
+            let mut last_node = current_node();
             (*my_boxed_session).open_session
                 .disconnect(
                     Some(DisconnectCode::AuthCancelledByUser),
@@ -87,6 +73,10 @@ async fn log_out(window: tauri::Window) {
                 .unwrap();
             GLOBAL_STRUCT = None;
             window.eval("window['loadNewPage']('../index.html')").unwrap();
+            last_node
+        }
+        else{
+            String::from("Some problem.")
         }
     }
 }
@@ -151,8 +141,8 @@ fn cpu_mem(window: tauri::Window) -> String {
     }
 }
 
-#[tauri::command]
-async fn current_node(window: tauri::Window) -> String {
+#[tauri::command(async)]
+fn current_node() -> String {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
@@ -198,12 +188,13 @@ async fn current_node(window: tauri::Window) -> String {
     }
 }
 
-#[tauri::command]
-async fn node_info() -> String {
+#[tauri::command(async)]
+fn node_info(node_name:String) -> String {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-            channel.exec("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; lavad status").unwrap();
+            let command = format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; {node_name} status");
+            channel.exec(&command).unwrap();
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             s
@@ -214,33 +205,40 @@ async fn node_info() -> String {
     }
 }
 
-#[tauri::command]
-async fn am_i_logged_out() {
+#[tauri::command(async)]
+fn systemctl_statusnode(node_name:String) -> String {
     unsafe {
-        if GLOBAL_STRUCT.is_none() {
-            println!("Logged out successfully.");
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            let command = format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; systemctl status lavad;echo hey;");
+            channel.exec(&command).unwrap();
+            let mut s = String::new();
+            channel.read_to_string(&mut s).unwrap();
+            s
         } else {
-            println!("You're still logged in.");
+            String::from("Couldn't get status.")
         }
     }
 }
 
-#[tauri::command]
-async fn remove_node(node_name: String, window: tauri::Window) -> String {
+#[tauri::command(async)]
+fn remove_node(node_name: String, window: tauri::Window) -> String {
+    println!("im here?");
     unsafe {
         if GLOBAL_STRUCT.is_some() {
-            if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
+            if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+                println!("im here");
                 let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-                println!("arrived here.");
-                let command: String = format!("rm -rf $");
+                let command: String = format!("touch hii.txt");
                 channel.exec(&*command).unwrap();
-                let mut s = String::new();
+                let mut s = String::new();  
                 channel.read_to_string(&mut s).unwrap();
-                if s.contains("SETUP IS FINISHED") {
+                let condition = format!("/{node_name}");
+                if s.contains(&condition) {
                     println!("{}", s);
-                    String::from("Successful.")
+                    String::from("Problem deleting node.")
                 } else {
-                    String::from("A problem has occurred while installing the node.")
+                    String::from("Successfully deleted.")
                 }
             } else {
                 String::from("Problem finding session")
@@ -347,16 +345,12 @@ fn create_wallet(walletname: String, password: String, window: tauri::Window) ->
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
                 let mut channel = my_boxed_session.open_session.channel_session().unwrap();
                 let mut s = String::new();
-                // print the parameters
                 println!("walletname: {} password: {}", walletname, password);
                 channel
-                    // .exec(
-                    //     "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"password\" | tgrade keys add walletname --output json"
-                    // )
-                    // use parameters
                     .exec(
                         &*format!(
-                            "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{}\" | lavad keys add {} --output json", // TODO: PASSWORD MAY INCLUDE \ AND SHOULD BE HANDLED
+                            "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{}\" | lavad keys add {} --output json",
+                            // TODO: PASSWORD MAY INCLUDE \ AND SHOULD BE HANDLED
                             password,
                             walletname
                         )
@@ -369,9 +363,7 @@ fn create_wallet(walletname: String, password: String, window: tauri::Window) ->
                 println!("{}", v["address"].to_string());
 
                 let func = format!(
-                    "window['showCreatedWallet']('{}', '{}', '{}')",
-                    v["name"].to_string(),
-                    v["address"].to_string(),
+                    "window['showCreatedWallet']('{}')",
                     v["mnemonic"].to_string()
                 );
                 window.eval(&func).unwrap();
@@ -386,8 +378,8 @@ fn create_wallet(walletname: String, password: String, window: tauri::Window) ->
     }
 }
 // export PATH=$PATH:/usr/local/go/bin:/root/go/bin; " + command
-#[tauri::command]
-async fn show_wallets() -> String {
+#[tauri::command(async)]
+fn show_wallets(window: tauri::Window) -> String {
     unsafe {
         if GLOBAL_STRUCT.is_some() {
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
@@ -400,6 +392,8 @@ async fn show_wallets() -> String {
                 let mut s = String::new();
                 channel.read_to_string(&mut s).unwrap();
                 println!("{}", s);
+                let func = format!("window.showWallets({});", s.trim());
+                window.eval(&func).unwrap();
                 String::from(s)
             } else {
                 String::from("Problem")
@@ -410,24 +404,26 @@ async fn show_wallets() -> String {
     }
 }
 
-#[tauri::command]
-async fn delete_wallets(wallet_name: String) -> String {
+#[tauri::command(async)]
+fn delete_wallet(walletname: String, window: tauri::Window) -> String {
     unsafe {
         if GLOBAL_STRUCT.is_some() {
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
                 let mut channel = my_boxed_session.open_session.channel_session().unwrap();
                 println!("arrived here.");
-                let command: String = format!(
-                    "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; lavad keys delete {wallet_name} --output json;"
-                );
+                let command: String =
+                    format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; lavad keys delete {} -y --output json;", walletname);
+                println!("{}", command);
                 channel.exec(&*command).unwrap();
                 let mut s = String::new();
                 channel.read_to_string(&mut s).unwrap();
-                if s.contains(":") {
-                    channel.exec("y").unwrap();
-                    channel.read_to_string(&mut s).unwrap();
-                }
+                // if s.contains(":") {
+                //     channel.exec("y").unwrap();
+                //     channel.read_to_string(&mut s).unwrap();
+                // }
                 println!("{}", s);
+                show_wallets(window);
+
                 String::from(s)
             } else {
                 String::from("Problem")
@@ -471,7 +467,7 @@ async fn start_node(node_name: String) -> String {
                 channel.exec(&*command).unwrap();
                 let mut s = String::new();
                 channel.read_to_string(&mut s).unwrap();
-                String::from(s)
+                String::from("started the node.")
             } else {
                 String::from("Problem")
             }
@@ -581,13 +577,17 @@ fn main() {
                 cpu_mem,
                 cpu_mem_stop,
                 node_info,
-                am_i_logged_out,
                 current_node,
                 install_node,
                 unjail,
                 create_wallet,
                 show_wallets,
-                delete_wallets
+                delete_wallet,
+                start_node,
+                stop_node,
+                restart_node,
+                systemctl_statusnode,
+                remove_node
             ]
         )
         .run(tauri::generate_context!())

@@ -1,7 +1,7 @@
 const { invoke } = window.__TAURI__.tauri;
 const { writeText } = window.__TAURI__.clipboard;
 const { readTextFile, writeFile } = window.__TAURI__.fs;
-const { message } = window.__TAURI__.dialog;
+const { message, ask } = window.__TAURI__.dialog;
 const contentOfPage = document.getElementById('content-of-page');
 let ipAddresses;
 let notifications;
@@ -16,12 +16,88 @@ function updateCpuMem(cpu, mem) {
   }
 }
 
-function showCreatedWallet(name, address, mnemonic) {
-  message("Wallet name: " + name + "\n Address: " + address + "\n Mnemonic: " + mnemonic, { title: "Wallet created", type: "info" });
+function showCreatedWallet(mnemonic) {
+  message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" });
   document.querySelectorAll(".each-input-field")[0].value = "";
   document.querySelectorAll(".each-input-field")[1].value = "";
 
-  // wallet listesini güncelle
+  invoke("show_wallets");
+}
+
+function showWallets(list) {
+  document.getElementById("page-wallet-list").innerHTML = "";
+  let adet = list.length;
+  
+  while (adet > 0) {
+    row = document.createElement("div");
+    row.setAttribute("class", "each-row");
+
+    if (adet == 1) {
+      tekrar = 1;
+    } else {
+      tekrar = 2;
+    }
+    for (let i = 0; i < tekrar; i++) {
+      halfrow = document.createElement("div");
+      halfrow.setAttribute("class", "each-row-half");
+
+      label = document.createElement("div");
+      label.setAttribute("class", "each-input-label");
+      label.textContent = list[adet - i - 1].name;
+
+      outputgroup = document.createElement("div");
+      outputgroup.setAttribute("class", "each-output-group");
+
+      outputfield = document.createElement("div");
+      outputfield.setAttribute("class", "each-output-field");
+      outputfield.textContent = list[adet - i - 1].address.substring(0, 4) + "..." + list[adet - i - 1].address.substring(list[adet - i - 1].address.length - 4);
+      outputfield.setAttribute("title", list[adet - i - 1].address);
+      
+      outputfieldiconcopy = document.createElementNS('http://www.w3.org/2000/svg', "svg");
+      outputfieldiconcopy.setAttribute("class", "each-output-field-icon-copy");
+      outputfieldiconcopy.setAttribute("viewBox", "0 0 17 16");
+      outputfieldiconcopy.addEventListener("click", function() {
+        writeText(this.previousSibling.title);
+      });
+
+      path1 = document.createElementNS('http://www.w3.org/2000/svg', `path`);
+      path1.setAttribute("d", "M14.0555 7.35L11.0055 4.3C10.8555 4.1 10.6055 4 10.3555 4H6.35547C5.80547 4 5.35547 4.45 5.35547 5V14C5.35547 14.55 5.80547 15 6.35547 15H13.3555C13.9055 15 14.3555 14.55 14.3555 14V8.05C14.3555 7.8 14.2555 7.55 14.0555 7.35ZM10.3555 5L13.3055 8H10.3555V5ZM6.35547 14V5H9.35547V8C9.35547 8.55 9.80547 9 10.3555 9H13.3555V14H6.35547Z M3.35547 9H2.35547V2C2.35547 1.45 2.80547 1 3.35547 1H10.3555V2H3.35547V9Z");
+
+      outputfieldicondelete = document.createElementNS('http://www.w3.org/2000/svg', "svg");
+      outputfieldicondelete.setAttribute("class", "each-output-field-icon-delete");
+      outputfieldicondelete.setAttribute("viewBox", "0 0 17 16");
+      outputfieldicondelete.addEventListener("click", async function() {
+        if (await ask('This action cannot be reverted. Are you sure?', { title: 'Delete Wallet', type: 'warning' })) {
+          invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent });
+        }
+      });
+
+      path2 = document.createElementNS('http://www.w3.org/2000/svg', `path`);
+      path2.setAttribute("d", "M7.35547 6H6.35547V12H7.35547V6Z M10.3555 6H9.35547V12H10.3555V6Z M2.35547 3V4H3.35547V14C3.35547 14.2652 3.46083 14.5196 3.64836 14.7071C3.8359 14.8946 4.09025 15 4.35547 15H12.3555C12.6207 15 12.875 14.8946 13.0626 14.7071C13.2501 14.5196 13.3555 14.2652 13.3555 14V4H14.3555V3H2.35547ZM4.35547 14V4H12.3555V14H4.35547Z M10.3555 1H6.35547V2H10.3555V1Z");
+
+      outputfieldiconcopy.appendChild(path1);
+      outputfieldicondelete.appendChild(path2);
+      outputgroup.appendChild(outputfield);
+      outputgroup.appendChild(outputfieldiconcopy);
+      outputgroup.appendChild(outputfieldicondelete);
+      halfrow.appendChild(label);
+      halfrow.appendChild(outputgroup);
+      row.appendChild(halfrow);
+    }
+    document.getElementById("page-wallet-list").appendChild(row);
+    adet = adet - 2;
+  }
+}
+
+function showLoadingAnimation() {
+  document.querySelector(".all-wrapper").style.setProperty("pointer-events", "none");
+  document.querySelector(".all-wrapper").style.setProperty("display", "none");
+  document.querySelector(".boxes").style.setProperty("display", "unset");
+}
+function hideLoadingAnimation() {
+  document.querySelector(".boxes").style.setProperty("display", "none");
+  document.querySelector(".all-wrapper").style.removeProperty("display");
+  document.querySelector(".all-wrapper").style.removeProperty("pointer-events");
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -262,10 +338,30 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log("recover wallet")
       }
       else if (page == "See Wallets") {
+        // if password is correct, change the page
         changePage('page-content/wallets.html');
+        invoke("show_wallets");
       }
       else if (page == "Create Wallet") {
         invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, password: document.querySelectorAll(".each-input-field")[1].value });
+      }
+    }
+
+    if (document.querySelector(".page-manage-node-buttons").contains(e.target)) {
+      if (document.querySelectorAll(".each-page-manage-node-button")[0].contains(e.target)) {
+        console.log("start node");
+      }
+      else if (document.querySelectorAll(".each-page-manage-node-button")[1].contains(e.target)) {
+        console.log("stop node");
+      }
+      else if (document.querySelectorAll(".each-page-manage-node-button")[2].contains(e.target)) {
+        console.log("restart node");
+      }
+      else if (document.querySelectorAll(".each-page-manage-node-button")[3].contains(e.target)) {
+        console.log("update node");
+      }
+      else if (document.querySelector(".delete-node-button").contains(e.target)) {
+        console.log("delete node");
       }
     }
   });
