@@ -29,7 +29,14 @@
         "removeDir": true,
         "removeFile": true,
         "renameFile": true,
-        "scope": ["**"]
+        "scope": [
+          "**"
+        ]
+      },
+      "dialog": {
+        "all": true,
+        "open": true,
+        "save": true
       },
       "shell": {
         "all": false,

@@ -1,20 +1,27 @@
 const { invoke } = window.__TAURI__.tauri;
 const { writeText } = window.__TAURI__.clipboard;
 const { readTextFile, writeFile } = window.__TAURI__.fs;
+const { message } = window.__TAURI__.dialog;
 const contentOfPage = document.getElementById('content-of-page');
 let ipAddresses;
 let notifications;
 
-invoke('create_wallet', { walletname: 'test', password: 'test' });
-
 function updateCpuMem(cpu, mem) {
   charts_to_update[1].update(Math.floor(mem));
   document.querySelectorAll('.each-page-chart-percentage')[1].textContent = Math.floor(mem) + "%";
-  
+
   if (cpu < 100) {
     charts_to_update[2].update(Math.floor(cpu));
     document.querySelectorAll('.each-page-chart-percentage')[2].textContent = Math.floor(cpu) + "%";
   }
+}
+
+function showCreatedWallet(name, address, mnemonic) {
+  message("Wallet name: " + name + "\n Address: " + address + "\n Mnemonic: " + mnemonic, { title: "Wallet created", type: "info" });
+  document.querySelectorAll(".each-input-field")[0].value = "";
+  document.querySelectorAll(".each-input-field")[1].value = "";
+
+  // wallet listesini güncelle
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -41,7 +48,6 @@ window.addEventListener('DOMContentLoaded', () => {
       .catch(err => console.log(err));
   }
 
-  invoke("cpu_mem_start_stop", { a: true });
   changePage('page-content/node-operations.html')
 
   const validatorAddress = document.querySelector(".sidebar-info-details-copy");
@@ -177,14 +183,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
       readTextFile("notifications.json").then((data) => {
         notifications = JSON.parse(data);
-    
+
         // <div class="each-header-submenu-notifications-item">
         //   <span class="each-notification-icon"></span>
         //   <div class="each-notification-content">Example notification</div>
         // </div>
 
         submenuNotifications.innerHTML = "";
-    
+
         for (let i = notifications.length - 1; 0 < i; i--) {
           notificationItem = document.createElement("div");
           notificationItem.setAttribute("class", "each-header-submenu-notifications-item");
@@ -216,6 +222,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
     else if (logoutButton.contains(e.target)) {
+      invoke("cpu_mem_stop", { a: true });
       window.location.href = "../index.html";
     }
     else {
@@ -258,7 +265,7 @@ window.addEventListener('DOMContentLoaded', () => {
         changePage('page-content/wallets.html');
       }
       else if (page == "Create Wallet") {
-        console.log("wallets")
+        invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, password: document.querySelectorAll(".each-input-field")[1].value });
       }
     }
   });

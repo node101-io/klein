@@ -9,15 +9,15 @@ use std::path::Path;
 use std::io::BufReader;
 use std::thread;
 use std::time;
+use serde_json::Value;
 
 //SESSION OPERATIONS
 struct SessionManager {
     open_session: Session,
-    stop_cpu_mem:bool
+    stop_cpu_mem: bool,
 }
 
 static mut GLOBAL_STRUCT: Option<SessionManager> = None;
-
 
 fn create_session(session: Session) -> SessionManager {
     let mut alive_session = SessionManager {
@@ -98,10 +98,10 @@ fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>> wher
 }
 
 #[tauri::command]
-fn cpu_mem_start_stop(a: bool) {
+fn cpu_mem_stop(a: bool) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
-            (my_boxed_session).stop_cpu_mem= a;
+            my_boxed_session.stop_cpu_mem = a;
         }
     }
 }
@@ -115,9 +115,10 @@ fn cpu_mem(window: tauri::Window) -> String {
                 let mut channel = my_boxed_session.open_session.channel_session().unwrap();
                 channel.shell().unwrap();
                 let mut stream = channel.stream(0);
-                my_boxed_session.stop_cpu_mem = false; 
+                my_boxed_session.stop_cpu_mem = false;
 
                 loop {
+                    println!("{:?}", my_boxed_session.stop_cpu_mem);
                     if my_boxed_session.stop_cpu_mem {
                         break;
                     }
@@ -340,21 +341,41 @@ async fn install_node(moniker_name: String, node_name: String, window: tauri::Wi
 
 //Should give first wallet's password if created before.
 #[tauri::command(async)]
-fn create_wallet(walletname: String, password: String) -> String {
+fn create_wallet(walletname: String, password: String, window: tauri::Window) -> String {
     unsafe {
         if GLOBAL_STRUCT.is_some() {
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
                 let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-                println!("asdf");
                 let mut s = String::new();
+                // print the parameters
+                println!("walletname: {} password: {}", walletname, password);
                 channel
+                    // .exec(
+                    //     "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"password\" | tgrade keys add walletname --output json"
+                    // )
+                    // use parameters
                     .exec(
-                        "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"deneme11\" | tgrade keys add something --output json"
+                        &*format!(
+                            "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{}\" | lavad keys add {} --output json", // TODO: PASSWORD MAY INCLUDE \ AND SHOULD BE HANDLED
+                            password,
+                            walletname
+                        )
                     )
                     .unwrap();
                 channel.read_to_string(&mut s).unwrap();
                 println!("{}", s);
-                println!("done probably");
+                // parse as json and get the address
+                let v: Value = serde_json::from_str(&s).unwrap();
+                println!("{}", v["address"].to_string());
+
+                let func = format!(
+                    "window['showCreatedWallet']('{}', '{}', '{}')",
+                    v["name"].to_string(),
+                    v["address"].to_string(),
+                    v["mnemonic"].to_string()
+                );
+                window.eval(&func).unwrap();
+
                 String::from("NICE")
             } else {
                 String::from("ah fuck")
@@ -438,7 +459,7 @@ async fn vote(
 }
 
 #[tauri::command]
-async fn start_node(node_name: String) -> String{
+async fn start_node(node_name: String) -> String {
     unsafe {
         if GLOBAL_STRUCT.is_some() {
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
@@ -461,7 +482,7 @@ async fn start_node(node_name: String) -> String{
 }
 
 #[tauri::command]
-async fn stop_node(node_name: String) -> String{
+async fn stop_node(node_name: String) -> String {
     unsafe {
         if GLOBAL_STRUCT.is_some() {
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
@@ -484,7 +505,7 @@ async fn stop_node(node_name: String) -> String{
 }
 
 #[tauri::command]
-async fn restart_node(node_name: String) -> String{
+async fn restart_node(node_name: String) -> String {
     unsafe {
         if GLOBAL_STRUCT.is_some() {
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
@@ -505,7 +526,6 @@ async fn restart_node(node_name: String) -> String{
         }
     }
 }
-
 
 #[tauri::command]
 async fn unjail(node_name: String, wallet_name: String, password: String, fees: String) -> String {
@@ -559,7 +579,7 @@ fn main() {
                 log_in,
                 log_out,
                 cpu_mem,
-                cpu_mem_start_stop,
+                cpu_mem_stop,
                 node_info,
                 am_i_logged_out,
                 current_node,
