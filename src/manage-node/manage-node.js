@@ -73,7 +73,7 @@ function showWallets(list) {
       });
 
       path2 = document.createElementNS('http://www.w3.org/2000/svg', `path`);
-      path2.setAttribute("d", "M7.35547 6H6.35547V12H7.35547V6Z M10.3555 6H9.35547V12H10.3555V6Z M2.35547 3V4H3.35547V14C3.35547 14.2652 3.46083 14.5196 3.64836 14.7071C3.8359 14.8946 4.09025 15 4.35547 15H12.3555C12.6207 15 12.875 14.8946 13.0626 14.7071C13.2501 14.5196 13.3555 14.2652 13.3555 14V4H14.3555V3H2.35547ZM4.35547 14V4H12.3555V14H4.35547Z M10.3555 1H6.35547V2H10.3555V1Z");
+      path2.setsetAttribute("d", "M7.35547 6H6.35547V12H7.35547V6Z M10.3555 6H9.35547V12H10.3555V6Z M2.35547 3V4H3.35547V14C3.35547 14.2652 3.46083 14.5196 3.64836 14.7071C3.8359 14.8946 4.09025 15 4.35547 15H12.3555C12.6207 15 12.875 14.8946 13.0626 14.7071C13.2501 14.5196 13.3555 14.2652 13.3555 14V4H14.3555V3H2.35547ZM4.35547 14V4H12.3555V14H4.35547Z M10.3555 1H6.35547V2H10.3555V1Z");
 
       outputfieldiconcopy.appendChild(path1);
       outputfieldicondelete.appendChild(path2);
@@ -349,20 +349,139 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (document.querySelector(".page-manage-node-buttons").contains(e.target)) {
       if (document.querySelectorAll(".each-page-manage-node-button")[0].contains(e.target)) {
-        console.log("start node");
+        start_node();
       }
       else if (document.querySelectorAll(".each-page-manage-node-button")[1].contains(e.target)) {
-        console.log("stop node");
+        stop_node();
       }
       else if (document.querySelectorAll(".each-page-manage-node-button")[2].contains(e.target)) {
-        console.log("restart node");
+        restart_node();
       }
       else if (document.querySelectorAll(".each-page-manage-node-button")[3].contains(e.target)) {
-        console.log("update node");
+        update_node();
       }
       else if (document.querySelector(".delete-node-button").contains(e.target)) {
-        console.log("delete node");
+        remove_node();
       }
     }
   });
 });
+
+function loadNewPage(pagename) {
+  window.location.href = pagename;
+}
+
+function logout(){
+  invoke("log_out");
+}
+
+function cpu_mem(){
+  invoke("cpu_mem");
+}
+
+function current_node(){
+  invoke("current_node").then((res)=>{
+    console.log(res);
+  }).catch((e)=>{
+    console.log(e);
+  });
+}
+
+function logged_out(){
+  invoke("am_i_logged_out");
+}
+
+function node_info(){
+  invoke("node_info")
+  .then((res) => {
+    console.log(res);
+  }).catch((e)=>{
+    console.log("oy hata.");
+  }); 
+}
+
+function install_node(){
+  invoke("install_node",{monikerName:"haciabi",nodeName:"lava"}).then((res) => {
+    console.log(res);
+  }).catch((e)=>{
+    console.log("oy hata.");
+  });
+
+}
+
+function show_wallets(){
+  invoke("show_wallets")
+  .then((res) => {
+    console.log(res);
+  }).catch((e)=>{
+    console.log(e);
+  }); 
+}
+
+function create_wallet(){
+  invoke("create_wallet",{walletName:"modapalas"})
+  .then((res) => {
+    console.log(res);
+  }).catch((e)=>{
+    console.log(e);
+  }); 
+}
+
+function delete_wallet(){
+  invoke("delete_wallet",{walletName:"modapalas"})
+  .then((res) => {
+    console.log(res);
+  }).catch((e)=>{
+    console.log(e);
+  }); 
+}
+
+function start_node(){
+  invoke("start_node",{nodeName: "tgrade"}).
+  then((res)=>{
+  console.log(res);
+  }).catch((e)=>{
+    console.log(e);
+  });
+}
+
+function stop_node(){
+  invoke("stop_node",{nodeName: "tgrade"}).
+  then((res)=>{
+  console.log(res);
+  }).catch((e)=>{
+    console.log(e);
+  });
+}
+
+function restart_node(){
+  invoke("restart_node",{nodeName: "tgrade"}).
+  then((res)=>{
+  console.log(res);
+  }).catch((e)=>{
+    console.log(e);
+  });
+}
+
+function remove_node(){
+  console.log("remove_node function is called i guess.");
+  invoke("remove_node",{nodeName: "tgrade"})
+  .then((res)=>{
+  console.log(res);
+  })
+  .catch((e)=>{
+    console.log(e);
+  });
+}
+
+function update_node(){
+  console.log("update_node function is called i guess.");
+  invoke("update_node",{nodeName: "tgrade"})
+  .then((res)=>{
+  console.log(res);
+  })
+  .catch((e)=>{
+    console.log(e);
+  });
+}
+
