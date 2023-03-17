@@ -5,6 +5,15 @@ const { message, ask } = window.__TAURI__.dialog;
 const contentOfPage = document.getElementById('content-of-page');
 let ipAddresses;
 let notifications;
+let projectInfo;
+
+readTextFile("node-info-to-display.json").then((data) => {
+  projectInfo = JSON.parse(data);
+  document.querySelector(".sidebar-info-details-name").textContent = projectInfo.project;
+  document.querySelector(".sidebar-info-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
+  document.querySelector(".header-node-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
+  document.querySelector(".header-menu-ip-list-button-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
+});
 
 function updateCpuMem(cpu, mem) {
   charts_to_update[1].update(Math.floor(mem));
@@ -19,15 +28,15 @@ function updateCpuMem(cpu, mem) {
 function showCreatedWallet(mnemonic) {
   message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" });
   document.querySelectorAll(".each-input-field")[0].value = "";
-  document.querySelectorAll(".each-input-field")[1].value = "";
 
   invoke("show_wallets");
 }
 
 function showWallets(list) {
+  console.log(list);
   document.getElementById("page-wallet-list").innerHTML = "";
   let adet = list.length;
-  
+
   while (adet > 0) {
     row = document.createElement("div");
     row.setAttribute("class", "each-row");
@@ -52,11 +61,11 @@ function showWallets(list) {
       outputfield.setAttribute("class", "each-output-field");
       outputfield.textContent = list[adet - i - 1].address.substring(0, 4) + "..." + list[adet - i - 1].address.substring(list[adet - i - 1].address.length - 4);
       outputfield.setAttribute("title", list[adet - i - 1].address);
-      
+
       outputfieldiconcopy = document.createElementNS('http://www.w3.org/2000/svg', "svg");
       outputfieldiconcopy.setAttribute("class", "each-output-field-icon-copy");
       outputfieldiconcopy.setAttribute("viewBox", "0 0 17 16");
-      outputfieldiconcopy.addEventListener("click", function() {
+      outputfieldiconcopy.addEventListener("click", function () {
         writeText(this.previousSibling.title);
       });
 
@@ -66,14 +75,14 @@ function showWallets(list) {
       outputfieldicondelete = document.createElementNS('http://www.w3.org/2000/svg', "svg");
       outputfieldicondelete.setAttribute("class", "each-output-field-icon-delete");
       outputfieldicondelete.setAttribute("viewBox", "0 0 17 16");
-      outputfieldicondelete.addEventListener("click", async function() {
+      outputfieldicondelete.addEventListener("click", async function () {
         if (await ask('This action cannot be reverted. Are you sure?', { title: 'Delete Wallet', type: 'warning' })) {
           invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent });
         }
       });
 
       path2 = document.createElementNS('http://www.w3.org/2000/svg', `path`);
-      path2.setsetAttribute("d", "M7.35547 6H6.35547V12H7.35547V6Z M10.3555 6H9.35547V12H10.3555V6Z M2.35547 3V4H3.35547V14C3.35547 14.2652 3.46083 14.5196 3.64836 14.7071C3.8359 14.8946 4.09025 15 4.35547 15H12.3555C12.6207 15 12.875 14.8946 13.0626 14.7071C13.2501 14.5196 13.3555 14.2652 13.3555 14V4H14.3555V3H2.35547ZM4.35547 14V4H12.3555V14H4.35547Z M10.3555 1H6.35547V2H10.3555V1Z");
+      path2.setAttribute("d", "M7.35547 6H6.35547V12H7.35547V6Z M10.3555 6H9.35547V12H10.3555V6Z M2.35547 3V4H3.35547V14C3.35547 14.2652 3.46083 14.5196 3.64836 14.7071C3.8359 14.8946 4.09025 15 4.35547 15H12.3555C12.6207 15 12.875 14.8946 13.0626 14.7071C13.2501 14.5196 13.3555 14.2652 13.3555 14V4H14.3555V3H2.35547ZM4.35547 14V4H12.3555V14H4.35547Z M10.3555 1H6.35547V2H10.3555V1Z");
 
       outputfieldiconcopy.appendChild(path1);
       outputfieldicondelete.appendChild(path2);
@@ -343,25 +352,59 @@ window.addEventListener('DOMContentLoaded', () => {
         invoke("show_wallets");
       }
       else if (page == "Create Wallet") {
-        invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, password: document.querySelectorAll(".each-input-field")[1].value });
+        invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, password: "s" });
       }
     }
 
-    if (document.querySelector(".page-manage-node-buttons").contains(e.target)) {
+    if (document.querySelector(".page-manage-node-buttons") && document.querySelector(".page-manage-node-buttons").contains(e.target)) {
       if (document.querySelectorAll(".each-page-manage-node-button")[0].contains(e.target)) {
-        start_node();
+        // START NODE
+        invoke("start_node").
+          then((res) => {
+            console.log(res);
+          }).catch((e) => {
+            console.log(e);
+          });
       }
       else if (document.querySelectorAll(".each-page-manage-node-button")[1].contains(e.target)) {
-        stop_node();
+        // STOP NODE
+        invoke("stop_node").
+          then((res) => {
+            console.log(res);
+          }).catch((e) => {
+            console.log(e);
+          });
       }
       else if (document.querySelectorAll(".each-page-manage-node-button")[2].contains(e.target)) {
-        restart_node();
+        // RESTART NODE
+        invoke("restart_node").
+          then((res) => {
+            console.log(res);
+          }).catch((e) => {
+            console.log(e);
+          });
       }
       else if (document.querySelectorAll(".each-page-manage-node-button")[3].contains(e.target)) {
-        update_node();
+        // UPDATE NODE
+        console.log("update_node function is called i guess.");
+        invoke("update_node")
+          .then((res) => {
+            console.log(res);
+          })
+          .catch((e) => {
+            console.log(e);
+          });
       }
       else if (document.querySelector(".delete-node-button").contains(e.target)) {
-        remove_node();
+        // DELETE NODE
+        console.log("remove_node function is called i guess.");
+        invoke("remove_node")
+          .then((res) => {
+            console.log(res);
+          })
+          .catch((e) => {
+            console.log(e);
+          });
       }
     }
   });
@@ -371,117 +414,28 @@ function loadNewPage(pagename) {
   window.location.href = pagename;
 }
 
-function logout(){
-  invoke("log_out");
-}
-
-function cpu_mem(){
-  invoke("cpu_mem");
-}
-
-function current_node(){
-  invoke("current_node").then((res)=>{
+function current_node() {
+  invoke("current_node").then((res) => {
     console.log(res);
-  }).catch((e)=>{
+  }).catch((e) => {
     console.log(e);
   });
 }
 
-function logged_out(){
-  invoke("am_i_logged_out");
-}
-
-function node_info(){
+function node_info() {
   invoke("node_info")
-  .then((res) => {
+    .then((res) => {
+      console.log(res);
+    }).catch((e) => {
+      console.log("oy hata.");
+    });
+}
+
+function install_node() {
+  invoke("install_node", { monikerName: "haciabi", nodeName: "lava" }).then((res) => {
     console.log(res);
-  }).catch((e)=>{
+  }).catch((e) => {
     console.log("oy hata.");
-  }); 
-}
-
-function install_node(){
-  invoke("install_node",{monikerName:"haciabi",nodeName:"lava"}).then((res) => {
-    console.log(res);
-  }).catch((e)=>{
-    console.log("oy hata.");
   });
 
 }
-
-function show_wallets(){
-  invoke("show_wallets")
-  .then((res) => {
-    console.log(res);
-  }).catch((e)=>{
-    console.log(e);
-  }); 
-}
-
-function create_wallet(){
-  invoke("create_wallet",{walletName:"modapalas"})
-  .then((res) => {
-    console.log(res);
-  }).catch((e)=>{
-    console.log(e);
-  }); 
-}
-
-function delete_wallet(){
-  invoke("delete_wallet",{walletName:"modapalas"})
-  .then((res) => {
-    console.log(res);
-  }).catch((e)=>{
-    console.log(e);
-  }); 
-}
-
-function start_node(){
-  invoke("start_node",{nodeName: "tgrade"}).
-  then((res)=>{
-  console.log(res);
-  }).catch((e)=>{
-    console.log(e);
-  });
-}
-
-function stop_node(){
-  invoke("stop_node",{nodeName: "tgrade"}).
-  then((res)=>{
-  console.log(res);
-  }).catch((e)=>{
-    console.log(e);
-  });
-}
-
-function restart_node(){
-  invoke("restart_node",{nodeName: "tgrade"}).
-  then((res)=>{
-  console.log(res);
-  }).catch((e)=>{
-    console.log(e);
-  });
-}
-
-function remove_node(){
-  console.log("remove_node function is called i guess.");
-  invoke("remove_node",{nodeName: "tgrade"})
-  .then((res)=>{
-  console.log(res);
-  })
-  .catch((e)=>{
-    console.log(e);
-  });
-}
-
-function update_node(){
-  console.log("update_node function is called i guess.");
-  invoke("update_node",{nodeName: "tgrade"})
-  .then((res)=>{
-  console.log(res);
-  })
-  .catch((e)=>{
-    console.log(e);
-  });
-}
-

@@ -15,14 +15,18 @@ readTextFile("ipaddresses.json").then((data) => {
 });
 
 // Functions to be called from Rust
-function loadNewPage(pagename, remember) {
-  if (remember && ipAddresses.some((ip) => ip.ip == document.getElementById("ip-input").value)) {
+function loadNewPage(pagename, remember, project) {
+  if (ipAddresses.some((ip) => ip.ip == document.getElementById("ip-input").value)) {
+    ipAddresses.find((ip) => ip.ip == document.getElementById("ip-input").value).icon = project.charAt(0).toUpperCase() + project.slice(1, project.length - 1);
+    // writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
+  } else if (remember) {
     ipAddresses.push({
       ip: document.getElementById("ip-input").value,
-      icon: "",
+      icon: project.charAt(0).toUpperCase() + project.slice(1, project.length - 1)
     });
     writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
   }
+  writeFile("node-info-to-display.json", `{"ip": "${document.getElementById('ip-input').value}", "project": "${project.charAt(0).toUpperCase() + project.slice(1, project.length - 1)}"}`);
   hideLoadingAnimation();
   window.location.href = pagename;
 }
@@ -45,11 +49,11 @@ function hideLoadingAnimation() {
 function showSelectedItem(ip, icon) {
   let ipInputEl = document.getElementById("ip-input");
   let selectedItemEl = document.getElementById("selected-item");
-  
+
   ipInputEl.value = ip
   ipInputEl.style.setProperty("display", "none");
   selectedItemEl.style.setProperty("display", "flex");
-  selectedItemEl.children[0].src = `assets/${icon.toLowerCase()}.png`;
+  selectedItemEl.children[0].src = `assets/projects/${icon.toLowerCase()}.png`;
   selectedItemEl.children[1].textContent = icon;
   selectedItemEl.children[2].textContent = ip;
 }
@@ -75,8 +79,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   dropdownToggleEl.src = ARROWHEAD_DOWN;
   new MutationObserver(() => { dropdownToggleEl.src = (autocompleteListEl.innerHTML == "") ? ARROWHEAD_DOWN : ARROWHEAD_UP; }).observe(autocompleteListEl, { childList: true });
-  
-  ipInputEl.addEventListener("keydown", function(e) {
+
+  ipInputEl.addEventListener("keydown", function (e) {
     x = document.querySelectorAll(".each-autocomplete-item");
     if (e.keyCode == 40) {
       focusedIndex++;
@@ -91,19 +95,19 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  ipInputEl.addEventListener("input", function() {
+  ipInputEl.addEventListener("input", function () {
     autocompleteListEl.innerHTML = "";
     focusedIndex = 0;
     for (let i = 0; i < ipAddresses.length; i++) {
       if (ipAddresses[i].ip.toLowerCase().includes(ipInputEl.value.toLowerCase()) || ipAddresses[i].icon.toLowerCase().includes(ipInputEl.value.toLowerCase())) {
         div = document.createElement("div");
         div.setAttribute("class", "each-autocomplete-item");
-        div.addEventListener("click", function() {
+        div.addEventListener("click", function () {
           showSelectedItem.call(this, ipAddresses[i].ip, ipAddresses[i].icon);
         });
         img = document.createElement("img");
         img.setAttribute("class", "each-autocomplete-item-icon");
-        img.setAttribute("src", `assets/${ipAddresses[i].icon.toLowerCase()}.png`);
+        img.setAttribute("src", `assets/projects/${ipAddresses[i].icon.toLowerCase()}.png`);
         div1 = document.createElement("div");
         div1.textContent = ipAddresses[i].icon;
         div2 = document.createElement("div");
@@ -117,19 +121,19 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  selectedItemEl.addEventListener("click", function() {
+  selectedItemEl.addEventListener("click", function () {
     selectedItemEl.style.setProperty("display", "none");
     ipInputEl.style.removeProperty("display");
     ipInputEl.focus();
   });
 
   visibilityToggleEl.src = EYE_OFF;
-  visibilityToggleEl.addEventListener("click", function() {
-      passwordInputEl.type = passwordInputEl.type == "password" ? "text" : "password";
-      visibilityToggleEl.src = passwordInputEl.type == "password" ? EYE_OFF : EYE_ON;
+  visibilityToggleEl.addEventListener("click", function () {
+    passwordInputEl.type = passwordInputEl.type == "password" ? "text" : "password";
+    visibilityToggleEl.src = passwordInputEl.type == "password" ? EYE_OFF : EYE_ON;
   });
 
-  loginButtonEl.addEventListener("click", function() {
+  loginButtonEl.addEventListener("click", function () {
     if (ipInputEl.value == "" || passwordInputEl.value == "") {
       showLoginError();
     }
