@@ -380,15 +380,14 @@ fn update_wallet_password(passw: String) {
 
 //Should give first wallet's password if created before.
 #[tauri::command(async)]
-fn create_wallet(walletname: String, overwrite: bool, window: tauri::Window) {
+fn create_wallet(walletname: String, window: tauri::Window) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let mut s = String::new();
             channel
-                .exec(&*format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{}\" {} | {} keys add {} --output json;",
+                .exec(&*format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{}\" | {} keys add {} --output json;",
                 my_boxed_session.walletpassword,
-                if overwrite { "yes" } else { "" },
                 GLOBAL_STRUCT.as_mut().unwrap().existing_node, walletname))
                 .unwrap();
             channel.read_to_string(&mut s).unwrap();
@@ -439,21 +438,6 @@ fn delete_wallet(walletname: String, window: tauri::Window) {
         }
     }
 }
-
-// #[tauri::command]
-// async fn recover_wallet(wallet_name:String,password:String) -> Result<String,String> {
-//     Ok(("stuff"))
-// }
-
-// #[tauri::command(async)]
-// fn vote(
-//     wallet_name: String,
-//     proposoal_num: String,
-//     mnemonic: String,
-//     option: String,
-// ) -> Result<String, String> {
-//     Ok("Should print result, in a json if possible.".into())
-// }
 
 #[tauri::command(async)]
 fn start_node() -> String {
@@ -522,15 +506,47 @@ fn unjail(password: String, fees: String) {
     }
 }
 
-// #[tauri::command(async)]
-// fn send_token(
-//     wallet_name: String,
-//     receiver_address: String,
-//     amount: String,
-//     password: String,
-// ) -> Result<String, String> {
-//     Ok("Will send token".into())
-// }
+#[tauri::command]
+async fn recover_wallet(wallet_name:String,password:String) -> String{
+String::from("asdasd")
+    
+}
+
+#[tauri::command(async)]
+fn vote(wallet_name: String, password:String, proposal_num: String, option: String)  {
+    unsafe{
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref(){
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+    
+            let command: String = format!("yes \"{password}\" $EXECUTE tx gov vote {proposal_num} {option} --from {wallet_name} --chain-id=$CHAIN_ID -y");
+
+            channel.exec(&command).unwrap();
+            let mut s = String::new();
+            channel.read_to_string(&mut s).unwrap();
+            println!("{}", s);
+            channel.close().unwrap();
+            }
+        }
+    
+}
+
+#[tauri::command(async)]
+fn send_token(wallet_name: String, receiver_address: String, amount: String, password: String,) {
+    unsafe{
+    if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref(){
+        let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+
+        let command: String = format!("yes \"{password}\" $EXECUTE tx bank send {wallet_name} {receiver_address} {amount}$DENOM -y");
+
+        channel.exec(&command).unwrap();
+        let mut s = String::new();
+        channel.read_to_string(&mut s).unwrap();
+        println!("{}", s);
+        channel.close().unwrap();
+        }
+    }
+}
+
 
 fn main() {
     tauri::Builder::default()
@@ -560,7 +576,10 @@ fn main() {
             systemctl_statusnode,
             remove_node,
             update_node,
-            update_wallet_password
+            update_wallet_password,
+            send_token,
+            recover_wallet,
+            vote
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
