@@ -24,9 +24,9 @@ function loadNewPage(pagename, remember, project) {
       ip: document.getElementById("ip-input").value,
       icon: project.charAt(0).toUpperCase() + project.slice(1, project.length - 1)
     });
-    writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
+    // writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
   }
-  writeFile("node-info-to-display.json", `{"ip": "${document.getElementById('ip-input').value}", "project": "${project.charAt(0).toUpperCase() + project.slice(1, project.length - 1)}"}`);
+  // writeFile("node-info-to-display.json", `{"ip": "${document.getElementById('ip-input').value}", "project": "${project.charAt(0).toUpperCase() + project.slice(1, project.length - 1)}"}`);
   hideLoadingAnimation();
   window.location.href = pagename;
 }
@@ -139,7 +139,8 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     else {
       showLoadingAnimation();
-      invoke("log_in", { ip: ipInputEl.value, password: passwordInputEl.value, remember: checkboxInputEl.checked });
+      // invoke("log_in", { ip: ipInputEl.value, password: passwordInputEl.value, remember: checkboxInputEl.checked });
+      invoke("log_in", { ip: ipInputEl.value, password: "node101bos", remember: checkboxInputEl.checked });
     }
   });
 

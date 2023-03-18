@@ -26,6 +26,7 @@ function updateCpuMem(cpu, mem) {
 }
 
 function showCreatedWallet(mnemonic) {
+  console.log("hey");
   message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" });
   document.querySelectorAll(".each-input-field")[0].value = "";
 
@@ -347,12 +348,13 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log("recover wallet")
       }
       else if (page == "See Wallets") {
-        // if password is correct, change the page
+        invoke("update_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value });
         changePage('page-content/wallets.html');
         invoke("show_wallets");
       }
       else if (page == "Create Wallet") {
-        invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, password: "s" });
+        console.log("create wallet")
+        invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value });
       }
     }
 
