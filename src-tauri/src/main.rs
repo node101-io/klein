@@ -100,7 +100,6 @@ fn cpu_mem_stop(a: bool) {
 
 #[tauri::command(async)]
 async fn cpu_mem(window: tauri::Window) {
-
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             loop {
@@ -170,7 +169,6 @@ async fn current_node() {
                 let vec: Vec<&str> = s.split("/").collect();
                 let x = *vec.last().unwrap();
                 GLOBAL_STRUCT.as_mut().unwrap().existing_node = x.trim().to_string();
-               
             }
             channel.close().unwrap();
         }
@@ -179,7 +177,6 @@ async fn current_node() {
 
 #[tauri::command(async)]
 fn update_node(node_name: String) {
-    
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
@@ -383,13 +380,16 @@ fn update_wallet_password(passw: String) {
 
 //Should give first wallet's password if created before.
 #[tauri::command(async)]
-fn create_wallet(walletname: String, window: tauri::Window) {
+fn create_wallet(walletname: String, overwrite: bool, window: tauri::Window) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let mut s = String::new();
             channel
-                .exec(&*format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{}\" | {} keys add {} --output json;", my_boxed_session.walletpassword, GLOBAL_STRUCT.as_mut().unwrap().existing_node, walletname)) // bi yes daha ekledim overwrite için (\" ları kaldırırsak gerek kalmaz)
+                .exec(&*format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{}\" {} | {} keys add {} --output json;",
+                my_boxed_session.walletpassword,
+                if overwrite { "yes" } else { "" },
+                GLOBAL_STRUCT.as_mut().unwrap().existing_node, walletname))
                 .unwrap();
             channel.read_to_string(&mut s).unwrap();
             println!("{}", s);
@@ -469,7 +469,6 @@ fn start_node() -> String {
         } else {
             String::from("Problem")
         }
-
     }
 }
 

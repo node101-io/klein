@@ -353,8 +353,17 @@ window.addEventListener('DOMContentLoaded', () => {
         invoke("show_wallets");
       }
       else if (page == "Create Wallet") {
-        console.log("create wallet")
-        invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value });
+        document.querySelectorAll(".each-input-label").forEach(async (label) => {
+          console.log(label.innerText);
+          if (label.innerText == document.querySelectorAll(".each-input-field")[0].value) {
+            if (await ask('This action will overwrite the existing wallet. Are you sure?', { title: 'Overwrite Wallet', type: 'warning' })) {
+              invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, overwrite: true });
+            }
+          }
+          else {
+            invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, overwrite: false });
+          }
+        });
       }
     }
 
