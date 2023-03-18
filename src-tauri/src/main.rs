@@ -100,6 +100,7 @@ fn cpu_mem_stop(a: bool) {
 
 #[tauri::command(async)]
 async fn cpu_mem(window: tauri::Window) {
+
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             loop {
@@ -169,13 +170,16 @@ async fn current_node() {
                 let vec: Vec<&str> = s.split("/").collect();
                 let x = *vec.last().unwrap();
                 GLOBAL_STRUCT.as_mut().unwrap().existing_node = x.trim().to_string();
+               
             }
+            channel.close().unwrap();
         }
     }
 }
 
 #[tauri::command(async)]
 fn update_node(node_name: String) {
+    
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
@@ -222,6 +226,7 @@ fn node_info(node_name: String) {
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             println!("{}", s);
+            channel.close().unwrap();
         }
     }
 }
@@ -238,6 +243,7 @@ fn systemctl_statusnode(node_name: String) {
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             println!("{}", s);
+            channel.close().unwrap();
         }
     }
 }
@@ -286,6 +292,7 @@ fn remove_node(node_name: String) {
                 println!("{}", s);
                 print!("Node deleted successfully.");
             }
+            channel.close().unwrap();
         }
     }
 }
@@ -362,6 +369,7 @@ fn install_node(moniker_name: String, net_name: String, node_name: String) {
             } else {
                 println!("setup is not finished");
             }
+            channel.close().unwrap();
         }
     }
 }
@@ -385,10 +393,10 @@ fn create_wallet(walletname: String, window: tauri::Window) {
                 .unwrap();
             channel.read_to_string(&mut s).unwrap();
             println!("{}", s);
-            // parse as json and get the address
             let v: Value = serde_json::from_str(&s).unwrap();
             let func = format!("window.showCreatedWallet('{}')", v["mnemonic"].to_string());
             window.eval(&func).unwrap();
+            channel.close().unwrap();
         }
     }
 }
@@ -409,6 +417,7 @@ fn show_wallets(window: tauri::Window) {
             channel.read_to_string(&mut s).unwrap();
             // println!("{}", s);
             window.eval(&format!("window.showWallets({})", s)).unwrap();
+            channel.close().unwrap();
         }
     }
 }
@@ -424,12 +433,9 @@ fn delete_wallet(walletname: String, window: tauri::Window) {
             channel.exec(&*command).unwrap();
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
-            if s.contains(":") {
-                channel.exec("y").unwrap();
-                channel.read_to_string(&mut s).unwrap();
-            }
             println!("{}", s);
             show_wallets(window.clone());
+            channel.close().unwrap();
         }
     }
 }
@@ -458,10 +464,12 @@ fn start_node() -> String {
             let command: String =
                 format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; systemctl start {nd}");
             channel.exec(&*command).unwrap();
+            channel.close().unwrap();
             String::from("Node started successfully.")
         } else {
             String::from("Problem")
         }
+
     }
 }
 
@@ -474,6 +482,7 @@ fn stop_node() -> String {
             let command: String =
                 format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; systemctl stop {nd}");
             channel.exec(&*command).unwrap();
+            channel.close().unwrap();
             String::from("Node stopped successfully.")
         } else {
             String::from("Problem")
@@ -490,6 +499,7 @@ fn restart_node() {
             let command: String =
                 format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; systemctl restart {nd}");
             channel.exec(&*command).unwrap();
+            channel.close().unwrap();
         }
     }
 }
@@ -508,6 +518,7 @@ fn unjail(password: String, fees: String) {
             channel.read_to_string(&mut s).unwrap();
             println!("{}", s);
             println!("Will return mnemonics if created first, if not then will return a success or anything.");
+            channel.close().unwrap();
         }
     }
 }
