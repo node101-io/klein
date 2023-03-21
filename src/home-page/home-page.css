@@ -80,11 +80,11 @@ body {
 }
 
 .all-header-wrapper {
-  min-height: 92px;
+  height: 92px;
   display: flex;
   padding-left: 5vw;
   padding-right: 5vw;
-  background: var(--second-color);
+  background: rgba(30, 30, 30, 1);
   align-items: center;
 }
 
@@ -107,7 +107,7 @@ body {
 }
 
 .header-node-icon {
-  stroke: var(--divider-color);
+  border-radius: 50%;
   width: 44px;
   height: 44px;
 }
@@ -118,7 +118,7 @@ body {
   right: 0px;
   height: 18px;
   width: 18px;
-  border: var(--second-color) solid 3px;
+  border: rgba(30, 30, 30, 1) solid 3px;
   background-color: var(--main-color);
   border-radius: 50%;
 }
@@ -129,7 +129,6 @@ body {
   font-size: 22px;
   cursor: pointer;
   color: var(--divider-color);
-
 }
 
 .header-language-divider {
@@ -172,6 +171,7 @@ body {
 .header-menu-ip-list-button-icon {
   width: 36px;
   height: 36px;
+  border-radius: 50%;
 }
 
 .header-menu-ip-list-button-details {
@@ -225,12 +225,17 @@ body {
 .header-submenu-ip-list {
   display: none;
   position: absolute;
-  max-height: 240px;
+  max-height: 180px;
   top: 92px;
-  right: calc(5vw + 225px);
+  right: calc(5vw + 216px);
   width: calc(6vw + 200px);
   z-index: 100;
-  overflow: auto;
+  overflow-y: scroll;
+  padding-right: 6px;
+}
+
+.header-submenu-ip-list::-webkit-scrollbar {
+  width: 8px;
 }
 
 .header-submenu-ip-list::-webkit-scrollbar-track {
@@ -256,6 +261,7 @@ body {
   width: 28px;
   height: 28px;
   margin-right: 12px;
+  border-radius: 50%;
 }
 
 .each-header-submenu-ip-list-item-name {
@@ -271,30 +277,30 @@ body {
 }
 
 .header-menu-scroll-background {
-  position: absolute;
   display: none;
-  top: 92px;
-  width: 30px;
-  right: calc(5vw + 210px);
-  z-index: 100;
-}
-
-.each-header-menu-scroll-background-item {
+  position: absolute;
   background-color: var(--fifth-color);
-  width: 30px;
-  height: 60px;
-  z-index: 101;
+  top: 92px;
+  width: 20px;
+  height: 180px;
+  right: calc(5vw + 210px);
+  z-index: 90;
 }
 
 .header-submenu-notifications {
   display: none;
   position: absolute;
+  max-height: 216px;
   top: 92px;
-  max-height: 240px;
-  right: calc(5vw + 225px);
+  right: calc(5vw + 216px);
   width: calc(6vw + 200px);
-  overflow: auto;
   z-index: 100;
+  overflow-y: scroll;
+  padding-right: 6px;
+}
+
+.header-submenu-notifications::-webkit-scrollbar {
+  width: 8px;
 }
 
 .header-submenu-notifications::-webkit-scrollbar-track {
@@ -345,6 +351,7 @@ body {
 }
 
 .nodes-page-wrapper {
+  width: 100%;
   margin-top: 40px;
 }
 
@@ -483,6 +490,16 @@ body {
   margin-top: 20px;
   color: var(--logo-color);
   font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  /* text-align: justify; */
+  /* çalışmıyor */
+  /* text-align-last: left; */
+  /* çalışmıyor */
 }
 
 .project-buttons {
@@ -527,7 +544,7 @@ body {
   width: calc(90vw - 20px);
   height: 3vh;
   background: linear-gradient(180deg, rgba(18, 18, 18, 1) 0%, rgba(18, 18, 18, 0.5) 50%, rgba(18, 18, 18, 0) 100%);
-  z-index: 99;
+  z-index: 89;
 }
 
 .overlay-bottom {

@@ -44,6 +44,13 @@
       },
       "protocol": {
         "all": true
+      },
+      "http": {
+        "all": true,
+        "request": true,
+        "scope": [
+          "https://admin.node101.io/api/*"
+        ]
       }
     },
     "bundle": {

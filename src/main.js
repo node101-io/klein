@@ -1,7 +1,5 @@
 const { invoke } = window.__TAURI__.tauri;
 const { readTextFile, writeFile } = window.__TAURI__.fs;
-const ARROWHEAD_UP = "assets/arrowhead-up.png";
-const ARROWHEAD_DOWN = "assets/arrowhead-down.png";
 const EYE_ON = "assets/eye-on.png";
 const EYE_OFF = "assets/eye-off.png";
 let focusedIndex;
@@ -71,14 +69,39 @@ window.addEventListener("DOMContentLoaded", () => {
   let ipInputEl = document.getElementById("ip-input");
   let passwordInputEl = document.getElementById("password-input");
   let autocompleteListEl = document.getElementById("ip-input-autocomplete-list");
-  let dropdownToggleEl = document.getElementById("menu-toggle");
-  let visibilityToggleEl = document.getElementById("visibility-toggle");
+  let dropdownToggleEl = document.querySelectorAll(".each-login-page-toggle")[0];
+  let visibilityToggleEl1 = document.querySelectorAll(".each-login-page-toggle")[1];
+  let visibilityToggleEl2 = document.querySelectorAll(".each-login-page-toggle")[2];
   let selectedItemEl = document.getElementById("selected-item");
   let loginButtonEl = document.getElementById("login-button");
   let checkboxInputEl = document.getElementById("checkbox-input");
 
-  dropdownToggleEl.src = ARROWHEAD_DOWN;
-  new MutationObserver(() => { dropdownToggleEl.src = (autocompleteListEl.innerHTML == "") ? ARROWHEAD_DOWN : ARROWHEAD_UP; }).observe(autocompleteListEl, { childList: true });
+  new MutationObserver(() => {
+    if (autocompleteListEl.innerHTML == "") {
+      dropdownToggleEl.setAttribute("style", "transform: rotate(0); transition: 0.5s;");
+    }
+    else {
+      dropdownToggleEl.setAttribute("style", "transform: rotate(-180deg); transition: 0.5s;");
+    }
+  }).observe(autocompleteListEl, { childList: true });
+
+  visibilityToggleEl1.addEventListener("click", function () {
+    passwordInputEl.type = passwordInputEl.type == "password" ? "text" : "password";
+  });
+
+  visibilityToggleEl2.addEventListener("click", function () {
+    passwordInputEl.type = passwordInputEl.type == "password" ? "text" : "password";
+  });
+
+  new MutationObserver(() => {
+    if (passwordInputEl.type == "password") {
+      visibilityToggleEl1.setAttribute("style", "display: unset;");
+      visibilityToggleEl2.setAttribute("style", "display: none;");
+    } else {
+      visibilityToggleEl1.setAttribute("style", "display: none;");
+      visibilityToggleEl2.setAttribute("style", "display: unset;");
+    }
+  }).observe(passwordInputEl, { attributes: true });
 
   ipInputEl.addEventListener("keydown", function (e) {
     x = document.querySelectorAll(".each-autocomplete-item");
@@ -127,12 +150,6 @@ window.addEventListener("DOMContentLoaded", () => {
     ipInputEl.focus();
   });
 
-  visibilityToggleEl.src = EYE_OFF;
-  visibilityToggleEl.addEventListener("click", function () {
-    passwordInputEl.type = passwordInputEl.type == "password" ? "text" : "password";
-    visibilityToggleEl.src = passwordInputEl.type == "password" ? EYE_OFF : EYE_ON;
-  });
-
   loginButtonEl.addEventListener("click", function () {
     if (ipInputEl.value == "" || passwordInputEl.value == "") {
       showLoginError();
@@ -145,7 +162,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("click", function (e) {
-    if (e.target == dropdownToggleEl && !dropdownToggleEl.src.includes(ARROWHEAD_UP)) {
+    if (e.target == dropdownToggleEl && !autocompleteListEl.innerHTML) {
       ipInputEl.dispatchEvent(new Event("input", { bubbles: true }));
     }
     else {

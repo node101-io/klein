@@ -1,5 +1,16 @@
 const { invoke } = window.__TAURI__.tauri;
+const { fetch, getClient, Body } = window.__TAURI__.http;
+const { readTextFile, writeFile } = window.__TAURI__.fs;
+
 let ipAddresses;
+let notifications;
+let projects;
+
+readTextFile("node-info-to-display.json").then((data) => {
+  projectInfo = JSON.parse(data);
+  document.querySelector(".header-node-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
+  document.querySelector(".header-menu-ip-list-button-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
+});
 
 // Disable right click:
 // document.addEventListener("contextmenu", event => event.preventDefault());
@@ -18,6 +29,33 @@ window.addEventListener("DOMContentLoaded", () => {
   const scrollbarBackground = document.querySelector(".header-menu-scroll-background");
   const submenuNotifications = document.querySelector(".header-submenu-notifications");
 
+  showTestnetProjects();
+
+  readTextFile("ipaddresses.json").then((data) => {
+    ipAddresses = JSON.parse(data);
+    for (let i = 0; i < ipAddresses.length; i++) {
+      ipListItem = document.createElement("div");
+      ipListItem.setAttribute("class", "each-header-submenu-ip-list-item");
+      ipListItemIcon = document.createElement("img");
+      ipListItemIcon.setAttribute("src", `../assets/projects/${ipAddresses[i].icon.toLowerCase()}.png`);
+      ipListItemIcon.setAttribute("class", "each-header-submenu-ip-list-item-icon");
+      ipListItemName = document.createElement("div");
+      ipListItemName.setAttribute("class", "each-header-submenu-ip-list-item-name");
+      ipListItemName.innerText = ipAddresses[i].icon;
+      ipListItemIp = document.createElement("div");
+      ipListItemIp.setAttribute("class", "each-header-submenu-ip-list-item-ip");
+      ipListItemIp.innerText = ipAddresses[i].ip;
+      ipListItem.appendChild(ipListItemIcon);
+      ipListItem.appendChild(ipListItemName);
+      ipListItem.appendChild(ipListItemIp);
+      submenuIpList.appendChild(ipListItem);
+    }
+  });
+
+  readTextFile("notifications.json").then((data) => {
+    notifications = JSON.parse(data);
+  });
+
   testnetTabButton.addEventListener("click", () => {
     testnetTabButton.setAttribute("class", "each-nodes-page-tab active-tab");
     mainnetTabButton.setAttribute("class", "each-nodes-page-tab");
@@ -33,7 +71,6 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   window.addEventListener("click", (e) => {
-    console.log(e.target.parentNode);
     if (nodeIcons.contains(e.target)) {
       if (headerMenu.style.display == "block") {
         headerMenu.setAttribute("style", "display: none;");
@@ -53,21 +90,54 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       else {
         submenuIpList.setAttribute("style", "display: block;");
-        scrollbarBackground.setAttribute("style", "display: block;");
+        scrollbarBackground.setAttribute("style", `display: block; height: ${Math.min(ipAddresses.length, 3) * 60}px;`);
       }
     }
     else if (notificationsButton.contains(e.target)) {
       submenuIpList.setAttribute("style", "display: none;");
+
+      readTextFile("notifications.json").then((data) => {
+        notifications = JSON.parse(data);
+
+        // <div class="each-header-submenu-notifications-item">
+        //   <span class="each-notification-icon"></span>
+        //   <div class="each-notification-content">Example notification</div>
+        // </div>
+
+        submenuNotifications.innerHTML = "";
+
+        for (let i = notifications.length - 1; 0 < i; i--) {
+          notificationItem = document.createElement("div");
+          notificationItem.setAttribute("class", "each-header-submenu-notifications-item");
+          notificationIcon = document.createElement("span");
+          notificationIcon.setAttribute("class", `each-notification-icon${notifications[i].unread ? '' : '-seen'}`);
+          notificationContent = document.createElement("div");
+          notificationContent.setAttribute("class", "each-notification-content");
+          notificationContent.innerText = notifications[i].text;
+          notificationItem.appendChild(notificationIcon);
+          notificationItem.appendChild(notificationContent);
+          submenuNotifications.appendChild(notificationItem);
+        }
+        document.querySelector(".header-node-icon-notification").setAttribute("style", "display: none;");
+        document.querySelector(".each-header-menu-item-notification").setAttribute("style", "display: none;");
+      });
+
+      writeFile("notifications.json", JSON.stringify(notifications.map((notification) => {
+        notification.unread = false;
+        return notification;
+      })));
+
       if (submenuNotifications.style.display == "block") {
         submenuNotifications.setAttribute("style", "display: none;");
         scrollbarBackground.setAttribute("style", "display: none;");
       }
       else {
         submenuNotifications.setAttribute("style", "display: block;");
-        scrollbarBackground.setAttribute("style", "display: block;");
+        scrollbarBackground.setAttribute("style", `display: block; height: ${Math.min(notifications.length, 6) * 36}px;`);
       }
     }
     else if (logoutButton.contains(e.target)) {
+      invoke("cpu_mem_stop", { a: true });
       window.location.href = "../index.html";
     }
     else {
@@ -83,68 +153,129 @@ function loadNewPage(pagename) {
   window.location.href = pagename;
 }
 
-function logout(){
+function logout() {
   invoke("log_out");
 }
 
-function cpu_mem(){
-  invoke("cpu_mem");
-}
+async function showTestnetProjects() {
+  const client = await getClient();
 
-function current_node(){
-  invoke("current_node").then((res)=>{
-    console.log(res);
-  }).catch((e)=>{
-    console.log(e);
+  const authenticate = await client.post('https://admin.node101.io/api/authenticate', {
+    type: 'Json',
+    payload: { key: "" },
   });
+  const projectsData = await client.get('https://admin.node101.io/api/projects', {
+    type: 'Json',
+    headers: {
+      'Cookie': authenticate.headers['set-cookie']
+    }
+  })
+
+  document.getElementById('testnet-tab-content').innerHTML = "";
+  projects = projectsData.data.projects;
+
+  for (let i = 0; i < projects.length; i++) {
+    row = document.createElement("div");
+    row.setAttribute("class", "each-node-page-project");
+
+    //Project Header Part
+    header = document.createElement("div");
+    header.setAttribute("class", "project-header");
+    headerIcon = document.createElement("img");
+    headerIcon.setAttribute("class", "project-icon");
+    headerIcon.setAttribute("src", projects[i].image);
+    header.appendChild(headerIcon);
+    details = document.createElement("div");
+    details.setAttribute("class", "project-details")
+    detailsHeading = document.createElement("div");
+    detailsHeading.setAttribute("class", "project-details-heading");
+    detailsHeading.textContent = projects[i].name;
+    detailsTags = document.createElement("div");
+    detailsTags.setAttribute("class", "project-details-tags");
+    detailsTagsSpan1 = document.createElement("span");
+    // detailsTagsSpan1.setAttribute("class","each-project-detail-tag upcoming-tag");
+    // detailsTagsSpan1.textContent = "Upcoming";
+    detailsTagsSpan1.setAttribute("class", "each-project-detail-tag incentivized-tag");
+    detailsTagsSpan1.textContent = "Incentivized";
+    detailsTagsSpan2 = document.createElement("span");
+    detailsTagsSpan2.setAttribute("class", "each-project-detail-tag active-tag");
+    detailsTagsSpan2.textContent = "Active";
+    detailsTags.appendChild(detailsTagsSpan1);
+    detailsTags.appendChild(detailsTagsSpan2);
+    rating = document.createElement("div");
+    rating.setAttribute("class", "project-rating");
+    ratingHeading = document.createElement("div");
+    ratingHeading.setAttribute("class", "project-rating-heading");
+    ratingHeading.textContent = "Rating"
+    rating.appendChild(ratingHeading);
+    ratingScore = projects[i].rating;
+
+    for (let j = 0; j < 5; j++) {
+      ratingCircle = document.createElement("span");
+      ratingCircle.setAttribute("class", "each-project-rating-value");
+      ratingCircleOn = document.createElement("span");
+      ratingCircleOn.setAttribute("class", "each-project-rating-value-on");
+      if (ratingScore != 0) {
+        ratingCircleOn.setAttribute("style", "display: unset;");
+        ratingScore = ratingScore - 1;
+      } else {
+        ratingCircleOn.setAttribute("style", "display: none;");
+      }
+      ratingCircle.appendChild(ratingCircleOn);
+      rating.appendChild(ratingCircle);
+    }
+
+    details.appendChild(detailsHeading);
+    details.appendChild(detailsTags);
+    details.appendChild(rating);
+    header.appendChild(details);
+    row.appendChild(header);
+
+    //Project Description Part
+    description = document.createElement("div");
+    description.setAttribute("class", "project-description");
+    description.textContent = projects[i].description;
+    row.appendChild(description);
+
+    //Project Buttons Part
+    buttons = document.createElement("div");
+    buttons.setAttribute("class", "project-buttons");
+
+    //Install Button
+    installButton = document.createElement("button");
+    installButton.setAttribute("class", "each-project-button install-button");
+    textDiv = document.createElement("div");
+    textDiv.textContent = "Install Node";
+    installButtonSVG = document.createElementNS('http://www.w3.org/2000/svg', "svg");
+    installButtonSVG.setAttribute("class", "each-project-button-svg");
+    installButtonSVG.setAttribute("width", "14");
+    installButtonSVG.setAttribute("height", "14");
+    installButtonSVG.setAttribute("viewBox", "0 0 14 14");
+    path1 = document.createElementNS('http://www.w3.org/2000/svg', `path`);
+    path1.setAttribute("d", "M 12.656854,8.1649583 11.949748,7.4578515 7.4985105,11.909089 V 0.17818725 H 6.5014899 V 11.909089 L 2.0502527,7.4578515 1.343146,8.1649583 7.0000002,13.821813 Z");
+    installButtonSVG.appendChild(path1);
+    installButton.appendChild(textDiv);
+    installButton.appendChild(installButtonSVG)
+
+    //Discover Button
+    discoverButton = document.createElement("button");
+    discoverButton.setAttribute("class", "each-project-button discover-button");
+    textDiv2 = document.createElement("div");
+    textDiv2.textContent = "Discover Node";
+    discoverButtonSVG = document.createElementNS('http://www.w3.org/2000/svg', "svg");
+    discoverButtonSVG.setAttribute("class", "each-project-button-svg");
+    discoverButtonSVG.setAttribute("width", "10");
+    discoverButtonSVG.setAttribute("height", "10");
+    discoverButtonSVG.setAttribute("viewBox", "0 0 10 10");
+    path2 = document.createElementNS('http://www.w3.org/2000/svg', `path`);
+    path2.setAttribute("d", "M2 0V1H8.295L0 9.295L0.705 10L9 1.705V8H10V0H2Z");
+
+    discoverButtonSVG.appendChild(path2);
+    discoverButton.appendChild(textDiv2);
+    discoverButton.appendChild(discoverButtonSVG)
+    buttons.appendChild(installButton);
+    buttons.appendChild(discoverButton);
+    row.appendChild(buttons);
+    document.getElementById('testnet-tab-content').appendChild(row);
+  }
 }
-
-function logged_out(){
-  invoke("am_i_logged_out");
-}
-
-function node_info(){
-  invoke("node_info")
-  .then((res) => {
-    console.log(res);
-  }).catch((e)=>{
-    console.log("oy hata.");
-  }); 
-}
-
-function install_node(){
-  invoke("install_node",{monikerName:"haciabi",nodeName:"lava"}).then((res) => {
-    console.log(res);
-  }).catch((e)=>{
-    console.log("oy hata.");
-  });
-
-}
-
-function show_wallets(){
-  invoke("show_wallets")
-  .then((res) => {
-    console.log(res);
-  }).catch((e)=>{
-    console.log("oy hata.");
-  }); 
-}
-
-function create_wallet(){
-  invoke("create_wallet",{walletName:"modapalas"})
-  .then((res) => {
-    console.log(res);
-  }).catch((e)=>{
-    console.log("oy hata.");
-  }); 
-}
-
-function delete_wallet(){
-  invoke("delete_wallet",{walletName:"modapalas"})
-  .then((res) => {
-    console.log(res);
-  }).catch((e)=>{
-    console.log("oy hata.");
-  }); 
-}
-

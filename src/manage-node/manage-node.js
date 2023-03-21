@@ -2,7 +2,9 @@ const { invoke } = window.__TAURI__.tauri;
 const { writeText } = window.__TAURI__.clipboard;
 const { readTextFile, writeFile } = window.__TAURI__.fs;
 const { message, ask } = window.__TAURI__.dialog;
+
 const contentOfPage = document.getElementById('content-of-page');
+
 let ipAddresses;
 let notifications;
 let projectInfo;
@@ -14,6 +16,9 @@ readTextFile("node-info-to-display.json").then((data) => {
   document.querySelector(".header-node-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
   document.querySelector(".header-menu-ip-list-button-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
 });
+
+// Disable right click:
+// document.addEventListener("contextmenu", event => event.preventDefault());
 
 function updateCpuMem(cpu, mem) {
   charts_to_update[1].update(Math.floor(mem));
@@ -241,7 +246,7 @@ window.addEventListener('DOMContentLoaded', () => {
     changePage('page-content/node-information.html');
   });
 
-  window.addEventListener("click", (e) => {
+  window.addEventListener("click", async (e) => {
     if (nodeIcons.contains(e.target)) {
       if (headerMenu.style.display == "block") {
         headerMenu.setAttribute("style", "display: none;");
@@ -353,17 +358,21 @@ window.addEventListener('DOMContentLoaded', () => {
         invoke("show_wallets");
       }
       else if (page == "Create Wallet") {
-        document.querySelectorAll(".each-input-label").forEach(async (label) => {
-          console.log(label.innerText);
+        ifOverwrite = false;
+        document.querySelectorAll(".each-input-label").forEach((label) => {
           if (label.innerText == document.querySelectorAll(".each-input-field")[0].value) {
-            if (await ask('This action will overwrite the existing wallet. Are you sure?', { title: 'Overwrite Wallet', type: 'warning' })) {
-              invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, overwrite: true });
-            }
-          }
-          else {
-            invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, overwrite: false });
+            ifOverwrite = true;
           }
         });
+
+        if (ifOverwrite) {
+          if (await ask('This action will overwrite the existing wallet. Are you sure?', { title: 'Overwrite Wallet', type: 'warning' })) {
+            invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, overwrite: true });
+          }
+        }
+        else {
+          invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, overwrite: false });
+        }
       }
     }
 

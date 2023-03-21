@@ -322,8 +322,6 @@ html {
   font-size: 14px;
 }
 
-
-
 /* SIDEBAR */
 .all-sidebar-wrapper {
   display: flex;
@@ -370,6 +368,15 @@ html {
   align-items: center;
   cursor: pointer;
   margin-top: 6px;
+  gap: 8px;
+}
+
+.sidebar-info-details-copy:focus::after {
+  background-color: #0F62FE;
+}
+
+.sidebar-info-details-copy:hover {
+  opacity: 0.8;
 }
 
 .sidebar-info-details-copy-address {
@@ -396,6 +403,11 @@ html {
   margin-bottom: 8px;
   padding: 1px 15px;
   border-radius: 20px;
+  cursor: pointer;
+}
+
+.each-sidebar-tag:hover {
+  opacity: 0.8;
 }
 
 .active-tag {
@@ -419,6 +431,10 @@ html {
   align-items: center;
   margin-bottom: 20px;
   cursor: pointer;
+}
+
+.each-sidebar-button:hover {
+  opacity: 0.8;
 }
 
 .each-sidebar-button-icon {
@@ -487,6 +503,10 @@ html {
   margin-right: 16px;
 }
 
+.each-sidebar-anchor:hover {
+  opacity: 0.8;
+}
+
 .each-sidebar-anchor-icon {
   width: 24px;
   fill: rgba(243, 243, 243, 1);
@@ -528,8 +548,6 @@ html {
   justify-content: center;
   width: 160px;
   height: 160px;
-  /* font-size: 34px;
-  color: rgba(90, 104, 114, 1); */
 }
 
 .container .box .each-page-chart .each-page-chart-percentage {
@@ -586,7 +604,7 @@ html {
   flex-wrap: wrap;
   width: 100%;
   max-width: 1000px;
-  gap: 20px 10px;
+  gap: 20px 9px;
   margin: 40px auto;
 }
 
@@ -596,13 +614,13 @@ html {
   align-items: center;
   height: 48px;
   width: fit-content;
-  padding: 0 20px;
-  background: #252525;
+  padding: 0 16px;
+  background: var(--second-color);
   cursor: pointer;
 }
 
 .each-page-manage-node-button:hover {
-  background: rgb(110, 109, 109);
+  background: rgba(26, 26, 26, 1);
 }
 
 .each-page-manage-node-button-icon {
@@ -754,18 +772,32 @@ progress::-webkit-progress-value {
   background-color: var(--third-color);
 }
 
-.each-mnemonic-input-field {
+.each-mnemonic-input {
+  position: relative;
   display: flex;
+  flex-grow: 1;
+  max-width: 33.33%;
+  align-items: center;
+}
+
+.each-mnemonic-input-field {
   outline: none;
   border: none;
   background-color: var(--third-color);
-  min-width: 160px;
   height: 44px;
-  padding: 0 16px;
+  padding-left: 48px;
+  padding-right: 0px;
   font-size: 16px;
   color: rgba(149, 149, 149, 1);
   overflow: auto;
   flex-grow: 1;
+  text-align: center;
+}
+
+.each-mnemonic-input-field-number {
+  position: absolute;
+  left: 16px;
+  display: flex;
 }
 
 .each-output-group {
@@ -791,7 +823,7 @@ progress::-webkit-progress-value {
 
 .each-output-field-icon-copy {
   position: absolute;
-  fill: rgba(179, 179, 179, 1); 
+  fill: rgba(179, 179, 179, 1);
   right: 60px;
   width: 24px;
   height: 24px;
