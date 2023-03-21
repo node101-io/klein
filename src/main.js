@@ -81,7 +81,7 @@ window.addEventListener("DOMContentLoaded", () => {
       dropdownToggleEl.setAttribute("style", "transform: rotate(0); transition: 0.5s;");
     }
     else {
-      dropdownToggleEl.setAttribute("style", "transform: rotate(-180deg); transition: 0.5s;");
+      dropdownToggleEl.setAttribute("style", "transform: rotateX(-180deg); transition: 0.5s;");
     }
   }).observe(autocompleteListEl, { childList: true });
 

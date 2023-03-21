@@ -8,6 +8,7 @@ const contentOfPage = document.getElementById('content-of-page');
 let ipAddresses;
 let notifications;
 let projectInfo;
+let scrollTop;
 
 readTextFile("node-info-to-display.json").then((data) => {
   projectInfo = JSON.parse(data);
@@ -39,10 +40,13 @@ function showCreatedWallet(mnemonic) {
 }
 
 function showWallets(list) {
-  console.log(list);
-  document.getElementById("page-wallet-list").innerHTML = "";
-  let adet = list.length;
+  let walletList = document.getElementById("page-wallet-list");
+  walletList.innerHTML = "";
 
+  let adet = list.length;
+  if (list.length == 0) {
+    walletList.innerHTML = "No wallets found.";
+  }
   while (adet > 0) {
     row = document.createElement("div");
     row.setAttribute("class", "each-row");
@@ -73,6 +77,7 @@ function showWallets(list) {
       outputfieldiconcopy.setAttribute("viewBox", "0 0 17 16");
       outputfieldiconcopy.addEventListener("click", function () {
         writeText(this.previousSibling.title);
+        message("Copied to clipboard.", { title: "Success", type: "success" });
       });
 
       path1 = document.createElementNS('http://www.w3.org/2000/svg', `path`);
@@ -83,7 +88,12 @@ function showWallets(list) {
       outputfieldicondelete.setAttribute("viewBox", "0 0 17 16");
       outputfieldicondelete.addEventListener("click", async function () {
         if (await ask('This action cannot be reverted. Are you sure?', { title: 'Delete Wallet', type: 'warning' })) {
-          invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent });
+          showLoadingAnimation();
+          invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent }).then(() => {
+            invoke("show_wallets").then(() => {
+              hideLoadingAnimation();
+            });
+          });
         }
       });
 
@@ -99,12 +109,14 @@ function showWallets(list) {
       halfrow.appendChild(outputgroup);
       row.appendChild(halfrow);
     }
-    document.getElementById("page-wallet-list").appendChild(row);
+    walletList.appendChild(row);
     adet = adet - 2;
   }
+  hideLoadingAnimation();
 }
 
 function showLoadingAnimation() {
+  scrollTop = window.scrollY;
   document.querySelector(".all-wrapper").style.setProperty("pointer-events", "none");
   document.querySelector(".all-wrapper").style.setProperty("display", "none");
   document.querySelector(".boxes").style.setProperty("display", "unset");
@@ -113,6 +125,7 @@ function hideLoadingAnimation() {
   document.querySelector(".boxes").style.setProperty("display", "none");
   document.querySelector(".all-wrapper").style.removeProperty("display");
   document.querySelector(".all-wrapper").style.removeProperty("pointer-events");
+  window.scrollTo(0, scrollTop);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -195,6 +208,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   validatorAddress.addEventListener('click', function () {
     writeText(validatorAddressText.innerText);
+    message("Copied to clipboard.", { title: "Success", type: "success" });
   })
   homePageButton.addEventListener('click', function () {
     window.location.href = '../home-page/home-page.html';
@@ -353,6 +367,7 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log("recover wallet")
       }
       else if (page == "See Wallets") {
+        showLoadingAnimation();
         invoke("update_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value });
         changePage('page-content/wallets.html');
         invoke("show_wallets");
@@ -367,11 +382,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
         if (ifOverwrite) {
           if (await ask('This action will overwrite the existing wallet. Are you sure?', { title: 'Overwrite Wallet', type: 'warning' })) {
-            invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, overwrite: true });
+            showLoadingAnimation();
+            invoke('delete_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value }).then(() => {
+              invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value });
+            });
           }
         }
         else {
-          invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value, overwrite: false });
+          showLoadingAnimation();
+          invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value });
         }
       }
     }

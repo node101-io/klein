@@ -483,7 +483,6 @@ fn show_wallets(window: tauri::Window) {
             channel.exec(&*command).unwrap();
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
-            // println!("{}", s);
             window.eval(&format!("window.showWallets({})", s)).unwrap();
             channel.close().unwrap();
         }
@@ -502,7 +501,6 @@ fn delete_wallet(walletname: String, window: tauri::Window) {
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             println!("{}", s);
-            show_wallets(window.clone());
             channel.close().unwrap();
         }
     }
@@ -576,14 +574,19 @@ fn unjail(password: String, fees: String) {
 }
 
 #[tauri::command]
-async fn recover_wallet() {
+async fn recover_wallet(walletname: String) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let mut s = String::new();
-            let mut mnemo= String::from("chuckle relief fresh enroll vacant word embark video blind thought wish bitter fruit narrow true remove broccoli frozen couple age hero napkin panic chaos");
+            let mnemo= String::from("faith sight runway armor glare fame manage simple way palm stick entire organ october jazz reward pony lizard burst legal inch broccoli purchase blind");
             channel
-                .exec(&*format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo \"{mnemo}\n deneme11\" | tgrade keys add slxx --recover --output json;"))
+                .exec(&*format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo -e '{}\ny\n{}' | {} keys add {} --recover --output json;",
+                    my_boxed_session.walletpassword,
+                    mnemo,
+                    my_boxed_session.existing_node,
+                    walletname
+                ))
                 .unwrap();
             channel.read_to_string(&mut s).unwrap();
             println!("{}", s);
