@@ -469,7 +469,39 @@ fn create_wallet(walletname: String, window: tauri::Window) {
     }
 }
 
-// export PATH=$PATH:/usr/local/go/bin:/root/go/bin; " + command
+#[tauri::command(async)]
+fn if_wallet_exists(walletname: String) -> bool {
+    unsafe {
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            let command: String = format!(
+                "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo -e {} | {} keys list --output json;",
+                GLOBAL_STRUCT.as_mut().unwrap().walletpassword,
+                GLOBAL_STRUCT.as_mut().unwrap().existing_node
+            );
+            channel.exec(&*command).unwrap();
+            let mut s = String::new();
+            channel.read_to_string(&mut s).unwrap();
+            let v: Value = serde_json::from_str(&s).unwrap();
+            let mut is_exist = false;
+            for i in v.as_array().unwrap() {
+                if i["name"].to_string() == format!("\"{}\"", walletname) {
+                    is_exist = true;
+                }
+            }
+            if is_exist {
+                println!("wallet exists");
+            } else {
+                println!("wallet does not exist");
+            }
+            channel.close().unwrap();
+            is_exist
+        } else {
+            false
+        }
+    }
+}
+
 #[tauri::command(async)]
 fn show_wallets(window: tauri::Window) {
     unsafe {
@@ -490,7 +522,7 @@ fn show_wallets(window: tauri::Window) {
 }
 
 #[tauri::command(async)]
-fn delete_wallet(walletname: String, window: tauri::Window) {
+fn delete_wallet(walletname: String) -> () {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
@@ -573,15 +605,14 @@ fn unjail(password: String, fees: String) {
     }
 }
 
-#[tauri::command]
-async fn recover_wallet(walletname: String) {
+#[tauri::command(async)]
+fn recover_wallet(walletname: String, mnemo: String) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let mut s = String::new();
-            let mnemo= String::from("faith sight runway armor glare fame manage simple way palm stick entire organ october jazz reward pony lizard burst legal inch broccoli purchase blind");
             channel
-                .exec(&*format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo -e '{}\ny\n{}' | {} keys add {} --recover --output json;",
+                .exec(&*format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo -e '{}\n{}' | {} keys add {} --recover --output json;",
                     my_boxed_session.walletpassword,
                     mnemo,
                     my_boxed_session.existing_node,
@@ -657,7 +688,8 @@ fn main() {
             update_wallet_password,
             send_token,
             recover_wallet,
-            vote
+            vote,
+            if_wallet_exists
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

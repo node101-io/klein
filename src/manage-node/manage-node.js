@@ -9,6 +9,7 @@ let ipAddresses;
 let notifications;
 let projectInfo;
 let scrollTop;
+let currentPage;
 
 readTextFile("node-info-to-display.json").then((data) => {
   projectInfo = JSON.parse(data);
@@ -32,7 +33,6 @@ function updateCpuMem(cpu, mem) {
 }
 
 function showCreatedWallet(mnemonic) {
-  console.log("hey");
   message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" });
   document.querySelectorAll(".each-input-field")[0].value = "";
 
@@ -129,6 +129,8 @@ function hideLoadingAnimation() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  invoke("if_wallet_exists", { walletname: "kaka" });
+
   charts_to_update = [];
   document.querySelectorAll('.each-page-chart').forEach((element) => {
     charts_to_update.push(new EasyPieChart(element, {
@@ -147,7 +149,7 @@ window.addEventListener('DOMContentLoaded', () => {
       .then(response => response.text())
       .then(html => {
         contentOfPage.innerHTML = html;
-        submitButton = document.getElementById('submit-button');
+        currentPage = page.split("/")[1].split(".")[0];
       })
       .catch(err => console.log(err));
   }
@@ -227,9 +229,6 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   unjailButton.addEventListener('click', function () {
     changePage('page-content/unjail.html');
-  });
-  recoverWalletButton.addEventListener('click', function () {
-    changePage('page-content/recover-wallet.html');
   });
   delegateTokenButton.addEventListener('click', function () {
     changePage('page-content/delegate-token.html');
@@ -337,60 +336,71 @@ window.addEventListener('DOMContentLoaded', () => {
       submenuNotifications.setAttribute("style", "display: none;");
     }
 
-    if (submitButton && submitButton.contains(e.target)) {
-      let page = document.querySelector(".page-heading").innerText;
-      if (page == "Create Validator") {
+    submitButton = e.target.closest(".each-button");
+    if (submitButton) {
+      if (currentPage == "create-validator") {
         console.log("create validator")
       }
-      else if (page == "Edit Validator") {
+      else if (currentPage == "edit-validator") {
         console.log("edit validator")
       }
-      else if (page == "Withdraw Rewards") {
+      else if (currentPage == "withdraw-rewards") {
         console.log("withdraw rewards")
       }
-      else if (page == "Delegate Token") {
+      else if (currentPage == "delegate-token") {
         console.log("delegate token")
       }
-      else if (page == "Redelegate Token") {
+      else if (currentPage == "redelegate-token") {
         console.log("redelegate token")
       }
-      else if (page == "Voting") {
-        console.log("voting")
+      else if (currentPage == "vote") {
+        console.log("vote")
       }
-      else if (page == "Unjail") {
+      else if (currentPage == "unjail") {
         console.log("unjail")
       }
-      else if (page == "Send Token") {
+      else if (currentPage == "send-token") {
         console.log("send token")
       }
-      else if (page == "Recover Wallet") {
-        console.log("recover wallet")
-      }
-      else if (page == "See Wallets") {
+      else if (currentPage == "wallets-login") {
         showLoadingAnimation();
         invoke("update_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value });
         changePage('page-content/wallets.html');
         invoke("show_wallets");
       }
-      else if (page == "Create Wallet") {
-        ifOverwrite = false;
-        document.querySelectorAll(".each-input-label").forEach((label) => {
-          if (label.innerText == document.querySelectorAll(".each-input-field")[0].value) {
-            ifOverwrite = true;
-          }
-        });
-
-        if (ifOverwrite) {
-          if (await ask('This action will overwrite the existing wallet. Are you sure?', { title: 'Overwrite Wallet', type: 'warning' })) {
+      else if (currentPage == "wallets") {
+        if (submitButton.children[0].innerText == "Create") {
+          if (await invoke("if_wallet_exists", { walletname: document.querySelectorAll(".each-input-field")[0].value })) {
+            if (await ask('This action will override the existing wallet. Are you sure?', { title: 'Override Wallet', type: 'warning' })) {
+              showLoadingAnimation();
+              invoke('delete_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value }).then(() => {
+                invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value });
+              });
+            }
+          } else {
             showLoadingAnimation();
-            invoke('delete_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value }).then(() => {
-              invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value });
-            });
+            invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value });
           }
         }
-        else {
-          showLoadingAnimation();
-          invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value });
+        else if (submitButton.children[0].innerText == "Recover") {
+          if (await invoke("if_wallet_exists", { walletname: document.querySelectorAll(".each-input-field")[1].value })) {
+            if (await ask('This action will override the existing wallet. Are you sure?', { title: 'Override Wallet', type: 'warning' })) {
+              showLoadingAnimation();
+              invoke("delete_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value }).then(() => {
+                mnemonic = "";
+                document.querySelectorAll(".each-mnemonic-input-field").forEach((input) => {
+                  mnemonic += input.value + " ";
+                });
+                mnemonic = mnemonic.slice(0, -1);
+                console.log(mnemonic);
+                invoke("recover_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, mnemo: mnemonic });
+              });
+            }
+          } else {
+            // showLoadingAnimation();
+            // invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value });
+            console.log("recover new wallet");
+          }
         }
       }
     }
