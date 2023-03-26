@@ -416,6 +416,11 @@ html {
   color: #2f6514;
 }
 
+.inactive-tag {
+  background: #B53D43;
+  color: #ffffff;
+}
+
 .version-tag {
   background: #fed695;
   color: #a3382a;

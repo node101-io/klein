@@ -5,11 +5,8 @@
 
 use serde_json::{self, json, Value};
 use ssh2::{DisconnectCode, Session};
-use std::{
-    io::{Read, Write},
-    thread, time,
-};
-use tauri::{window, LogicalSize, Manager};
+use std::{io::Read, thread, time};
+use tauri::{LogicalSize, Manager};
 
 struct SessionManager {
     open_session: Session,
@@ -161,8 +158,9 @@ async fn cpu_mem_sync(window: tauri::Window) {
                 };
 
                 let mut s = String::new();
-                channel.exec("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo $(top -b -n1 | awk '/Cpu\\(s\\)/{{print 100-$8}} /MiB Mem/{{print ($4-$6)/$4*100}}'; $(bash -c -l 'echo $EXECUTE') status 2>&1 | jq -r .SyncInfo.latest_block_height,.SyncInfo.catching_up;)").unwrap();
+                channel.exec("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo $(top -b -n1 | awk '/Cpu\\(s\\)/{{print 100-$8}} /MiB Mem/{{print ($4-$6)/$4*100}}'; echo \\'$(systemctl is-active $(bash -c -l 'echo $EXECUTE'))\\'; $(bash -c -l 'echo $EXECUTE') status 2>&1 | jq .SyncInfo.latest_block_height,.SyncInfo.catching_up,.NodeInfo.version)").unwrap();
                 channel.read_to_string(&mut s).unwrap();
+                println!("{}", s);
 
                 window
                     .eval(&*format!(
@@ -171,6 +169,11 @@ async fn cpu_mem_sync(window: tauri::Window) {
                     ))
                     .unwrap();
                 channel.close().unwrap();
+
+                println!(
+                    "{}",
+                    s.trim().split_whitespace().collect::<Vec<&str>>().join(",")
+                );
 
                 thread::sleep(time::Duration::from_secs(5));
             }
@@ -224,7 +227,6 @@ fn node_info(window: tauri::Window) {
                 .unwrap();
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
-            println!("{}", s);
             window
                 .eval(&*format!("window.updateNodeInfo({})", s))
                 .unwrap();

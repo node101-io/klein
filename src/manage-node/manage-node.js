@@ -17,20 +17,39 @@ readTextFile("node-info-to-display.json").then((data) => {
   document.querySelector(".header-menu-ip-list-button-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
 });
 
-function updateCpuMemSync(cpu, mem, sync, catchup) {
-  console.log(typeof catchup);
-  console.log(catchup);
+function changePage(page) {
+  fetch(page)
+    .then(response => response.text())
+    .then(html => {
+      document.getElementById('content-of-page').innerHTML = html;
+      currentPage = page.split("/")[1].split(".")[0];
+      if (currentPage == "wallets") {
+        document.querySelectorAll(".each-mnemonic-input-field")[0].addEventListener("paste", function () {
+          setTimeout(() => {
+            if (this.value.split(" ").length == 24) {
+              mnemo = this.value.split(" ");
+              document.querySelectorAll(".each-mnemonic-input-field").forEach((element, index) => {
+                element.value = mnemo[index];
+              });
+            }
+          }, 100);
+        });
+      }
+    })
+    .catch(err => console.log(err));
+}
+
+function updateCpuMemSync(cpu, mem, active, sync, catchup, version) {
   if (typeof catchup == "undefined") {
     charts_to_update[0].options.barColor = "#FF2632";
     charts_to_update[0].update(100);
     document.querySelectorAll('.each-page-chart-percentage')[0].textContent = "!";
     document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Node has stopped!`;
   } else if (!catchup) {
-    console.log("node is synced");
     charts_to_update[0].options.barColor = "#43BE66";
     charts_to_update[0].update(100);
-    document.querySelectorAll('.each-page-chart-percentage')[0].textContent = Math.floor(parseInt(sync));
-    document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Synced!\n\nCurrent Block:\n${parseInt(sync)}`;
+    document.querySelectorAll('.each-page-chart-percentage')[0].textContent = (sync);
+    document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Synced!\n\nCurrent Block:\n${sync}`;
   } else {
     console.log("node is syncing");
     charts_to_update[0].options.barColor = "#0F62FE";
@@ -40,8 +59,8 @@ function updateCpuMemSync(cpu, mem, sync, catchup) {
       await new Promise(resolve => setTimeout(resolve, 2300));
       charts_to_update[0].update(0);
     })();
-    document.querySelectorAll('.each-page-chart-percentage')[0].textContent = Math.floor(parseInt(sync));
-    document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Syncing...\n\nCurrent Block:\n${parseInt(sync)}`;
+    document.querySelectorAll('.each-page-chart-percentage')[0].textContent = sync;
+    document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Syncing...\n\nCurrent Block:\n${sync}`;
   }
 
   charts_to_update[1].update(Math.floor(mem));
@@ -51,6 +70,19 @@ function updateCpuMemSync(cpu, mem, sync, catchup) {
     charts_to_update[2].update(Math.floor(cpu));
     document.querySelectorAll('.each-page-chart-percentage')[2].textContent = Math.floor(cpu) + "%";
   }
+
+  if (active == "active") {
+    document.querySelectorAll(".each-sidebar-tag")[0].classList.remove("inactive-tag");
+    document.querySelectorAll(".each-sidebar-tag")[0].classList.add("active-tag");
+    document.querySelectorAll(".each-sidebar-tag")[0].textContent = "Active";
+  } else {
+    document.querySelectorAll(".each-sidebar-tag")[0].classList.add("inactive-tag");
+    document.querySelectorAll(".each-sidebar-tag")[0].classList.remove("active-tag");
+    document.querySelectorAll(".each-sidebar-tag")[0].textContent = "Inactive";
+  }
+
+  document.querySelectorAll(".each-sidebar-tag")[1].textContent = "Version " + version;
+  document.querySelectorAll(".each-sidebar-tag")[1].classList.add("version-tag");
 }
 
 function updateNodeInfo(obj) {
@@ -59,34 +91,36 @@ function updateNodeInfo(obj) {
     hideLoadingAnimation();
     return;
   }
+  changePage('page-content/node-information.html');
 
-  let fields = document.querySelectorAll(".each-output-field");
-  fields[0].textContent = obj.NodeInfo.protocol_version.p2p;
-  fields[1].textContent = obj.NodeInfo.protocol_version.block;
-  fields[2].textContent = obj.NodeInfo.protocol_version.app;
-  fields[3].textContent = obj.NodeInfo.id;
-  fields[4].textContent = obj.NodeInfo.listen_addr;
-  fields[5].textContent = obj.NodeInfo.network;
-  fields[6].textContent = obj.NodeInfo.version;
-  fields[7].textContent = obj.NodeInfo.channels;
-  fields[8].textContent = obj.NodeInfo.moniker;
-  fields[9].textContent = obj.NodeInfo.other.tx_index;
-  fields[10].textContent = obj.NodeInfo.other.rpc_address;
-  fields[11].textContent = obj.SyncInfo.latest_block_hash;
-  fields[12].textContent = obj.SyncInfo.latest_app_hash;
-  fields[13].textContent = obj.SyncInfo.latest_block_height;
-  fields[14].textContent = obj.SyncInfo.latest_block_time;
-  fields[15].textContent = obj.SyncInfo.earliest_block_hash;
-  fields[16].textContent = obj.SyncInfo.earliest_app_hash;
-  fields[17].textContent = obj.SyncInfo.earliest_block_height;
-  fields[18].textContent = obj.SyncInfo.earliest_block_time;
-  fields[19].textContent = obj.SyncInfo.catching_up;
-  // fields[20].textContent = obj.ValidatorInfo.Address;
-  // fields[21].textContent = obj.ValidatorInfo.PubKey.type;
-  // fields[22].textContent = obj.ValidatorInfo.PubKey.value;
-  // fields[23].textContent = obj.ValidatorInfo.VotingPower;
-
-  hideLoadingAnimation();
+  setTimeout(() => {
+    let fields = document.querySelectorAll(".each-output-field");
+    fields[0].textContent = obj.NodeInfo.protocol_version.p2p;
+    fields[1].textContent = obj.NodeInfo.protocol_version.block;
+    fields[2].textContent = obj.NodeInfo.protocol_version.app;
+    fields[3].textContent = obj.NodeInfo.id;
+    fields[4].textContent = obj.NodeInfo.listen_addr;
+    fields[5].textContent = obj.NodeInfo.network;
+    fields[6].textContent = obj.NodeInfo.version;
+    fields[7].textContent = obj.NodeInfo.channels;
+    fields[8].textContent = obj.NodeInfo.moniker;
+    fields[9].textContent = obj.NodeInfo.other.tx_index;
+    fields[10].textContent = obj.NodeInfo.other.rpc_address;
+    fields[11].textContent = obj.SyncInfo.latest_block_hash;
+    fields[12].textContent = obj.SyncInfo.latest_app_hash;
+    fields[13].textContent = obj.SyncInfo.latest_block_height;
+    fields[14].textContent = obj.SyncInfo.latest_block_time;
+    fields[15].textContent = obj.SyncInfo.earliest_block_hash;
+    fields[16].textContent = obj.SyncInfo.earliest_app_hash;
+    fields[17].textContent = obj.SyncInfo.earliest_block_height;
+    fields[18].textContent = obj.SyncInfo.earliest_block_time;
+    fields[19].textContent = obj.SyncInfo.catching_up;
+    // fields[20].textContent = obj.ValidatorInfo.Address;
+    // fields[21].textContent = obj.ValidatorInfo.PubKey.type;
+    // fields[22].textContent = obj.ValidatorInfo.PubKey.value;
+    // fields[23].textContent = obj.ValidatorInfo.VotingPower;
+    hideLoadingAnimation();
+  }, 200);
 }
 
 function showCreatedWallet(mnemonic) {
@@ -199,29 +233,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }))
   });
 
-  function changePage(page) {
-    fetch(page)
-      .then(response => response.text())
-      .then(html => {
-        document.getElementById('content-of-page').innerHTML = html;
-        currentPage = page.split("/")[1].split(".")[0];
-        if (currentPage == "wallets") {
-          document.querySelectorAll(".each-mnemonic-input-field")[0].addEventListener("paste", function () {
-            setTimeout(() => {
-              if (this.value.split(" ").length == 24) {
-                mnemo = this.value.split(" ");
-                document.querySelectorAll(".each-mnemonic-input-field").forEach((element, index) => {
-                  element.value = mnemo[index];
-                });
-              }
-            }, 100);
-          });
-        }
-      })
-      .catch(err => console.log(err));
-  }
-
-  changePage('page-content/node-operations.html')
+  changePage('page-content/node-operations.html');
 
   const validatorAddress = document.querySelector(".sidebar-info-details-copy");
   const validatorAddressText = document.querySelector(".sidebar-info-details-copy-address");
@@ -324,7 +336,6 @@ window.addEventListener('DOMContentLoaded', () => {
   })
   nodeInformationButton.addEventListener('click', function () {
     showLoadingAnimation();
-    changePage('page-content/node-information.html');
     invoke("node_info");
   });
 
