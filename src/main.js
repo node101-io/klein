@@ -1,12 +1,7 @@
 const { invoke } = window.__TAURI__.tauri;
 const { readTextFile, writeFile } = window.__TAURI__.fs;
-const EYE_ON = "assets/eye-on.png";
-const EYE_OFF = "assets/eye-off.png";
 let focusedIndex;
 let ipAddresses;
-
-// Disable right click:
-// document.addEventListener("contextmenu", event => event.preventDefault());
 
 readTextFile("ipaddresses.json").then((data) => {
   ipAddresses = JSON.parse(data);
@@ -15,16 +10,16 @@ readTextFile("ipaddresses.json").then((data) => {
 // Functions to be called from Rust
 function loadNewPage(pagename, remember, project) {
   if (ipAddresses.some((ip) => ip.ip == document.getElementById("ip-input").value)) {
-    ipAddresses.find((ip) => ip.ip == document.getElementById("ip-input").value).icon = project.charAt(0).toUpperCase() + project.slice(1, project.length - 1);
+    ipAddresses.find((ip) => ip.ip == document.getElementById("ip-input").value).icon = project;
     // writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
   } else if (remember) {
     ipAddresses.push({
       ip: document.getElementById("ip-input").value,
-      icon: project.charAt(0).toUpperCase() + project.slice(1, project.length - 1)
+      icon: project.charAt(0).toUpperCase() + project
     });
-    // writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
+    writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
   }
-  // writeFile("node-info-to-display.json", `{"ip": "${document.getElementById('ip-input').value}", "project": "${project.charAt(0).toUpperCase() + project.slice(1, project.length - 1)}"}`);
+  // writeFile("node-info-to-display.json", `{"ip": "${document.getElementById('ip-input').value}", "project": "${project}"}`);
   hideLoadingAnimation();
   window.location.href = pagename;
 }

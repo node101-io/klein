@@ -3,8 +3,6 @@ const { writeText } = window.__TAURI__.clipboard;
 const { readTextFile, writeFile } = window.__TAURI__.fs;
 const { message, ask } = window.__TAURI__.dialog;
 
-const contentOfPage = document.getElementById('content-of-page');
-
 let ipAddresses;
 let notifications;
 let projectInfo;
@@ -19,10 +17,33 @@ readTextFile("node-info-to-display.json").then((data) => {
   document.querySelector(".header-menu-ip-list-button-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
 });
 
-// Disable right click:
-// document.addEventListener("contextmenu", event => event.preventDefault());
+function updateCpuMemSync(cpu, mem, sync, catchup) {
+  console.log(typeof catchup);
+  console.log(catchup);
+  if (typeof catchup == "undefined") {
+    charts_to_update[0].options.barColor = "#FF2632";
+    charts_to_update[0].update(100);
+    document.querySelectorAll('.each-page-chart-percentage')[0].textContent = "!";
+    document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Node has stopped!`;
+  } else if (!catchup) {
+    console.log("node is synced");
+    charts_to_update[0].options.barColor = "#43BE66";
+    charts_to_update[0].update(100);
+    document.querySelectorAll('.each-page-chart-percentage')[0].textContent = Math.floor(parseInt(sync));
+    document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Synced!\n\nCurrent Block:\n${parseInt(sync)}`;
+  } else {
+    console.log("node is syncing");
+    charts_to_update[0].options.barColor = "#0F62FE";
+    (async () => {
+      await new Promise(resolve => setTimeout(resolve, 2300));
+      charts_to_update[0].update(100);
+      await new Promise(resolve => setTimeout(resolve, 2300));
+      charts_to_update[0].update(0);
+    })();
+    document.querySelectorAll('.each-page-chart-percentage')[0].textContent = Math.floor(parseInt(sync));
+    document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Syncing...\n\nCurrent Block:\n${parseInt(sync)}`;
+  }
 
-function updateCpuMem(cpu, mem) {
   charts_to_update[1].update(Math.floor(mem));
   document.querySelectorAll('.each-page-chart-percentage')[1].textContent = Math.floor(mem) + "%";
 
@@ -32,8 +53,44 @@ function updateCpuMem(cpu, mem) {
   }
 }
 
+function updateNodeInfo(obj) {
+  if (obj == null) {
+    message("Node is not running.", { title: "Error", type: "error" });
+    hideLoadingAnimation();
+    return;
+  }
+
+  let fields = document.querySelectorAll(".each-output-field");
+  fields[0].textContent = obj.NodeInfo.protocol_version.p2p;
+  fields[1].textContent = obj.NodeInfo.protocol_version.block;
+  fields[2].textContent = obj.NodeInfo.protocol_version.app;
+  fields[3].textContent = obj.NodeInfo.id;
+  fields[4].textContent = obj.NodeInfo.listen_addr;
+  fields[5].textContent = obj.NodeInfo.network;
+  fields[6].textContent = obj.NodeInfo.version;
+  fields[7].textContent = obj.NodeInfo.channels;
+  fields[8].textContent = obj.NodeInfo.moniker;
+  fields[9].textContent = obj.NodeInfo.other.tx_index;
+  fields[10].textContent = obj.NodeInfo.other.rpc_address;
+  fields[11].textContent = obj.SyncInfo.latest_block_hash;
+  fields[12].textContent = obj.SyncInfo.latest_app_hash;
+  fields[13].textContent = obj.SyncInfo.latest_block_height;
+  fields[14].textContent = obj.SyncInfo.latest_block_time;
+  fields[15].textContent = obj.SyncInfo.earliest_block_hash;
+  fields[16].textContent = obj.SyncInfo.earliest_app_hash;
+  fields[17].textContent = obj.SyncInfo.earliest_block_height;
+  fields[18].textContent = obj.SyncInfo.earliest_block_time;
+  fields[19].textContent = obj.SyncInfo.catching_up;
+  // fields[20].textContent = obj.ValidatorInfo.Address;
+  // fields[21].textContent = obj.ValidatorInfo.PubKey.type;
+  // fields[22].textContent = obj.ValidatorInfo.PubKey.value;
+  // fields[23].textContent = obj.ValidatorInfo.VotingPower;
+
+  hideLoadingAnimation();
+}
+
 function showCreatedWallet(mnemonic) {
-  message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" });
+  message(mnemonic.slice(1, -1), { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" });
   document.querySelectorAll(".each-input-field")[0].value = "";
 
   invoke("show_wallets");
@@ -129,8 +186,6 @@ function hideLoadingAnimation() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  invoke("if_wallet_exists", { walletname: "kaka" });
-
   charts_to_update = [];
   document.querySelectorAll('.each-page-chart').forEach((element) => {
     charts_to_update.push(new EasyPieChart(element, {
@@ -140,7 +195,7 @@ window.addEventListener('DOMContentLoaded', () => {
       lineWidth: 6,
       trackColor: "#373737",
       lineCap: "circle",
-      animate: 1000,
+      animate: 2000,
     }))
   });
 
@@ -148,8 +203,20 @@ window.addEventListener('DOMContentLoaded', () => {
     fetch(page)
       .then(response => response.text())
       .then(html => {
-        contentOfPage.innerHTML = html;
+        document.getElementById('content-of-page').innerHTML = html;
         currentPage = page.split("/")[1].split(".")[0];
+        if (currentPage == "wallets") {
+          document.querySelectorAll(".each-mnemonic-input-field")[0].addEventListener("paste", function () {
+            setTimeout(() => {
+              if (this.value.split(" ").length == 24) {
+                mnemo = this.value.split(" ");
+                document.querySelectorAll(".each-mnemonic-input-field").forEach((element, index) => {
+                  element.value = mnemo[index];
+                });
+              }
+            }, 100);
+          });
+        }
       })
       .catch(err => console.log(err));
   }
@@ -256,7 +323,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   })
   nodeInformationButton.addEventListener('click', function () {
+    showLoadingAnimation();
     changePage('page-content/node-information.html');
+    invoke("node_info");
   });
 
   window.addEventListener("click", async (e) => {
@@ -326,7 +395,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
     else if (logoutButton.contains(e.target)) {
-      invoke("cpu_mem_stop", { a: true });
+      invoke("cpu_mem_sync_stop", { a: true });
       window.location.href = "../index.html";
     }
     else {
@@ -392,14 +461,17 @@ window.addEventListener('DOMContentLoaded', () => {
                   mnemonic += input.value + " ";
                 });
                 mnemonic = mnemonic.slice(0, -1);
-                console.log(mnemonic);
                 invoke("recover_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, mnemo: mnemonic });
               });
             }
           } else {
-            // showLoadingAnimation();
-            // invoke('create_wallet', { walletname: document.querySelectorAll(".each-input-field")[0].value });
-            console.log("recover new wallet");
+            showLoadingAnimation();
+            mnemonic = "";
+            document.querySelectorAll(".each-mnemonic-input-field").forEach((input) => {
+              mnemonic += input.value + " ";
+            });
+            mnemonic = mnemonic.slice(0, -1);
+            invoke("recover_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, mnemo: mnemonic });
           }
         }
       }
@@ -407,31 +479,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (document.querySelector(".page-manage-node-buttons") && document.querySelector(".page-manage-node-buttons").contains(e.target)) {
       if (document.querySelectorAll(".each-page-manage-node-button")[0].contains(e.target)) {
-        // START NODE
-        invoke("start_node").
-          then((res) => {
-            console.log(res);
-          }).catch((e) => {
-            console.log(e);
-          });
+        invoke("start_stop_restart_node", { action: "start" });
       }
       else if (document.querySelectorAll(".each-page-manage-node-button")[1].contains(e.target)) {
-        // STOP NODE
-        invoke("stop_node").
-          then((res) => {
-            console.log(res);
-          }).catch((e) => {
-            console.log(e);
-          });
+        invoke("start_stop_restart_node", { action: "stop" });
       }
       else if (document.querySelectorAll(".each-page-manage-node-button")[2].contains(e.target)) {
-        // RESTART NODE
-        invoke("restart_node").
-          then((res) => {
-            console.log(res);
-          }).catch((e) => {
-            console.log(e);
-          });
+        invoke("start_stop_restart_node", { action: "restart" });
       }
       else if (document.querySelectorAll(".each-page-manage-node-button")[3].contains(e.target)) {
         // UPDATE NODE
@@ -445,15 +499,12 @@ window.addEventListener('DOMContentLoaded', () => {
           });
       }
       else if (document.querySelector(".delete-node-button").contains(e.target)) {
-        // DELETE NODE
-        console.log("remove_node function is called i guess.");
-        invoke("remove_node")
-          .then((res) => {
-            console.log(res);
-          })
-          .catch((e) => {
-            console.log(e);
+        if (await ask('This action cannot be reverted. Are you sure?', { title: 'Delete Node', type: 'warning' })) {
+          invoke("delete_node").then(() => {
+            message("Node deleted successfully.", { title: 'Success', type: 'success' });
+            loadNewPage("../home-page/home-page.html");
           });
+        }
       }
     }
   });

@@ -12,9 +12,6 @@ readTextFile("node-info-to-display.json").then((data) => {
   document.querySelector(".header-menu-ip-list-button-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
 });
 
-// Disable right click:
-// document.addEventListener("contextmenu", event => event.preventDefault());
-
 window.addEventListener("DOMContentLoaded", () => {
   const testnetTabButton = document.getElementById("testnet-tab-button");
   const mainnetTabButton = document.getElementById("mainnet-tab-button");
@@ -162,9 +159,9 @@ async function showTestnetProjects() {
 
   const authenticate = await client.post('https://admin.node101.io/api/authenticate', {
     type: 'Json',
-    payload: { key: "" },
+    payload: { key: "b8737b4ca31571d769506c4373f5c476e0a022bf58d5e0595c0e37eabb881ad150b8c447f58d5f80f6ffe5ced6f21fe0502c12cf32ab33c6f0787aea5ccff153" },
   });
-  const projectsData = await client.get('https://admin.node101.io/api/projects', {
+  const projectsData = await client.get("https://admin.node101.io/api/projects", {
     type: 'Json',
     headers: {
       'Cookie': authenticate.headers['set-cookie']
@@ -175,6 +172,7 @@ async function showTestnetProjects() {
   projects = projectsData.data.projects;
 
   for (let i = 0; i < projects.length; i++) {
+    console.log(projects[i]);
     row = document.createElement("div");
     row.setAttribute("class", "each-node-page-project");
 
@@ -256,6 +254,9 @@ async function showTestnetProjects() {
     installButtonSVG.appendChild(path1);
     installButton.appendChild(textDiv);
     installButton.appendChild(installButtonSVG)
+    installButton.addEventListener("click", function () {
+      console.log(projects[i].wizard_key);
+    });
 
     //Discover Button
     discoverButton = document.createElement("button");
@@ -278,4 +279,7 @@ async function showTestnetProjects() {
     row.appendChild(buttons);
     document.getElementById('testnet-tab-content').appendChild(row);
   }
+
+  names = projects.map(item => item.name);
+  console.log(names);
 }
