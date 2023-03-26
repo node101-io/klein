@@ -81,8 +81,10 @@ function updateCpuMemSync(cpu, mem, active, sync, catchup, version) {
     document.querySelectorAll(".each-sidebar-tag")[0].textContent = "Inactive";
   }
 
-  document.querySelectorAll(".each-sidebar-tag")[1].textContent = "Version " + version;
-  document.querySelectorAll(".each-sidebar-tag")[1].classList.add("version-tag");
+  if (typeof version !== "undefined") {
+    document.querySelectorAll(".each-sidebar-tag")[1].textContent = "Version " + version;
+    document.querySelectorAll(".each-sidebar-tag")[1].classList.add("version-tag");
+  }
 }
 
 function updateNodeInfo(obj) {
@@ -233,7 +235,12 @@ window.addEventListener('DOMContentLoaded', () => {
     }))
   });
 
+  // if () {
+  //   changePage('page-content/installation.html');
+  // } else {
   changePage('page-content/node-operations.html');
+  // }
+  console.log(window.location.href);
 
   const validatorAddress = document.querySelector(".sidebar-info-details-copy");
   const validatorAddressText = document.querySelector(".sidebar-info-details-copy-address");
@@ -407,6 +414,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     else if (logoutButton.contains(e.target)) {
       invoke("cpu_mem_sync_stop", { a: true });
+      invoke("log_out");
       window.location.href = "../index.html";
     }
     else {

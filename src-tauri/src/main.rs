@@ -111,7 +111,7 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
 }
 
 #[tauri::command(async)]
-fn log_out(window: tauri::Window) {
+fn log_out() {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             (*my_boxed_session)
@@ -123,8 +123,7 @@ fn log_out(window: tauri::Window) {
                 )
                 .unwrap();
 
-            GLOBAL_STRUCT = None;
-            window.eval("window.loadNewPage('../index.html')").unwrap();
+            // GLOBAL_STRUCT = None;
         }
     }
 }
@@ -169,12 +168,6 @@ async fn cpu_mem_sync(window: tauri::Window) {
                     ))
                     .unwrap();
                 channel.close().unwrap();
-
-                println!(
-                    "{}",
-                    s.trim().split_whitespace().collect::<Vec<&str>>().join(",")
-                );
-
                 thread::sleep(time::Duration::from_secs(5));
             }
         }
