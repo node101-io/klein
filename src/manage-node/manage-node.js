@@ -1,21 +1,12 @@
 const { invoke } = window.__TAURI__.tauri;
 const { writeText } = window.__TAURI__.clipboard;
-const { readTextFile, writeFile } = window.__TAURI__.fs;
 const { message, ask } = window.__TAURI__.dialog;
 
-let ipAddresses;
-let notifications;
+let ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
+let notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
 let projectInfo;
 let scrollTop;
 let currentPage;
-
-readTextFile("node-info-to-display.json").then((data) => {
-  projectInfo = JSON.parse(data);
-  document.querySelector(".sidebar-info-details-name").textContent = projectInfo.project;
-  document.querySelector(".sidebar-info-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
-  document.querySelector(".header-node-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
-  document.querySelector(".header-menu-ip-list-button-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
-});
 
 function changePage(page) {
   fetch(page)
@@ -235,14 +226,24 @@ window.addEventListener('DOMContentLoaded', () => {
     }))
   });
 
-  // if () {
-  //   changePage('page-content/installation.html');
-  // } else {
-  changePage('page-content/node-operations.html');
-  // }
-  console.log(window.location.href);
+  if (localStorage.getItem("installation") == "true") {
+    changePage('page-content/installation.html');
+    setTimeout(() => {
+      // document.querySelector(".progress-bar").setAttribute("value", "3");
+      for (let i = 0; i < 100; i++) {
+        setTimeout(() => {
+          document.querySelector(".progress-bar").setAttribute("value", i);
+          document.querySelector(".progress-bar-text-right").textContent = `${i}%`;
+        }, i * i / 0.03);
+      }
+    }, 1000);
+  } else {
+    changePage('page-content/node-operations.html');
+  }
 
+  const sidebarNodeIcon = document.querySelector(".sidebar-info-icon");
   const validatorAddress = document.querySelector(".sidebar-info-details-copy");
+  const validatorAddressName = document.querySelector(".sidebar-info-details-name");
   const validatorAddressText = document.querySelector(".sidebar-info-details-copy-address");
   const validatorOperationsButton = document.getElementById("validator-operations-button");
   const validatorOperationsArrow = document.querySelector(".each-dropdown-button-arrow");
@@ -254,52 +255,51 @@ window.addEventListener('DOMContentLoaded', () => {
   const editValidatorButton = document.getElementById("edit-validator-button");
   const withdrawRewardsButton = document.getElementById("withdraw-rewards-button");
   const unjailButton = document.getElementById("unjail-button");
-  const recoverWalletButton = document.getElementById("recover-wallet-button");
   const delegateTokenButton = document.getElementById("delegate-token-button");
   const sendTokenButton = document.getElementById("send-token-button");
   const redelegateTokenButton = document.getElementById("redelegate-token-button");
   const voteButton = document.getElementById("vote-button");
   const walletsButton = document.getElementById("wallets-button");
+  const nodeIcon = document.querySelector(".header-node-icon");
   const nodeIcons = document.querySelector(".header-node-icons");
   const headerMenu = document.querySelector(".header-menu");
   const headerMenuIpButton = document.querySelector(".header-menu-ip-list-button");
+  const headerMenuIpButtonIcon = document.querySelector(".header-menu-ip-list-button-icon");
   const notificationsButton = document.getElementById("notifications-button");
   const logoutButton = document.getElementById("logout-button");
   const submenuIpList = document.querySelector(".header-submenu-ip-list");
   const scrollbarBackground = document.querySelector(".header-menu-scroll-background");
   const submenuNotifications = document.querySelector(".header-submenu-notifications");
 
-  readTextFile("ipaddresses.json").then((data) => {
-    ipAddresses = JSON.parse(data);
-    for (let i = 0; i < ipAddresses.length; i++) {
-      ipListItem = document.createElement("div");
-      ipListItem.setAttribute("class", "each-header-submenu-ip-list-item");
-      ipListItemIcon = document.createElement("img");
-      ipListItemIcon.setAttribute("src", `../assets/projects/${ipAddresses[i].icon.toLowerCase()}.png`);
-      ipListItemIcon.setAttribute("class", "each-header-submenu-ip-list-item-icon");
-      ipListItemName = document.createElement("div");
-      ipListItemName.setAttribute("class", "each-header-submenu-ip-list-item-name");
-      ipListItemName.innerText = ipAddresses[i].icon;
-      ipListItemIp = document.createElement("div");
-      ipListItemIp.setAttribute("class", "each-header-submenu-ip-list-item-ip");
-      ipListItemIp.innerText = ipAddresses[i].ip;
-      ipListItem.appendChild(ipListItemIcon);
-      ipListItem.appendChild(ipListItemName);
-      ipListItem.appendChild(ipListItemIp);
-      submenuIpList.appendChild(ipListItem);
-    }
-  });
+  validatorAddressName.textContent = localStorage.getItem("project");
+  sidebarNodeIcon.setAttribute("src", `../assets/projects/${localStorage.getItem("project").toLowerCase().replace(" ", "-")}.png`);
+  nodeIcon.setAttribute("src", `../assets/projects/${localStorage.getItem("project").toLowerCase().replace(" ", "-")}.png`);
+  headerMenuIpButtonIcon.setAttribute("src", `../assets/projects/${localStorage.getItem("project").toLowerCase().replace(" ", "-")}.png`);
 
-  readTextFile("notifications.json").then((data) => {
-    notifications = JSON.parse(data);
-  });
+  for (let i = 0; i < ipAddresses.length; i++) {
+    ipListItem = document.createElement("div");
+    ipListItem.setAttribute("class", "each-header-submenu-ip-list-item");
+    ipListItemIcon = document.createElement("img");
+    ipListItemIcon.setAttribute("src", `../assets/projects/${ipAddresses[i].icon.toLowerCase().replace(" ", "-")}.png`);
+    ipListItemIcon.setAttribute("class", "each-header-submenu-ip-list-item-icon");
+    ipListItemName = document.createElement("div");
+    ipListItemName.setAttribute("class", "each-header-submenu-ip-list-item-name");
+    ipListItemName.innerText = ipAddresses[i].icon;
+    ipListItemIp = document.createElement("div");
+    ipListItemIp.setAttribute("class", "each-header-submenu-ip-list-item-ip");
+    ipListItemIp.innerText = ipAddresses[i].ip;
+    ipListItem.appendChild(ipListItemIcon);
+    ipListItem.appendChild(ipListItemName);
+    ipListItem.appendChild(ipListItemIp);
+    submenuIpList.appendChild(ipListItem);
+  }
 
   validatorAddress.addEventListener('click', function () {
     writeText(validatorAddressText.innerText);
     message("Copied to clipboard.", { title: "Success", type: "success" });
   })
   homePageButton.addEventListener('click', function () {
-    window.location.href = '../home-page/home-page.html';
+    window.location.href = "../home-page/home-page.html";
   });
   nodeOperationsButton.addEventListener('click', function () {
     changePage('page-content/node-operations.html');
@@ -371,34 +371,25 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     else if (notificationsButton.contains(e.target)) {
       submenuIpList.setAttribute("style", "display: none;");
+      submenuNotifications.innerHTML = "";
+      notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
 
-      readTextFile("notifications.json").then((data) => {
-        notifications = JSON.parse(data);
+      for (let i = notifications.length - 1; 0 < i; i--) {
+        notificationItem = document.createElement("div");
+        notificationItem.setAttribute("class", "each-header-submenu-notifications-item");
+        notificationIcon = document.createElement("span");
+        notificationIcon.setAttribute("class", `each-notification-icon${notifications[i].unread ? '' : '-seen'}`);
+        notificationContent = document.createElement("div");
+        notificationContent.setAttribute("class", "each-notification-content");
+        notificationContent.innerText = notifications[i].text;
+        notificationItem.appendChild(notificationIcon);
+        notificationItem.appendChild(notificationContent);
+        submenuNotifications.appendChild(notificationItem);
+      }
+      document.querySelector(".header-node-icon-notification").setAttribute("style", "display: none;");
+      document.querySelector(".each-header-menu-item-notification").setAttribute("style", "display: none;");
 
-        // <div class="each-header-submenu-notifications-item">
-        //   <span class="each-notification-icon"></span>
-        //   <div class="each-notification-content">Example notification</div>
-        // </div>
-
-        submenuNotifications.innerHTML = "";
-
-        for (let i = notifications.length - 1; 0 < i; i--) {
-          notificationItem = document.createElement("div");
-          notificationItem.setAttribute("class", "each-header-submenu-notifications-item");
-          notificationIcon = document.createElement("span");
-          notificationIcon.setAttribute("class", `each-notification-icon${notifications[i].unread ? '' : '-seen'}`);
-          notificationContent = document.createElement("div");
-          notificationContent.setAttribute("class", "each-notification-content");
-          notificationContent.innerText = notifications[i].text;
-          notificationItem.appendChild(notificationIcon);
-          notificationItem.appendChild(notificationContent);
-          submenuNotifications.appendChild(notificationItem);
-        }
-        document.querySelector(".header-node-icon-notification").setAttribute("style", "display: none;");
-        document.querySelector(".each-header-menu-item-notification").setAttribute("style", "display: none;");
-      });
-
-      writeFile("notifications.json", JSON.stringify(notifications.map((notification) => {
+      localStorage.setItem("notifications", JSON.stringify(notifications.map((notification) => {
         notification.unread = false;
         return notification;
       })));
@@ -413,9 +404,13 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
     else if (logoutButton.contains(e.target)) {
+      showLoadingAnimation();
       invoke("cpu_mem_sync_stop", { a: true });
-      invoke("log_out");
-      window.location.href = "../index.html";
+      setTimeout(() => {
+        invoke("log_out");
+        hideLoadingAnimation();
+        window.location.href = "../index.html";
+      }, 5000);
     }
     else {
       headerMenu.setAttribute("style", "display: none;");
@@ -521,40 +516,10 @@ window.addEventListener('DOMContentLoaded', () => {
         if (await ask('This action cannot be reverted. Are you sure?', { title: 'Delete Node', type: 'warning' })) {
           invoke("delete_node").then(() => {
             message("Node deleted successfully.", { title: 'Success', type: 'success' });
-            loadNewPage("../home-page/home-page.html");
+            window.location.href = "../home-page/home-page.html";
           });
         }
       }
     }
   });
 });
-
-function loadNewPage(pagename) {
-  window.location.href = pagename;
-}
-
-function current_node() {
-  invoke("current_node").then((res) => {
-    console.log(res);
-  }).catch((e) => {
-    console.log(e);
-  });
-}
-
-function node_info() {
-  invoke("node_info")
-    .then((res) => {
-      console.log(res);
-    }).catch((e) => {
-      console.log("oy hata.");
-    });
-}
-
-function install_node() {
-  invoke("install_node", { monikerName: "haciabi", nodeName: "lava" }).then((res) => {
-    console.log(res);
-  }).catch((e) => {
-    console.log("oy hata.");
-  });
-
-}

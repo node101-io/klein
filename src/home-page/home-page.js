@@ -1,16 +1,11 @@
 const { invoke } = window.__TAURI__.tauri;
 const { fetch, getClient, Body } = window.__TAURI__.http;
-const { readTextFile, writeFile } = window.__TAURI__.fs;
 
-let ipAddresses;
-let notifications;
-let projects;
+let ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
+let notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
 
-readTextFile("node-info-to-display.json").then((data) => {
-  projectInfo = JSON.parse(data);
-  document.querySelector(".header-node-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
-  document.querySelector(".header-menu-ip-list-button-icon").src = `../assets/projects/${projectInfo.project.toLowerCase()}.png`;
-});
+document.querySelector(".header-node-icon").src = `../assets/projects/${localStorage.getItem("project").toLowerCase().replace(" ", "-")}.png`;
+document.querySelector(".header-menu-ip-list-button-icon").src = `../assets/projects/${localStorage.getItem("project").toLowerCase().replace(" ", "-")}.png`;
 
 window.addEventListener("DOMContentLoaded", () => {
   const testnetTabButton = document.getElementById("testnet-tab-button");
@@ -28,30 +23,23 @@ window.addEventListener("DOMContentLoaded", () => {
 
   showTestnetProjects();
 
-  readTextFile("ipaddresses.json").then((data) => {
-    ipAddresses = JSON.parse(data);
-    for (let i = 0; i < ipAddresses.length; i++) {
-      ipListItem = document.createElement("div");
-      ipListItem.setAttribute("class", "each-header-submenu-ip-list-item");
-      ipListItemIcon = document.createElement("img");
-      ipListItemIcon.setAttribute("src", `../assets/projects/${ipAddresses[i].icon.toLowerCase()}.png`);
-      ipListItemIcon.setAttribute("class", "each-header-submenu-ip-list-item-icon");
-      ipListItemName = document.createElement("div");
-      ipListItemName.setAttribute("class", "each-header-submenu-ip-list-item-name");
-      ipListItemName.innerText = ipAddresses[i].icon;
-      ipListItemIp = document.createElement("div");
-      ipListItemIp.setAttribute("class", "each-header-submenu-ip-list-item-ip");
-      ipListItemIp.innerText = ipAddresses[i].ip;
-      ipListItem.appendChild(ipListItemIcon);
-      ipListItem.appendChild(ipListItemName);
-      ipListItem.appendChild(ipListItemIp);
-      submenuIpList.appendChild(ipListItem);
-    }
-  });
-
-  readTextFile("notifications.json").then((data) => {
-    notifications = JSON.parse(data);
-  });
+  for (let i = 0; i < ipAddresses.length; i++) {
+    ipListItem = document.createElement("div");
+    ipListItem.setAttribute("class", "each-header-submenu-ip-list-item");
+    ipListItemIcon = document.createElement("img");
+    ipListItemIcon.setAttribute("src", `../assets/projects/${ipAddresses[i].icon.toLowerCase().replace(" ", "-")}.png`);
+    ipListItemIcon.setAttribute("class", "each-header-submenu-ip-list-item-icon");
+    ipListItemName = document.createElement("div");
+    ipListItemName.setAttribute("class", "each-header-submenu-ip-list-item-name");
+    ipListItemName.innerText = ipAddresses[i].icon;
+    ipListItemIp = document.createElement("div");
+    ipListItemIp.setAttribute("class", "each-header-submenu-ip-list-item-ip");
+    ipListItemIp.innerText = ipAddresses[i].ip;
+    ipListItem.appendChild(ipListItemIcon);
+    ipListItem.appendChild(ipListItemName);
+    ipListItem.appendChild(ipListItemIp);
+    submenuIpList.appendChild(ipListItem);
+  }
 
   testnetTabButton.addEventListener("click", () => {
     testnetTabButton.setAttribute("class", "each-nodes-page-tab active-tab");
@@ -93,33 +81,24 @@ window.addEventListener("DOMContentLoaded", () => {
     else if (notificationsButton.contains(e.target)) {
       submenuIpList.setAttribute("style", "display: none;");
 
-      readTextFile("notifications.json").then((data) => {
-        notifications = JSON.parse(data);
+      notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
+      submenuNotifications.innerHTML = "";
+      for (let i = notifications.length - 1; 0 < i; i--) {
+        notificationItem = document.createElement("div");
+        notificationItem.setAttribute("class", "each-header-submenu-notifications-item");
+        notificationIcon = document.createElement("span");
+        notificationIcon.setAttribute("class", `each-notification-icon${notifications[i].unread ? '' : '-seen'}`);
+        notificationContent = document.createElement("div");
+        notificationContent.setAttribute("class", "each-notification-content");
+        notificationContent.innerText = notifications[i].text;
+        notificationItem.appendChild(notificationIcon);
+        notificationItem.appendChild(notificationContent);
+        submenuNotifications.appendChild(notificationItem);
+      }
+      document.querySelector(".header-node-icon-notification").setAttribute("style", "display: none;");
+      document.querySelector(".each-header-menu-item-notification").setAttribute("style", "display: none;");
 
-        // <div class="each-header-submenu-notifications-item">
-        //   <span class="each-notification-icon"></span>
-        //   <div class="each-notification-content">Example notification</div>
-        // </div>
-
-        submenuNotifications.innerHTML = "";
-
-        for (let i = notifications.length - 1; 0 < i; i--) {
-          notificationItem = document.createElement("div");
-          notificationItem.setAttribute("class", "each-header-submenu-notifications-item");
-          notificationIcon = document.createElement("span");
-          notificationIcon.setAttribute("class", `each-notification-icon${notifications[i].unread ? '' : '-seen'}`);
-          notificationContent = document.createElement("div");
-          notificationContent.setAttribute("class", "each-notification-content");
-          notificationContent.innerText = notifications[i].text;
-          notificationItem.appendChild(notificationIcon);
-          notificationItem.appendChild(notificationContent);
-          submenuNotifications.appendChild(notificationItem);
-        }
-        document.querySelector(".header-node-icon-notification").setAttribute("style", "display: none;");
-        document.querySelector(".each-header-menu-item-notification").setAttribute("style", "display: none;");
-      });
-
-      writeFile("notifications.json", JSON.stringify(notifications.map((notification) => {
+      localStorage.setItem("notifications", JSON.stringify(notifications.map((notification) => {
         notification.unread = false;
         return notification;
       })));
@@ -134,8 +113,13 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
     else if (logoutButton.contains(e.target)) {
-      invoke("cpu_mem_stop", { a: true });
-      window.location.href = "../index.html";
+      showLoadingAnimation();
+      invoke("cpu_mem_sync_stop", { a: true });
+      setTimeout(() => {
+        invoke("log_out");
+        hideLoadingAnimation();
+        loadNewPage("../index.html");
+      }, 5000);
     }
     else {
       headerMenu.setAttribute("style", "display: none;");
@@ -146,33 +130,49 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+function showLoadingAnimation() {
+  scrollTop = window.scrollY;
+  document.querySelector(".all-wrapper").style.setProperty("pointer-events", "none");
+  document.querySelector(".all-wrapper").style.setProperty("display", "none");
+  document.querySelector(".boxes").style.setProperty("display", "unset");
+}
+function hideLoadingAnimation() {
+  document.querySelector(".boxes").style.setProperty("display", "none");
+  document.querySelector(".all-wrapper").style.removeProperty("display");
+  document.querySelector(".all-wrapper").style.removeProperty("pointer-events");
+  window.scrollTo(0, scrollTop);
+}
+
 function loadNewPage(pagename) {
   window.location.href = pagename;
 }
 
-function logout() {
-  invoke("log_out");
-}
-
 async function showTestnetProjects() {
   const client = await getClient();
-
   const authenticate = await client.post('https://admin.node101.io/api/authenticate', {
     type: 'Json',
     payload: { key: "b8737b4ca31571d769506c4373f5c476e0a022bf58d5e0595c0e37eabb881ad150b8c447f58d5f80f6ffe5ced6f21fe0502c12cf32ab33c6f0787aea5ccff153" },
   });
-  const projectsData = await client.get("https://admin.node101.io/api/projects", {
-    type: 'Json',
-    headers: {
-      'Cookie': authenticate.headers['set-cookie']
+
+  let count = 0;
+  let projects = [];
+  while (true) {
+    projectsData = await client.get(`https://admin.node101.io/api/projects?page=${count}`, {
+      type: 'Json',
+      headers: {
+        'Cookie': authenticate.headers['set-cookie']
+      }
+    })
+    count++;
+    if (projectsData.data.projects.length == 0) {
+      break;
     }
-  })
+    projects.push(...projectsData.data.projects);
+  }
 
   document.getElementById('testnet-tab-content').innerHTML = "";
-  projects = projectsData.data.projects;
 
   for (let i = 0; i < projects.length; i++) {
-    console.log(projects[i]);
     row = document.createElement("div");
     row.setAttribute("class", "each-node-page-project");
 
@@ -256,6 +256,9 @@ async function showTestnetProjects() {
     installButton.appendChild(installButtonSVG)
     installButton.addEventListener("click", function () {
       console.log(projects[i].wizard_key);
+      localStorage.setItem('installation', 'true');
+      invoke("install_node");
+      window.location.href = '../manage-node/manage-node.html';
     });
 
     //Discover Button
@@ -281,5 +284,4 @@ async function showTestnetProjects() {
   }
 
   names = projects.map(item => item.name);
-  console.log(names);
 }

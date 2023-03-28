@@ -693,14 +693,15 @@ progress {
   height: 5px;
 }
 
-progress::-webkit-progress-bar {
+::-webkit-progress-bar {
   background-color: var(--third-color);
   border-radius: 5px;
 }
 
-progress::-webkit-progress-value {
+::-webkit-progress-value {
   background-color: var(--main-color);
   border-radius: 5px;
+  transition: width 1s ease;
 }
 
 .page-video {

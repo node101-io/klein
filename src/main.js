@@ -1,26 +1,22 @@
 const { invoke } = window.__TAURI__.tauri;
-const { readTextFile, writeFile } = window.__TAURI__.fs;
 let focusedIndex;
-let ipAddresses;
+localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Lava Network"},{"ip":"213.43.64.436","icon":"Shentu"}]');
+localStorage.setItem("notifications", '[{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":true,"text":"Example notif!"},{"unread":true,"text":"Example notif!"}]');
+let ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
 
-readTextFile("ipaddresses.json").then((data) => {
-  ipAddresses = JSON.parse(data);
-});
-
-// Functions to be called from Rust
 function loadNewPage(pagename, remember, project) {
   if (ipAddresses.some((ip) => ip.ip == document.getElementById("ip-input").value)) {
     ipAddresses.find((ip) => ip.ip == document.getElementById("ip-input").value).icon = project;
-    // writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
+    localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
   } else if (remember) {
     ipAddresses.push({
       ip: document.getElementById("ip-input").value,
-      icon: project.charAt(0).toUpperCase() + project
+      icon: project
     });
-    writeFile("ipaddresses.json", JSON.stringify(ipAddresses));
+    localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
   }
-  // writeFile("node-info-to-display.json", `{"ip": "${document.getElementById('ip-input').value}", "project": "${project}"}`);
-  hideLoadingAnimation();
+  localStorage.setItem("ip", document.getElementById("ip-input").value);
+  localStorage.setItem("project", project);
   window.location.href = pagename;
 }
 function showLoginError() {
@@ -46,7 +42,7 @@ function showSelectedItem(ip, icon) {
   ipInputEl.value = ip
   ipInputEl.style.setProperty("display", "none");
   selectedItemEl.style.setProperty("display", "flex");
-  selectedItemEl.children[0].src = `assets/projects/${icon.toLowerCase()}.png`;
+  selectedItemEl.children[0].src = `assets/projects/${icon.toLowerCase().replace(" ", "-")}.png`;
   selectedItemEl.children[1].textContent = icon;
   selectedItemEl.children[2].textContent = ip;
 }
@@ -125,7 +121,7 @@ window.addEventListener("DOMContentLoaded", () => {
         });
         img = document.createElement("img");
         img.setAttribute("class", "each-autocomplete-item-icon");
-        img.setAttribute("src", `assets/projects/${ipAddresses[i].icon.toLowerCase()}.png`);
+        img.setAttribute("src", `assets/projects/${ipAddresses[i].icon.toLowerCase().replace(" ", "-")}.png`);
         div1 = document.createElement("div");
         div1.textContent = ipAddresses[i].icon;
         div2 = document.createElement("div");

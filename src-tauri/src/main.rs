@@ -5,6 +5,7 @@
 
 use serde_json::{self, json, Value};
 use ssh2::{DisconnectCode, Session};
+use std::io::prelude::*;
 use std::{io::Read, thread, time};
 use tauri::{LogicalSize, Manager};
 
@@ -36,39 +37,49 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
     let res = sess.userauth_password("root", &password);
 
     let client = reqwest::Client::new();
-    let projects_data = client
-                .get("https://admin.node101.io/api/projects")
-                .header(
-                    "Cookie",
-                    client
-                        .post("https://admin.node101.io/api/authenticate")
-                        .json(&json!({ "key": "b8737b4ca31571d769506c4373f5c476e0a022bf58d5e0595c0e37eabb881ad150b8c447f58d5f80f6ffe5ced6f21fe0502c12cf32ab33c6f0787aea5ccff153" }))
-                        .send()
-                        .await
-                        .unwrap()
-                        .headers()
-                        .get("set-cookie")
-                        .unwrap()
-                        .to_str()
+    let auth_response = client
+        .post("https://admin.node101.io/api/authenticate")
+        .json(&json!({ "key": "b8737b4ca31571d769506c4373f5c476e0a022bf58d5e0595c0e37eabb881ad150b8c447f58d5f80f6ffe5ced6f21fe0502c12cf32ab33c6f0787aea5ccff153" }))
+        .send().await.unwrap();
+    let cookie = auth_response
+        .headers()
+        .get("set-cookie")
+        .unwrap()
+        .to_str()
+        .unwrap();
+
+    let mut projects_data: Vec<Vec<(String, String)>> = Vec::new();
+    let mut page_num = 0;
+    loop {
+        let page_data = client
+            .get(format!(
+                "https://admin.node101.io/api/projects?page={page_num}"
+            ))
+            .header("Cookie", cookie)
+            .send()
+            .await
+            .unwrap();
+        let v: Value = serde_json::from_str(&page_data.text().await.unwrap()).unwrap();
+        let page_data: Vec<(String, String)> = v["projects"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| {
+                (
+                    p.get("name").and_then(Value::as_str).unwrap().to_owned(),
+                    p.get("wizard_key")
+                        .map(|v| v.to_string().replace("\"", ""))
                         .unwrap(),
                 )
-                .send()
-                .await
-                .unwrap();
+            })
+            .collect();
 
-    let v: Value = serde_json::from_str(&projects_data.text().await.unwrap()).unwrap();
-    let projects = v["projects"].as_array().unwrap();
-    let data: Vec<(&str, String)> = projects
-        .iter()
-        .map(|p| {
-            (
-                p.get("name").and_then(Value::as_str).unwrap(),
-                p.get("wizard_key")
-                    .map(|v| v.to_string().replace("\"", ""))
-                    .unwrap(),
-            )
-        })
-        .collect();
+        if page_data.is_empty() {
+            break;
+        }
+        projects_data.push(page_data);
+        page_num += 1;
+    }
 
     if res.is_ok() {
         unsafe {
@@ -81,15 +92,22 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
                 channel.read_to_string(&mut s).unwrap();
 
                 let mut found = false;
-                for item in data {
-                    if s.trim() == item.1 {
-                        window
-                            .eval(&format!(
-                                "window.loadNewPage('manage-node/manage-node.html', {}, '{}')",
-                                remember, item.0
-                            ))
-                            .unwrap();
-                        found = true;
+                for page_data in projects_data {
+                    for item in page_data {
+                        println!("{}", item.1);
+                        if s.trim() == item.1 {
+                            println!("Found project: {}", item.0);
+                            window
+                                .eval(&format!(
+                                    "window.loadNewPage('manage-node/manage-node.html', {}, '{}')",
+                                    remember, item.0
+                                ))
+                                .unwrap();
+                            found = true;
+                            break;
+                        }
+                    }
+                    if found {
                         break;
                     }
                 }
@@ -103,7 +121,7 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
 
                 channel.close().unwrap();
             }
-            cpu_mem_sync(window.clone()).await;
+            // cpu_mem_sync(window.clone()).await;
         }
     } else {
         window.eval("window.showLoginError()").unwrap();
@@ -151,7 +169,6 @@ async fn cpu_mem_sync(window: tauri::Window) {
                     Ok(channel) => channel,
                     Err(err) => {
                         println!("Error opening channel: {}", err);
-                        cpu_mem_sync(window.clone());
                         return;
                     }
                 };
@@ -379,26 +396,29 @@ fn delete_node() {
 //     }
 // }
 
-// #[tauri::command(async)]
-// fn install_node(moniker_name: String, net_name: String, node_name: String) {
-//     unsafe {
-//         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
-//             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-//             let command: String = format!(
-//                     "echo 'export MONIKER= {moniker_name}' >> $HOME/.bash_profile; wget -O {node_name}.sh https://node101.io/{net_name}/{node_name}/{node_name}.sh && chmod +x {node_name}.sh && bash {node_name}.sh "
-//                 );
-//             channel.exec(&*command).unwrap();
-//             let mut s = String::new();
-//             channel.read_to_string(&mut s).unwrap();
-//             if s.contains("SETUP IS FINISHED") {
-//                 println!("setup is finished");
-//             } else {
-//                 println!("setup is not finished");
-//             }
-//             channel.close().unwrap();
-//         }
-//     }
-// }
+#[tauri::command(async)]
+fn install_node(window: tauri::Window) {
+    unsafe {
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            channel.exec(&format!("echo 'export MONIKER=node101' >> $HOME/.bash_profile; echo 'export WALLET_NAME=node101' >> $HOME/.bash_profile; wget -O lava.sh https://node101.io/testnet/lava-testnet1/lava.sh && chmod +x lava.sh && bash lava.sh")).unwrap();
+            let mut buf = [0u8; 1024];
+            loop {
+                let len = channel.read(&mut buf).unwrap();
+                if len == 0 {
+                    break;
+                }
+                let s = std::str::from_utf8(&buf[0..len]).unwrap();
+                if s.contains("SETUP IS FINISHED") {
+                    println!("SETUP IS FINISHED");
+                    window.eval("DONE").unwrap();
+                }
+                std::io::stdout().flush().unwrap();
+            }
+            channel.close().unwrap();
+        }
+    }
+}
 
 #[tauri::command]
 fn update_wallet_password(passw: String) {
@@ -599,7 +619,7 @@ fn main() {
             cpu_mem_sync,
             cpu_mem_sync_stop,
             node_info,
-            // install_node,
+            install_node,
             // unjail,
             create_wallet,
             show_wallets,
