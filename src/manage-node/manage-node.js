@@ -53,7 +53,6 @@ function updateCpuMemSync(cpu, mem, active, sync, catchup, version) {
     document.querySelectorAll('.each-page-chart-percentage')[0].textContent = sync;
     document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Syncing...\n\nCurrent Block:\n${sync}`;
   }
-
   charts_to_update[1].update(Math.floor(mem));
   document.querySelectorAll('.each-page-chart-percentage')[1].textContent = Math.floor(mem) + "%";
 
@@ -69,7 +68,7 @@ function updateCpuMemSync(cpu, mem, active, sync, catchup, version) {
   } else {
     document.querySelectorAll(".each-sidebar-tag")[0].classList.add("inactive-tag");
     document.querySelectorAll(".each-sidebar-tag")[0].classList.remove("active-tag");
-    document.querySelectorAll(".each-sidebar-tag")[0].textContent = "Inactive";
+    document.querySelectorAll(".each-sidebar-tag")[0].textContent = active.charAt(0).toUpperCase() + active.slice(1);
   }
 
   if (typeof version !== "undefined") {
@@ -213,9 +212,9 @@ function hideLoadingAnimation() {
 }
 
 function endInstallation() {
-  document.querySelectorAll(".each-progress-bar-status-icon")[0].setProperty("display", "unset");
+  document.querySelectorAll(".each-progress-bar-status-icon")[0].setAttribute("style", "display: unset;")
   document.querySelector(".progress-bar").setAttribute("value", "100");
-  localStorage.setItem("installation", "false");
+  document.querySelector(".progress-bar-text-right").textContent = `100%`;
   invoke("cpu_mem_sync");
 }
 
@@ -234,14 +233,15 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   if (localStorage.getItem("installation") == "true") {
+    localStorage.setItem("installation", "false");
+    invoke("install_node");
     changePage('page-content/installation.html');
     setTimeout(() => {
-      // document.querySelector(".progress-bar").setAttribute("value", "3");
       for (let i = 0; i < 100; i++) {
         setTimeout(() => {
           document.querySelector(".progress-bar").setAttribute("value", i);
           document.querySelector(".progress-bar-text-right").textContent = `${i}%`;
-        }, i * i / 0.03);
+        }, i * i / 0.02);
       }
     }, 1000);
   } else {
@@ -487,6 +487,7 @@ window.addEventListener('DOMContentLoaded', () => {
                   mnemonic += input.value + " ";
                 });
                 mnemonic = mnemonic.slice(0, -1);
+                console.log(mnemonic);
                 invoke("recover_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, mnemo: mnemonic });
               });
             }
@@ -528,6 +529,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (await ask('This action cannot be reverted. Are you sure?', { title: 'Delete Node', type: 'warning' })) {
           invoke("delete_node").then(() => {
             message("Node deleted successfully.", { title: 'Success', type: 'success' });
+            localStorage.setItem("project", "");
             window.location.href = "../home-page/home-page.html";
           });
         }

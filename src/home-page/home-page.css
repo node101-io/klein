@@ -528,6 +528,19 @@ body {
   background-color: var(--main-color);
 }
 
+.install-button:disabled:hover {
+  opacity: 1;
+}
+
+.install-button:disabled {
+  background-color: var(--border-color);
+  cursor: not-allowed;
+}
+
+.install-button:disabled:first-child {
+  color: var(--second-text-color);
+}
+
 .discover-button {
   background-color: rgba(90, 104, 114, 1);
 }

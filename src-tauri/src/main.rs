@@ -5,8 +5,10 @@
 
 use serde_json::{self, json, Value};
 use ssh2::{DisconnectCode, Session};
-use std::io::prelude::*;
-use std::{io::Read, thread, time};
+use std::{
+    io::{prelude::Read, Write},
+    thread, time,
+};
 use tauri::{LogicalSize, Manager};
 
 struct SessionManager {
@@ -16,15 +18,6 @@ struct SessionManager {
 }
 
 static mut GLOBAL_STRUCT: Option<SessionManager> = None;
-
-async fn create_session(session: Session) -> SessionManager {
-    let alive_session = SessionManager {
-        open_session: session,
-        stop_cpu_mem_sync: false,
-        walletpassword: String::new(),
-    };
-    alive_session
-}
 
 #[tauri::command(async)]
 async fn log_in(ip: String, password: String, remember: bool, window: tauri::Window) {
@@ -83,7 +76,11 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
 
     if res.is_ok() {
         unsafe {
-            GLOBAL_STRUCT = Some(create_session(sess).await);
+            GLOBAL_STRUCT = Some(SessionManager {
+                open_session: sess,
+                stop_cpu_mem_sync: false,
+                walletpassword: String::new(),
+            });
 
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
                 let mut channel = my_boxed_session.open_session.channel_session().unwrap();
@@ -94,7 +91,6 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
                 let mut found = false;
                 for page_data in projects_data {
                     for item in page_data {
-                        println!("{}", item.1);
                         if s.trim() == item.1 {
                             println!("Found project: {}", item.0);
                             window
@@ -140,7 +136,7 @@ fn log_out() {
                 )
                 .unwrap();
 
-            // GLOBAL_STRUCT = None;
+            GLOBAL_STRUCT = None;
         }
     }
 }
@@ -163,21 +159,19 @@ async fn cpu_mem_sync(window: tauri::Window) {
                 if my_boxed_session.stop_cpu_mem_sync {
                     break;
                 }
-
                 let channel_result = my_boxed_session.open_session.channel_session();
                 let mut channel = match channel_result {
                     Ok(channel) => channel,
                     Err(err) => {
                         println!("Error opening channel: {}", err);
+                        window.eval("message('Session timed out, please log in again.', { title: 'Error', type: 'error' }); window.location.href = '../index.html';").unwrap();
                         return;
                     }
                 };
-
                 let mut s = String::new();
                 channel.exec("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo $(top -b -n1 | awk '/Cpu\\(s\\)/{{print 100-$8}} /MiB Mem/{{print ($4-$6)/$4*100}}'; echo \\'$(systemctl is-active $(bash -c -l 'echo $EXECUTE'))\\'; $(bash -c -l 'echo $EXECUTE') status 2>&1 | jq .SyncInfo.latest_block_height,.SyncInfo.catching_up,.NodeInfo.version)").unwrap();
                 channel.read_to_string(&mut s).unwrap();
                 println!("{}", s);
-
                 window
                     .eval(&*format!(
                         "window.updateCpuMemSync({});",
@@ -409,12 +403,14 @@ fn install_node(window: tauri::Window) {
                     break;
                 }
                 let s = std::str::from_utf8(&buf[0..len]).unwrap();
+                println!("{}", s);
                 if s.contains("SETUP IS FINISHED") {
                     println!("SETUP IS FINISHED");
                     window.eval("endInstallation();").unwrap();
                 }
                 std::io::stdout().flush().unwrap();
             }
+            println!("çıktık");
             channel.close().unwrap();
         }
     }
@@ -434,12 +430,13 @@ fn create_wallet(walletname: String, window: tauri::Window) {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let mut s = String::new();
             channel
-                .exec(&*format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo -e '{}\ny\n' | $(bash -c -l 'echo $EXECUTE') keys add {} --output json;",
+                .exec(&*format!(
+                    "echo -e '{}\ny\n' | bash -c -l '$EXECUTE keys add {} --output json'",
                     my_boxed_session.walletpassword, walletname
                 ))
                 .unwrap();
             channel.read_to_string(&mut s).unwrap();
-            println!("{}", s);
+            println!("aaa{}", s);
             let v: Value = serde_json::from_str(&s).unwrap();
             window
                 .eval(&format!(
@@ -457,12 +454,11 @@ fn if_wallet_exists(walletname: String) -> bool {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-            // let command: String = format!(
-            //     "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo -e {} | {} keys list --output json;",
-            //     GLOBAL_STRUCT.as_mut().unwrap().walletpassword,
-            //     GLOBAL_STRUCT.as_mut().unwrap().existing_node
-            // );
-            // channel.exec(&*command).unwrap();
+            let command: String = format!(
+                "echo -e {} | bash -c -l '$EXECUTE keys list --output json'",
+                GLOBAL_STRUCT.as_mut().unwrap().walletpassword,
+            );
+            channel.exec(&*command).unwrap();
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             let v: Value = serde_json::from_str(&s).unwrap();
@@ -471,11 +467,6 @@ fn if_wallet_exists(walletname: String) -> bool {
                 if i["name"].to_string() == format!("\"{}\"", walletname) {
                     is_exist = true;
                 }
-            }
-            if is_exist {
-                println!("wallet exists");
-            } else {
-                println!("wallet does not exist");
             }
             channel.close().unwrap();
             is_exist
@@ -490,12 +481,11 @@ fn show_wallets(window: tauri::Window) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-            // let command: String = format!(
-            //     "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{}\" | {} keys list --output json;",
-            //     GLOBAL_STRUCT.as_mut().unwrap().walletpassword,
-            //     GLOBAL_STRUCT.as_mut().unwrap().existing_node
-            // );
-            // channel.exec(&*command).unwrap();
+            let command: String = format!(
+                "yes \"{}\" | bash -c -l '$EXECUTE keys list --output json'",
+                GLOBAL_STRUCT.as_mut().unwrap().walletpassword,
+            );
+            channel.exec(&*command).unwrap();
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             window.eval(&format!("window.showWallets({})", s)).unwrap();
@@ -509,10 +499,12 @@ fn delete_wallet(walletname: String) -> () {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-            // let command: String = format!(
-            //         "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{}\" | {} keys delete {} -y --output json;", GLOBAL_STRUCT.as_mut().unwrap().walletpassword, GLOBAL_STRUCT.as_mut().unwrap().existing_node, walletname
-            //     );
-            // channel.exec(&*command).unwrap();
+            let command: String = format!(
+                "yes \"{}\" | bash -c -l '$EXECUTE keys delete {} -y --output json'",
+                GLOBAL_STRUCT.as_mut().unwrap().walletpassword,
+                walletname
+            );
+            channel.exec(&*command).unwrap();
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             println!("{}", s);
@@ -526,7 +518,7 @@ fn start_stop_restart_node(action: String) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-            let command: String = format!("systemctl {action} $(bash -c -l 'echo $EXECUTE')");
+            let command: String = format!("bash -c -l 'systemctl {action} $EXECUTE'");
             channel.exec(&*command).unwrap();
             channel.close().unwrap();
         }
@@ -558,16 +550,17 @@ fn recover_wallet(walletname: String, mnemo: String) {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let mut s = String::new();
-            // channel
-            //     .exec(&*format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo -e '{}\n{}' | {} keys add {} --recover --output json;",
-            //         my_boxed_session.walletpassword,
-            //         mnemo,
-            //         my_boxed_session.existing_node,
-            //         walletname
-            //     ))
-            //     .unwrap();
+            channel
+                .exec(
+                    &*format!("echo -e '{}\n{}\n' | bash -c -l '$EXECUTE keys add {} --recover --output json'", // PAROLA İSTEMEYENLERDE ÇALIŞMIYOR!!!
+                    my_boxed_session.walletpassword,
+                    mnemo,
+                    walletname
+                ),
+                )
+                .unwrap();
             channel.read_to_string(&mut s).unwrap();
-            println!("{}", s);
+            println!("hahaha{}", s);
             channel.close().unwrap();
         }
     }

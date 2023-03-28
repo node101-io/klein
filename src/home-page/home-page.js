@@ -1,5 +1,6 @@
 const { invoke } = window.__TAURI__.tauri;
 const { fetch, getClient, Body } = window.__TAURI__.http;
+const { message } = window.__TAURI__.dialog;
 
 let ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
 let notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
@@ -170,13 +171,12 @@ async function showTestnetProjects() {
     projects.push(...projectsData.data.projects);
   }
 
-  document.getElementById('testnet-tab-content').innerHTML = "";
-
+  const testnetTabContent = document.getElementById('testnet-tab-content');
+  testnetTabContent.innerHTML = "";
+  let gonnaPrepend = "";
   for (let i = 0; i < projects.length; i++) {
     row = document.createElement("div");
     row.setAttribute("class", "each-node-page-project");
-
-    //Project Header Part
     header = document.createElement("div");
     header.setAttribute("class", "project-header");
     headerIcon = document.createElement("img");
@@ -228,18 +228,12 @@ async function showTestnetProjects() {
     details.appendChild(rating);
     header.appendChild(details);
     row.appendChild(header);
-
-    //Project Description Part
     description = document.createElement("div");
     description.setAttribute("class", "project-description");
     description.textContent = projects[i].description;
     row.appendChild(description);
-
-    //Project Buttons Part
     buttons = document.createElement("div");
     buttons.setAttribute("class", "project-buttons");
-
-    //Install Button
     installButton = document.createElement("button");
     installButton.setAttribute("class", "each-project-button install-button");
     textDiv = document.createElement("div");
@@ -255,13 +249,10 @@ async function showTestnetProjects() {
     installButton.appendChild(textDiv);
     installButton.appendChild(installButtonSVG)
     installButton.addEventListener("click", function () {
-      console.log(projects[i].wizard_key);
       localStorage.setItem('installation', 'true');
-      invoke("install_node");
+      localStorage.setItem('project', projects[i].name);
       window.location.href = '../manage-node/manage-node.html';
     });
-
-    //Discover Button
     discoverButton = document.createElement("button");
     discoverButton.setAttribute("class", "each-project-button discover-button");
     textDiv2 = document.createElement("div");
@@ -273,15 +264,27 @@ async function showTestnetProjects() {
     discoverButtonSVG.setAttribute("viewBox", "0 0 10 10");
     path2 = document.createElementNS('http://www.w3.org/2000/svg', `path`);
     path2.setAttribute("d", "M2 0V1H8.295L0 9.295L0.705 10L9 1.705V8H10V0H2Z");
-
     discoverButtonSVG.appendChild(path2);
     discoverButton.appendChild(textDiv2);
     discoverButton.appendChild(discoverButtonSVG)
     buttons.appendChild(installButton);
     buttons.appendChild(discoverButton);
     row.appendChild(buttons);
-    document.getElementById('testnet-tab-content').appendChild(row);
+    testnetTabContent.appendChild(row);
+    if (projects[i].name == localStorage.getItem("project")) {
+      gonnaPrepend = row;
+    }
   }
-
-  names = projects.map(item => item.name);
+  if (gonnaPrepend) {
+    testnetTabContent.prepend(gonnaPrepend);
+    document.querySelector(".install-button").replaceWith(document.querySelector(".install-button").cloneNode(true));
+    document.querySelector(".install-button").addEventListener("click", function () {
+      window.location.href = '../manage-node/manage-node.html';
+    });
+    document.querySelector(".install-button").firstChild.textContent = "Manage Node";
+    document.querySelector(".install-button").firstChild.nextSibling.setAttribute("style", "transform: rotate(-90deg);");
+    for (let i = 1; i < document.querySelectorAll(".install-button").length; i++) {
+      document.querySelectorAll(".install-button")[i].disabled = true;
+    }
+  }
 }
