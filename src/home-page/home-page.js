@@ -114,7 +114,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     else if (logoutButton.contains(e.target)) {
       showLoadingAnimation();
-      invoke("cpu_mem_sync_stop", { a: true });
+      invoke("cpu_mem_sync_stop");
       setTimeout(() => {
         invoke("log_out");
         hideLoadingAnimation();

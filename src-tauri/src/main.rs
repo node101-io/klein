@@ -121,7 +121,6 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
 
                 channel.close().unwrap();
             }
-            // cpu_mem_sync(window.clone()).await;
         }
     } else {
         window.eval("window.showLoginError()").unwrap();
@@ -147,10 +146,10 @@ fn log_out() {
 }
 
 #[tauri::command(async)]
-fn cpu_mem_sync_stop(a: bool) {
+fn cpu_mem_sync_stop() {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
-            my_boxed_session.stop_cpu_mem_sync = a;
+            my_boxed_session.stop_cpu_mem_sync = true;
         }
     }
 }
@@ -159,6 +158,7 @@ fn cpu_mem_sync_stop(a: bool) {
 async fn cpu_mem_sync(window: tauri::Window) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
+            my_boxed_session.stop_cpu_mem_sync = false;
             loop {
                 if my_boxed_session.stop_cpu_mem_sync {
                     break;
@@ -411,7 +411,7 @@ fn install_node(window: tauri::Window) {
                 let s = std::str::from_utf8(&buf[0..len]).unwrap();
                 if s.contains("SETUP IS FINISHED") {
                     println!("SETUP IS FINISHED");
-                    window.eval("DONE").unwrap();
+                    window.eval("endInstallation();").unwrap();
                 }
                 std::io::stdout().flush().unwrap();
             }

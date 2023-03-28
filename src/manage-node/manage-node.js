@@ -212,6 +212,13 @@ function hideLoadingAnimation() {
   window.scrollTo(0, scrollTop);
 }
 
+function endInstallation() {
+  document.querySelectorAll(".each-progress-bar-status-icon")[0].setProperty("display", "unset");
+  document.querySelector(".progress-bar").setAttribute("value", "100");
+  localStorage.setItem("installation", "false");
+  invoke("cpu_mem_sync");
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   charts_to_update = [];
   document.querySelectorAll('.each-page-chart').forEach((element) => {
@@ -239,6 +246,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   } else {
     changePage('page-content/node-operations.html');
+    invoke("cpu_mem_sync");
   }
 
   const sidebarNodeIcon = document.querySelector(".sidebar-info-icon");
@@ -299,7 +307,11 @@ window.addEventListener('DOMContentLoaded', () => {
     message("Copied to clipboard.", { title: "Success", type: "success" });
   })
   homePageButton.addEventListener('click', function () {
-    window.location.href = "../home-page/home-page.html";
+    showLoadingAnimation();
+    invoke("cpu_mem_sync_stop");
+    setTimeout(() => {
+      window.location.href = "../home-page/home-page.html";
+    }, 5000);
   });
   nodeOperationsButton.addEventListener('click', function () {
     changePage('page-content/node-operations.html');
@@ -405,7 +417,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     else if (logoutButton.contains(e.target)) {
       showLoadingAnimation();
-      invoke("cpu_mem_sync_stop", { a: true });
+      invoke("cpu_mem_sync_stop");
       setTimeout(() => {
         invoke("log_out");
         hideLoadingAnimation();

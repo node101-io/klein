@@ -685,6 +685,12 @@ html {
   margin-right: auto;
 }
 
+.each-progress-bar-status-icon {
+  display: none;
+  width: 18px;
+  height: 18px;
+}
+
 progress {
   -webkit-appearance: none;
   -moz-appearance: none;
