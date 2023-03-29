@@ -551,11 +551,11 @@ body {
 
 .overlay-top {
   position: absolute;
-  top: 209px;
+  top: 212px;
   margin-right: calc(5vw + 20px);
   margin-left: 5vw;
   width: calc(90vw - 20px);
-  height: 3vh;
+  height: 5vh;
   background: linear-gradient(180deg, rgba(18, 18, 18, 1) 0%, rgba(18, 18, 18, 0.5) 50%, rgba(18, 18, 18, 0) 100%);
   z-index: 89;
 }

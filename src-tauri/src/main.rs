@@ -116,6 +116,7 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
                 }
 
                 channel.close().unwrap();
+                // check_if_password_needed();
             }
         }
     } else {
@@ -405,9 +406,36 @@ fn install_node(window: tauri::Window) {
                 let s = std::str::from_utf8(&buf[0..len]).unwrap();
                 println!("{}", s);
                 if s.contains("SETUP IS FINISHED") {
-                    println!("SETUP IS FINISHED");
                     window.eval("endInstallation();").unwrap();
                 }
+                std::io::stdout().flush().unwrap();
+            }
+            println!("çıktık");
+            channel.close().unwrap();
+        }
+    }
+}
+
+#[tauri::command(async)]
+fn check_if_password_needed() {
+    unsafe {
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            channel
+                .exec(&format!("bash -c -l '$EXECUTE keys add testforpassword'"))
+                .unwrap();
+            let mut buf = [0u8; 1024];
+            loop {
+                let len = channel.read(&mut buf).unwrap();
+                if len == 0 {
+                    break;
+                }
+                let s = std::str::from_utf8(&buf[0..len]).unwrap();
+                println!("{}", s);
+                // if s.contains("SETUP IS FINISHED") {
+                //     println!("SETUP IS FINISHED");
+                //     window.eval("endInstallation();").unwrap();
+                // }
                 std::io::stdout().flush().unwrap();
             }
             println!("çıktık");

@@ -1,26 +1,38 @@
 const { invoke } = window.__TAURI__.tauri;
 const { fetch, getClient, Body } = window.__TAURI__.http;
-const { message } = window.__TAURI__.dialog;
+const { message, confirm } = window.__TAURI__.dialog;
 
-let ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
-let notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
-
-document.querySelector(".header-node-icon").src = `../assets/projects/${localStorage.getItem("project").toLowerCase().replace(" ", "-")}.png`;
-document.querySelector(".header-menu-ip-list-button-icon").src = `../assets/projects/${localStorage.getItem("project").toLowerCase().replace(" ", "-")}.png`;
+const ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
+const notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
+const project = localStorage.getItem("project");
+const imgSrc = project ? `../assets/projects/${project.toLowerCase().replace(" ", "-")}.png` : `../assets/projects/default.png`;
 
 window.addEventListener("DOMContentLoaded", () => {
   const testnetTabButton = document.getElementById("testnet-tab-button");
   const mainnetTabButton = document.getElementById("mainnet-tab-button");
   const testnetTabContent = document.getElementById("testnet-tab-content");
   const mainnetTabContent = document.getElementById("mainnet-tab-content");
+  const nodeIcon = document.querySelector(".header-node-icon");
   const nodeIcons = document.querySelector(".header-node-icons");
   const headerMenu = document.querySelector(".header-menu");
   const headerMenuIpButton = document.querySelector(".header-menu-ip-list-button");
+  const headerMenuIpButtonName = document.querySelector(".header-menu-ip-list-button-details-name");
+  const headerMenuIpButtonIp = document.querySelector(".header-menu-ip-list-button-details-ip");
+  const headerMenuIpButtonIcon = document.querySelector(".header-menu-ip-list-button-icon");
   const notificationsButton = document.getElementById("notifications-button");
   const logoutButton = document.getElementById("logout-button");
   const submenuIpList = document.querySelector(".header-submenu-ip-list");
   const scrollbarBackground = document.querySelector(".header-menu-scroll-background");
   const submenuNotifications = document.querySelector(".header-submenu-notifications");
+
+  nodeIcon.setAttribute("src", imgSrc);
+  if (imgSrc == `../assets/projects/default.png`) {
+    headerMenuIpButtonIcon.setAttribute("style", "display: none;");
+  } else {
+    headerMenuIpButtonIcon.setAttribute("src", imgSrc);
+  }
+  headerMenuIpButtonName.textContent = project;
+  headerMenuIpButtonIp.textContent = localStorage.getItem("ip");
 
   showTestnetProjects();
 
@@ -32,11 +44,11 @@ window.addEventListener("DOMContentLoaded", () => {
     ipListItemIcon.setAttribute("class", "each-header-submenu-ip-list-item-icon");
     ipListItemName = document.createElement("div");
     ipListItemName.setAttribute("class", "each-header-submenu-ip-list-item-name");
-    ipListItemName.innerText = ipAddresses[i].icon;
+    ipListItemName.innerText = ipAddresses[i].icon == "" ? "Empty Server" : ipAddresses[i].icon;
     ipListItemIp = document.createElement("div");
     ipListItemIp.setAttribute("class", "each-header-submenu-ip-list-item-ip");
     ipListItemIp.innerText = ipAddresses[i].ip;
-    ipListItem.appendChild(ipListItemIcon);
+    ipAddresses[i].icon == "" ? ipListItemIcon.setAttribute("style", "display: none;") : ipListItem.appendChild(ipListItemIcon);
     ipListItem.appendChild(ipListItemName);
     ipListItem.appendChild(ipListItemIp);
     submenuIpList.appendChild(ipListItem);
@@ -81,8 +93,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
     else if (notificationsButton.contains(e.target)) {
       submenuIpList.setAttribute("style", "display: none;");
-
-      notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
       submenuNotifications.innerHTML = "";
       for (let i = notifications.length - 1; 0 < i; i--) {
         notificationItem = document.createElement("div");
@@ -98,12 +108,10 @@ window.addEventListener("DOMContentLoaded", () => {
       }
       document.querySelector(".header-node-icon-notification").setAttribute("style", "display: none;");
       document.querySelector(".each-header-menu-item-notification").setAttribute("style", "display: none;");
-
       localStorage.setItem("notifications", JSON.stringify(notifications.map((notification) => {
         notification.unread = false;
         return notification;
       })));
-
       if (submenuNotifications.style.display == "block") {
         submenuNotifications.setAttribute("style", "display: none;");
         scrollbarBackground.setAttribute("style", "display: none;");
@@ -175,6 +183,7 @@ async function showTestnetProjects() {
   testnetTabContent.innerHTML = "";
   let gonnaPrepend = "";
   for (let i = 0; i < projects.length; i++) {
+    console.log(projects[i]);
     row = document.createElement("div");
     row.setAttribute("class", "each-node-page-project");
     header = document.createElement("div");
@@ -248,10 +257,12 @@ async function showTestnetProjects() {
     installButtonSVG.appendChild(path1);
     installButton.appendChild(textDiv);
     installButton.appendChild(installButtonSVG)
-    installButton.addEventListener("click", function () {
-      localStorage.setItem('installation', 'true');
-      localStorage.setItem('project', projects[i].name);
-      window.location.href = '../manage-node/manage-node.html';
+    installButton.addEventListener("click", async function () {
+      if (confirm("Node is going to be installed, please confirm.", projects[i].name)) {
+        localStorage.setItem('installation', 'true');
+        localStorage.setItem('project', projects[i].name);
+        window.location.href = '../manage-node/manage-node.html';
+      }
     });
     discoverButton = document.createElement("button");
     discoverButton.setAttribute("class", "each-project-button discover-button");
@@ -271,7 +282,7 @@ async function showTestnetProjects() {
     buttons.appendChild(discoverButton);
     row.appendChild(buttons);
     testnetTabContent.appendChild(row);
-    if (projects[i].name == localStorage.getItem("project")) {
+    if (projects[i].name == project) {
       gonnaPrepend = row;
     }
   }

@@ -2,11 +2,8 @@ const { invoke } = window.__TAURI__.tauri;
 const { writeText } = window.__TAURI__.clipboard;
 const { message, ask } = window.__TAURI__.dialog;
 
-let ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
-let notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
-let projectInfo;
-let scrollTop;
-let currentPage;
+const ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
+const notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
 
 function changePage(page) {
   fetch(page)
@@ -234,6 +231,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (localStorage.getItem("installation") == "true") {
     localStorage.setItem("installation", "false");
+    localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses.map((ip) => {
+      return ip.ip === localStorage.getItem("ip") ? { ...ip, icon: localStorage.getItem("project") } : ip;
+    })));
     invoke("install_node");
     changePage('page-content/installation.html');
     setTimeout(() => {
@@ -241,7 +241,7 @@ window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           document.querySelector(".progress-bar").setAttribute("value", i);
           document.querySelector(".progress-bar-text-right").textContent = `${i}%`;
-        }, i * i / 0.02);
+        }, i * i / 0.015);
       }
     }, 1000);
   } else {
@@ -292,11 +292,11 @@ window.addEventListener('DOMContentLoaded', () => {
     ipListItemIcon.setAttribute("class", "each-header-submenu-ip-list-item-icon");
     ipListItemName = document.createElement("div");
     ipListItemName.setAttribute("class", "each-header-submenu-ip-list-item-name");
-    ipListItemName.innerText = ipAddresses[i].icon;
+    ipListItemName.innerText = ipAddresses[i].icon == "" ? "Empty Server" : ipAddresses[i].icon;
     ipListItemIp = document.createElement("div");
     ipListItemIp.setAttribute("class", "each-header-submenu-ip-list-item-ip");
     ipListItemIp.innerText = ipAddresses[i].ip;
-    ipListItem.appendChild(ipListItemIcon);
+    ipAddresses[i].icon == "" ? ipListItemIcon.setAttribute("style", "display: none;") : ipListItem.appendChild(ipListItemIcon);
     ipListItem.appendChild(ipListItemName);
     ipListItem.appendChild(ipListItemIp);
     submenuIpList.appendChild(ipListItem);
@@ -527,10 +527,17 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       else if (document.querySelector(".delete-node-button").contains(e.target)) {
         if (await ask('This action cannot be reverted. Are you sure?', { title: 'Delete Node', type: 'warning' })) {
+          showLoadingAnimation();
           invoke("delete_node").then(() => {
-            message("Node deleted successfully.", { title: 'Success', type: 'success' });
+            invoke("cpu_mem_sync_stop");
             localStorage.setItem("project", "");
-            window.location.href = "../home-page/home-page.html";
+            localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses.map((ip) => {
+              return ip.ip === localStorage.getItem("ip") ? { ...ip, icon: "" } : ip;
+            })));
+            setTimeout(() => {
+              message("Node deleted successfully.", { title: 'Success', type: 'success' });
+              window.location.href = "../home-page/home-page.html";
+            }, 5000);
           });
         }
       }
