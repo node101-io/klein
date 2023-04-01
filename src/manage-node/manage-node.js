@@ -30,7 +30,7 @@ function changePage(page) {
           if (await ask("This action will delete all the wallets. Are you sure you want to continue?", { title: "Reset Keyring", type: "warning" })) {
             invoke("delete_keyring");
             localStorage.setItem("keyring", '{"required": true, "exists": false}');
-            changePage("page-content/wallets-login.html");
+            changePage("page-content/wallets-create-keyring.html");
           }
         });
       }
@@ -508,9 +508,15 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       else if (currentPage == "wallets-login") {
         showLoadingAnimation();
-        invoke("update_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value });
-        changePage('page-content/wallets.html');
-        invoke("show_wallets");
+        invoke("check_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value }).then((result) => {
+          if (result) {
+            changePage('page-content/wallets.html');
+            invoke("show_wallets");
+          } else {
+            message("", { title: "Wrong password.", type: 'error' });
+            hideLoadingAnimation();
+          }
+        });
       }
       else if (currentPage == "wallets") {
         if (submitButton.children[0].innerText == "Create") {

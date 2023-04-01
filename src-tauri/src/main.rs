@@ -114,7 +114,6 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
                         ))
                         .unwrap();
                 }
-
                 channel.close().unwrap();
             }
         }
@@ -495,10 +494,34 @@ fn delete_keyring() {
     }
 }
 
-#[tauri::command]
-fn update_wallet_password(passw: String) {
+#[tauri::command(async)]
+fn check_wallet_password(passw: String) -> bool {
     unsafe {
-        GLOBAL_STRUCT.as_mut().unwrap().walletpassword = passw.to_string();
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            channel
+                .exec(&*format!(
+                    "echo -e '{}\ny\n' | bash -c -l '$EXECUTE keys add testifpasswordcorrect --output json'",
+                    passw
+                ))
+                .unwrap();
+            let mut s = String::new();
+            channel.read_to_string(&mut s).unwrap();
+            if s.contains("address") {
+                println!("password correct");
+                GLOBAL_STRUCT.as_mut().unwrap().walletpassword = passw.to_string();
+                channel.close().unwrap();
+                delete_wallet("testifpasswordcorrect".to_string());
+                true
+            } else {
+                println!("password incorrect");
+                channel.close().unwrap();
+                false
+            }
+        } else {
+            println!("error in check_wallet_password");
+            false
+        }
     }
 }
 
@@ -567,6 +590,7 @@ fn show_wallets(window: tauri::Window) {
             channel.exec(&*command).unwrap();
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
+            println!("{}", s);
             window.eval(&format!("window.showWallets({})", s)).unwrap();
             channel.close().unwrap();
         }
@@ -700,7 +724,6 @@ fn main() {
             // systemctl_statusnode,
             delete_node,
             // update_node,
-            update_wallet_password,
             // send_token,
             recover_wallet,
             // vote,
@@ -708,7 +731,8 @@ fn main() {
             check_if_password_needed,
             check_if_keyring_exist,
             create_keyring,
-            delete_keyring
+            delete_keyring,
+            check_wallet_password
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
