@@ -4,6 +4,8 @@ const { message, ask } = window.__TAURI__.dialog;
 
 const ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
 const notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
+const project = localStorage.getItem("project");
+const imgSrc = project ? `../assets/projects/${project.toLowerCase().replace(" ", "-")}.png` : `../assets/projects/default.png`;
 
 function changePage(page) {
   fetch(page)
@@ -12,7 +14,7 @@ function changePage(page) {
       document.getElementById('content-of-page').innerHTML = html;
       currentPage = page.split("/")[1].split(".")[0];
       if (currentPage == "wallets") {
-        document.querySelectorAll(".each-mnemonic-input-field")[0].addEventListener("paste", function () {
+        document.querySelector(".each-mnemonic-input-field").addEventListener("paste", function () {
           setTimeout(() => {
             if (this.value.split(" ").length == 24) {
               mnemo = this.value.split(" ");
@@ -23,23 +25,33 @@ function changePage(page) {
           }, 100);
         });
       }
+      else if (currentPage == "wallets-login") {
+        document.querySelector(".each-input-helper-text").addEventListener("click", async () => {
+          if (await ask("This action will delete all the wallets. Are you sure you want to continue?", { title: "Reset Keyring", type: "warning" })) {
+            invoke("delete_keyring");
+            localStorage.setItem("keyring", '{"required": true, "exists": false}');
+            changePage("page-content/wallets-login.html");
+          }
+        });
+      }
     })
     .catch(err => console.log(err));
 }
 
 function updateCpuMemSync(cpu, mem, active, sync, catchup, version) {
+  const percentages = document.querySelectorAll(".each-page-chart-percentage");
+  const popUps = document.querySelectorAll(".each-page-chart-text-pop-up");
   if (typeof catchup == "undefined") {
     charts_to_update[0].options.barColor = "#FF2632";
     charts_to_update[0].update(100);
-    document.querySelectorAll('.each-page-chart-percentage')[0].textContent = "!";
-    document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Node has stopped!`;
+    percentages[0].textContent = "!";
+    popUps[0].innerText = "Node has stopped!";
   } else if (!catchup) {
     charts_to_update[0].options.barColor = "#43BE66";
     charts_to_update[0].update(100);
-    document.querySelectorAll('.each-page-chart-percentage')[0].textContent = (sync);
-    document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Synced!\n\nCurrent Block:\n${sync}`;
+    percentages[0].textContent = (sync);
+    popUps[0].innerText = "Synced!\n\nCurrent Block:\n" + sync;
   } else {
-    console.log("node is syncing");
     charts_to_update[0].options.barColor = "#0F62FE";
     (async () => {
       await new Promise(resolve => setTimeout(resolve, 2300));
@@ -47,15 +59,15 @@ function updateCpuMemSync(cpu, mem, active, sync, catchup, version) {
       await new Promise(resolve => setTimeout(resolve, 2300));
       charts_to_update[0].update(0);
     })();
-    document.querySelectorAll('.each-page-chart-percentage')[0].textContent = sync;
-    document.querySelectorAll('.each-page-chart-text-pop-up')[0].innerText = `Syncing...\n\nCurrent Block:\n${sync}`;
+    percentages[0].textContent = sync;
+    popUps[0].innerText = `Syncing...\n\nCurrent Block:\n${sync}`;
   }
   charts_to_update[1].update(Math.floor(mem));
-  document.querySelectorAll('.each-page-chart-percentage')[1].textContent = Math.floor(mem) + "%";
+  percentages[1].textContent = Math.floor(mem) + "%";
 
   if (cpu < 100) {
     charts_to_update[2].update(Math.floor(cpu));
-    document.querySelectorAll('.each-page-chart-percentage')[2].textContent = Math.floor(cpu) + "%";
+    percentages[2].textContent = Math.floor(cpu) + "%";
   }
 
   if (active == "active") {
@@ -211,8 +223,10 @@ function hideLoadingAnimation() {
 function endInstallation() {
   document.querySelectorAll(".each-progress-bar-status-icon")[0].setAttribute("style", "display: unset;")
   document.querySelector(".progress-bar").setAttribute("value", "100");
-  document.querySelector(".progress-bar-text-right").textContent = `100%`;
-  invoke("cpu_mem_sync");
+  document.querySelector(".progress-bar-text-right").textContent = "100%";
+  invoke("check_if_password_needed").then(() => {
+    invoke("cpu_mem_sync");
+  });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -232,26 +246,31 @@ window.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem("installation") == "true") {
     localStorage.setItem("installation", "false");
     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses.map((ip) => {
-      return ip.ip === localStorage.getItem("ip") ? { ...ip, icon: localStorage.getItem("project") } : ip;
+      return ip.ip === localStorage.getItem("ip") ? { ...ip, icon: project } : ip;
     })));
     invoke("install_node");
     changePage('page-content/installation.html');
-    setTimeout(() => {
+    setTimeout(async () => {
       for (let i = 0; i < 100; i++) {
-        setTimeout(() => {
-          document.querySelector(".progress-bar").setAttribute("value", i);
-          document.querySelector(".progress-bar-text-right").textContent = `${i}%`;
-        }, i * i / 0.015);
+        console.log(document.querySelectorAll(".each-progress-bar-status-icon")[0].getAttribute("style"));
+        if (document.querySelectorAll(".each-progress-bar-status-icon")[0].getAttribute("style") == "display: unset;") {
+          break;
+        }
+        document.querySelector(".progress-bar").setAttribute("value", i);
+        document.querySelector(".progress-bar-text-right").textContent = `${i}%`;
+        await new Promise(r => setTimeout(r, i * i / 0.015));
       }
     }, 1000);
   } else {
     changePage('page-content/node-operations.html');
-    invoke("cpu_mem_sync");
+    invoke("check_if_password_needed").then(() => {
+      invoke("cpu_mem_sync");
+    });
   }
 
   const sidebarNodeIcon = document.querySelector(".sidebar-info-icon");
+  const sidebarNodeName = document.querySelector(".sidebar-info-details-name");
   const validatorAddress = document.querySelector(".sidebar-info-details-copy");
-  const validatorAddressName = document.querySelector(".sidebar-info-details-name");
   const validatorAddressText = document.querySelector(".sidebar-info-details-copy-address");
   const validatorOperationsButton = document.getElementById("validator-operations-button");
   const validatorOperationsArrow = document.querySelector(".each-dropdown-button-arrow");
@@ -272,6 +291,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const nodeIcons = document.querySelector(".header-node-icons");
   const headerMenu = document.querySelector(".header-menu");
   const headerMenuIpButton = document.querySelector(".header-menu-ip-list-button");
+  const headerMenuIpButtonName = document.querySelector(".header-menu-ip-list-button-details-name");
+  const headerMenuIpButtonIp = document.querySelector(".header-menu-ip-list-button-details-ip");
   const headerMenuIpButtonIcon = document.querySelector(".header-menu-ip-list-button-icon");
   const notificationsButton = document.getElementById("notifications-button");
   const logoutButton = document.getElementById("logout-button");
@@ -279,10 +300,16 @@ window.addEventListener('DOMContentLoaded', () => {
   const scrollbarBackground = document.querySelector(".header-menu-scroll-background");
   const submenuNotifications = document.querySelector(".header-submenu-notifications");
 
-  validatorAddressName.textContent = localStorage.getItem("project");
-  sidebarNodeIcon.setAttribute("src", `../assets/projects/${localStorage.getItem("project").toLowerCase().replace(" ", "-")}.png`);
-  nodeIcon.setAttribute("src", `../assets/projects/${localStorage.getItem("project").toLowerCase().replace(" ", "-")}.png`);
-  headerMenuIpButtonIcon.setAttribute("src", `../assets/projects/${localStorage.getItem("project").toLowerCase().replace(" ", "-")}.png`);
+  sidebarNodeName.textContent = project;
+  sidebarNodeIcon.setAttribute("src", `../assets/projects/${project.toLowerCase().replace(" ", "-")}.png`);
+  nodeIcon.setAttribute("src", imgSrc);
+  if (imgSrc == `../assets/projects/default.png`) {
+    headerMenuIpButtonIcon.setAttribute("style", "display: none;");
+  } else {
+    headerMenuIpButtonIcon.setAttribute("src", imgSrc);
+  }
+  headerMenuIpButtonName.textContent = project;
+  headerMenuIpButtonIp.textContent = localStorage.getItem("ip");
 
   for (let i = 0; i < ipAddresses.length; i++) {
     ipListItem = document.createElement("div");
@@ -341,7 +368,16 @@ window.addEventListener('DOMContentLoaded', () => {
     changePage('page-content/vote.html');
   });
   walletsButton.addEventListener('click', function () {
-    changePage('page-content/wallets-login.html')
+    // {required: true, exists: true}
+    if (JSON.parse(localStorage.getItem("keyring")).required) {
+      if (JSON.parse(localStorage.getItem("keyring")).exists) {
+        changePage('page-content/wallets-login.html');
+      } else {
+        changePage('page-content/wallets-create-keyring.html');
+      }
+    } else {
+      changePage('page-content/wallets.html');
+    }
   });
   validatorOperationsButton.addEventListener('click', function () {
     if (window.getComputedStyle(subButtonsDiv).getPropertyValue("display") == "none") {
@@ -384,8 +420,6 @@ window.addEventListener('DOMContentLoaded', () => {
     else if (notificationsButton.contains(e.target)) {
       submenuIpList.setAttribute("style", "display: none;");
       submenuNotifications.innerHTML = "";
-      notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
-
       for (let i = notifications.length - 1; 0 < i; i--) {
         notificationItem = document.createElement("div");
         notificationItem.setAttribute("class", "each-header-submenu-notifications-item");
@@ -457,6 +491,21 @@ window.addEventListener('DOMContentLoaded', () => {
       else if (currentPage == "send-token") {
         console.log("send token")
       }
+      else if (currentPage == "wallets-create-keyring") {
+        if (document.querySelectorAll(".each-input-field")[0].value !== document.querySelectorAll(".each-input-field")[1].value) {
+          message("Passphrases do not match.", { type: 'error' });
+        }
+        else if (document.querySelectorAll(".each-input-field")[0].value.length < 8) {
+          message("Passphrase must be at least 8 characters.", { type: 'error' });
+        }
+        else {
+          showLoadingAnimation();
+          invoke("create_keyring", { passphrase: document.querySelector(".each-input-field").value });
+          localStorage.setItem("keyring", '{"required": true, "exists": true}');
+          changePage('page-content/wallets-login.html');
+          hideLoadingAnimation();
+        }
+      }
       else if (currentPage == "wallets-login") {
         showLoadingAnimation();
         invoke("update_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value });
@@ -487,7 +536,6 @@ window.addEventListener('DOMContentLoaded', () => {
                   mnemonic += input.value + " ";
                 });
                 mnemonic = mnemonic.slice(0, -1);
-                console.log(mnemonic);
                 invoke("recover_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, mnemo: mnemonic });
               });
             }
@@ -516,7 +564,6 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       else if (document.querySelectorAll(".each-page-manage-node-button")[3].contains(e.target)) {
         // UPDATE NODE
-        console.log("update_node function is called i guess.");
         invoke("update_node")
           .then((res) => {
             console.log(res);

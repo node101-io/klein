@@ -116,7 +116,6 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
                 }
 
                 channel.close().unwrap();
-                // check_if_password_needed();
             }
         }
     } else {
@@ -124,7 +123,7 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
     }
 }
 
-#[tauri::command(async)]
+#[tauri::command(async)] // DÜZELT
 fn log_out() {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
@@ -266,7 +265,7 @@ fn delete_node() {
 
             channel
                 .exec(&format!(
-                    "bash -c -l \"sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo rm -rf /etc/systemd/system/$EXECUTE* $(which $EXECUTE) $SYSTEM_FOLDER $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source .bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME\""
+                    "bash -c -l \"sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo rm -rf /etc/systemd/system/$EXECUTE* $(which $EXECUTE) $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source .bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME\""
                 ))
                 .unwrap();
             let mut s = String::new();
@@ -396,9 +395,9 @@ fn install_node(window: tauri::Window) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-            channel.exec(&format!("echo 'export MONIKER=node101' >> $HOME/.bash_profile; echo 'export WALLET_NAME=node101' >> $HOME/.bash_profile; wget -O lava.sh https://node101.io/testnet/lava-testnet1/lava.sh && chmod +x lava.sh && bash lava.sh")).unwrap();
-            let mut buf = [0u8; 1024];
+            channel.exec(&format!("echo 'export MONIKER=node101' >> $HOME/.bash_profile; echo 'export WALLET_NAME=node101' >> $HOME/.bash_profile; wget -O band.sh https://node101.io/mainnet/bandprotocol/band.sh && chmod +x band.sh && ./band.sh")).unwrap();
             loop {
+                let mut buf = [0u8; 1024];
                 let len = channel.read(&mut buf).unwrap();
                 if len == 0 {
                     break;
@@ -410,35 +409,87 @@ fn install_node(window: tauri::Window) {
                 }
                 std::io::stdout().flush().unwrap();
             }
-            println!("çıktık");
             channel.close().unwrap();
         }
     }
 }
 
 #[tauri::command(async)]
-fn check_if_password_needed() {
+fn check_if_password_needed(window: tauri::Window) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             channel
-                .exec(&format!("bash -c -l '$EXECUTE keys add testforpassword'"))
+                .exec(&format!(
+                    "yes | bash -c -l '$EXECUTE keys add testifpasswordneeded'"
+                ))
                 .unwrap();
-            let mut buf = [0u8; 1024];
-            loop {
-                let len = channel.read(&mut buf).unwrap();
-                if len == 0 {
-                    break;
-                }
-                let s = std::str::from_utf8(&buf[0..len]).unwrap();
-                println!("{}", s);
-                // if s.contains("SETUP IS FINISHED") {
-                //     println!("SETUP IS FINISHED");
-                //     window.eval("endInstallation();").unwrap();
-                // }
-                std::io::stdout().flush().unwrap();
+            if channel.read(&mut [0u8; 1024]).unwrap() == 0 {
+                println!("password needed");
+                channel.close().unwrap();
+                window
+                    .eval(&format!(
+                        "localStorage.setItem('keyring', '{{\"required\": true, \"exists\": {}}}')",
+                        check_if_keyring_exist()
+                    ))
+                    .unwrap();
+            } else {
+                delete_wallet("testifpasswordneeded".to_string());
+                println!("password not needed");
+                window
+                    .eval("localStorage.setItem('keyring', 'false')")
+                    .unwrap();
             }
-            println!("çıktık");
+        }
+    }
+}
+
+#[tauri::command(async)]
+fn check_if_keyring_exist() -> bool {
+    unsafe {
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            channel
+                .exec(&format!(
+                    "bash -c -l 'test -e $HOME/$SYSTEM_FOLDER/keyhash && echo yes || echo no'"
+                ))
+                .unwrap();
+            let mut s = String::new();
+            channel.read_to_string(&mut s).unwrap();
+            channel.close().unwrap();
+            println!("keyring exists: {}", s);
+            s.contains("yes")
+        } else {
+            println!("error in check_if_keyring_exist");
+            true
+        }
+    }
+}
+
+#[tauri::command(async)]
+fn create_keyring(passphrase: String) {
+    unsafe {
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            channel
+                .exec(&*format!(
+                    "echo -e '{passphrase}\n{passphrase}\n' | bash -c -l '$EXECUTE keys add forkeyringpurpose --output json'; yes \"{passphrase}\" | bash -c -l '$EXECUTE keys delete forkeyringpurpose -y --output json'"                ))
+                .unwrap();
+            channel.close().unwrap();
+        }
+    }
+}
+
+#[tauri::command(async)]
+fn delete_keyring() {
+    unsafe {
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            channel
+                .exec(&*format!(
+                    "bash -c -l 'cd $HOME/$SYSTEM_FOLDER; rm -rf keyhash *.address *.info;'"
+                ))
+                .unwrap();
             channel.close().unwrap();
         }
     }
@@ -464,7 +515,7 @@ fn create_wallet(walletname: String, window: tauri::Window) {
                 ))
                 .unwrap();
             channel.read_to_string(&mut s).unwrap();
-            println!("aaa{}", s);
+            println!("{}", s);
             let v: Value = serde_json::from_str(&s).unwrap();
             window
                 .eval(&format!(
@@ -653,7 +704,11 @@ fn main() {
             // send_token,
             recover_wallet,
             // vote,
-            if_wallet_exists
+            if_wallet_exists,
+            check_if_password_needed,
+            check_if_keyring_exist,
+            create_keyring,
+            delete_keyring
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

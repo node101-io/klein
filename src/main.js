@@ -1,5 +1,4 @@
 const { invoke } = window.__TAURI__.tauri;
-let focusedIndex;
 
 // alt kısım şimdilik kolaylık olsun diye var kalkacak
 localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Lava Network"},{"ip":"213.43.64.436","icon":"Shentu"}]');

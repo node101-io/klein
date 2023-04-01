@@ -8,6 +8,8 @@ const project = localStorage.getItem("project");
 const imgSrc = project ? `../assets/projects/${project.toLowerCase().replace(" ", "-")}.png` : `../assets/projects/default.png`;
 
 window.addEventListener("DOMContentLoaded", () => {
+  showLoadingAnimation();
+
   const testnetTabButton = document.getElementById("testnet-tab-button");
   const mainnetTabButton = document.getElementById("mainnet-tab-button");
   const testnetTabContent = document.getElementById("testnet-tab-content");
@@ -183,7 +185,6 @@ async function showTestnetProjects() {
   testnetTabContent.innerHTML = "";
   let gonnaPrepend = "";
   for (let i = 0; i < projects.length; i++) {
-    console.log(projects[i]);
     row = document.createElement("div");
     row.setAttribute("class", "each-node-page-project");
     header = document.createElement("div");
@@ -258,7 +259,7 @@ async function showTestnetProjects() {
     installButton.appendChild(textDiv);
     installButton.appendChild(installButtonSVG)
     installButton.addEventListener("click", async function () {
-      if (confirm("Node is going to be installed, please confirm.", projects[i].name)) {
+      if (await confirm("Node is going to be installed, please confirm.", projects[i].name)) {
         localStorage.setItem('installation', 'true');
         localStorage.setItem('project', projects[i].name);
         window.location.href = '../manage-node/manage-node.html';
@@ -298,4 +299,6 @@ async function showTestnetProjects() {
       document.querySelectorAll(".install-button")[i].disabled = true;
     }
   }
+
+  hideLoadingAnimation();
 }
