@@ -161,7 +161,6 @@ window.addEventListener("DOMContentLoaded", () => {
   const mainnetTabContent = document.getElementById("mainnet-tab-content");
   const headerMenuIpButtonIcon = document.querySelector(".header-menu-ip-list-button-icon");
 
-  document.querySelector(".sidebar-info-icon").setAttribute("src", imgSrc);
   if (imgSrc == "../assets/projects/default.png") {
     headerMenuIpButtonIcon.setAttribute("style", "display: none;");
   } else {
