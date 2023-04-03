@@ -1,162 +1,11 @@
 const { invoke } = window.__TAURI__.tauri;
-const { fetch, getClient, Body } = window.__TAURI__.http;
 const { message, confirm } = window.__TAURI__.dialog;
+const { fetch, getClient, Body } = window.__TAURI__.http;
 
 const ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
 const notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
 const project = localStorage.getItem("project");
-const imgSrc = project ? `../assets/projects/${project.toLowerCase().replace(" ", "-")}.png` : `../assets/projects/default.png`;
-
-window.addEventListener("DOMContentLoaded", () => {
-  showLoadingAnimation();
-
-  const testnetTabButton = document.getElementById("testnet-tab-button");
-  const mainnetTabButton = document.getElementById("mainnet-tab-button");
-  const testnetTabContent = document.getElementById("testnet-tab-content");
-  const mainnetTabContent = document.getElementById("mainnet-tab-content");
-  const nodeIcon = document.querySelector(".header-node-icon");
-  const nodeIcons = document.querySelector(".header-node-icons");
-  const headerMenu = document.querySelector(".header-menu");
-  const headerMenuIpButton = document.querySelector(".header-menu-ip-list-button");
-  const headerMenuIpButtonName = document.querySelector(".header-menu-ip-list-button-details-name");
-  const headerMenuIpButtonIp = document.querySelector(".header-menu-ip-list-button-details-ip");
-  const headerMenuIpButtonIcon = document.querySelector(".header-menu-ip-list-button-icon");
-  const notificationsButton = document.getElementById("notifications-button");
-  const logoutButton = document.getElementById("logout-button");
-  const submenuIpList = document.querySelector(".header-submenu-ip-list");
-  const scrollbarBackground = document.querySelector(".header-menu-scroll-background");
-  const submenuNotifications = document.querySelector(".header-submenu-notifications");
-
-  nodeIcon.setAttribute("src", imgSrc);
-  if (imgSrc == `../assets/projects/default.png`) {
-    headerMenuIpButtonIcon.setAttribute("style", "display: none;");
-  } else {
-    headerMenuIpButtonIcon.setAttribute("src", imgSrc);
-  }
-  headerMenuIpButtonName.textContent = project;
-  headerMenuIpButtonIp.textContent = localStorage.getItem("ip");
-
-  showTestnetProjects();
-
-  for (let i = 0; i < ipAddresses.length; i++) {
-    ipListItem = document.createElement("div");
-    ipListItem.setAttribute("class", "each-header-submenu-ip-list-item");
-    ipListItemIcon = document.createElement("img");
-    ipListItemIcon.setAttribute("src", `../assets/projects/${ipAddresses[i].icon.toLowerCase().replace(" ", "-")}.png`);
-    ipListItemIcon.setAttribute("class", "each-header-submenu-ip-list-item-icon");
-    ipListItemName = document.createElement("div");
-    ipListItemName.setAttribute("class", "each-header-submenu-ip-list-item-name");
-    ipListItemName.innerText = ipAddresses[i].icon == "" ? "Empty Server" : ipAddresses[i].icon;
-    ipListItemIp = document.createElement("div");
-    ipListItemIp.setAttribute("class", "each-header-submenu-ip-list-item-ip");
-    ipListItemIp.innerText = ipAddresses[i].ip;
-    ipAddresses[i].icon == "" ? ipListItemIcon.setAttribute("style", "display: none;") : ipListItem.appendChild(ipListItemIcon);
-    ipListItem.appendChild(ipListItemName);
-    ipListItem.appendChild(ipListItemIp);
-    submenuIpList.appendChild(ipListItem);
-  }
-
-  testnetTabButton.addEventListener("click", () => {
-    testnetTabButton.setAttribute("class", "each-nodes-page-tab active-tab");
-    mainnetTabButton.setAttribute("class", "each-nodes-page-tab");
-    mainnetTabContent.setAttribute("style", "display: none;");
-    testnetTabContent.setAttribute("style", "display: flex;");
-  });
-
-  mainnetTabButton.addEventListener("click", () => {
-    testnetTabButton.setAttribute("class", "each-nodes-page-tab");
-    mainnetTabButton.setAttribute("class", "each-nodes-page-tab active-tab");
-    testnetTabContent.setAttribute("style", "display: none;");
-    mainnetTabContent.setAttribute("style", "display: flex;");
-  });
-
-  window.addEventListener("click", (e) => {
-    if (nodeIcons.contains(e.target)) {
-      if (headerMenu.style.display == "block") {
-        headerMenu.setAttribute("style", "display: none;");
-        submenuIpList.setAttribute("style", "display: none;");
-        submenuNotifications.setAttribute("style", "display: none;");
-        scrollbarBackground.setAttribute("style", "display: none;");
-      }
-      else {
-        headerMenu.setAttribute("style", "display: block;");
-      }
-    }
-    else if (headerMenuIpButton.contains(e.target)) {
-      submenuNotifications.setAttribute("style", "display: none;");
-      if (submenuIpList.style.display == "block") {
-        submenuIpList.setAttribute("style", "display: none;");
-        scrollbarBackground.setAttribute("style", "display: none;");
-      }
-      else {
-        submenuIpList.setAttribute("style", "display: block;");
-        scrollbarBackground.setAttribute("style", `display: block; height: ${Math.min(ipAddresses.length, 3) * 60}px;`);
-      }
-    }
-    else if (notificationsButton.contains(e.target)) {
-      submenuIpList.setAttribute("style", "display: none;");
-      submenuNotifications.innerHTML = "";
-      for (let i = notifications.length - 1; 0 < i; i--) {
-        notificationItem = document.createElement("div");
-        notificationItem.setAttribute("class", "each-header-submenu-notifications-item");
-        notificationIcon = document.createElement("span");
-        notificationIcon.setAttribute("class", `each-notification-icon${notifications[i].unread ? '' : '-seen'}`);
-        notificationContent = document.createElement("div");
-        notificationContent.setAttribute("class", "each-notification-content");
-        notificationContent.innerText = notifications[i].text;
-        notificationItem.appendChild(notificationIcon);
-        notificationItem.appendChild(notificationContent);
-        submenuNotifications.appendChild(notificationItem);
-      }
-      document.querySelector(".header-node-icon-notification").setAttribute("style", "display: none;");
-      document.querySelector(".each-header-menu-item-notification").setAttribute("style", "display: none;");
-      localStorage.setItem("notifications", JSON.stringify(notifications.map((notification) => {
-        notification.unread = false;
-        return notification;
-      })));
-      if (submenuNotifications.style.display == "block") {
-        submenuNotifications.setAttribute("style", "display: none;");
-        scrollbarBackground.setAttribute("style", "display: none;");
-      }
-      else {
-        submenuNotifications.setAttribute("style", "display: block;");
-        scrollbarBackground.setAttribute("style", `display: block; height: ${Math.min(notifications.length, 6) * 36}px;`);
-      }
-    }
-    else if (logoutButton.contains(e.target)) {
-      showLoadingAnimation();
-      invoke("cpu_mem_sync_stop");
-      setTimeout(() => {
-        invoke("log_out");
-        hideLoadingAnimation();
-        loadNewPage("../index.html");
-      }, 5000);
-    }
-    else {
-      headerMenu.setAttribute("style", "display: none;");
-      submenuIpList.setAttribute("style", "display: none;");
-      scrollbarBackground.setAttribute("style", "display: none;");
-      submenuNotifications.setAttribute("style", "display: none;");
-    }
-  });
-});
-
-function showLoadingAnimation() {
-  scrollTop = window.scrollY;
-  document.querySelector(".all-wrapper").style.setProperty("pointer-events", "none");
-  document.querySelector(".all-wrapper").style.setProperty("display", "none");
-  document.querySelector(".boxes").style.setProperty("display", "unset");
-}
-function hideLoadingAnimation() {
-  document.querySelector(".boxes").style.setProperty("display", "none");
-  document.querySelector(".all-wrapper").style.removeProperty("display");
-  document.querySelector(".all-wrapper").style.removeProperty("pointer-events");
-  window.scrollTo(0, scrollTop);
-}
-
-function loadNewPage(pagename) {
-  window.location.href = pagename;
-}
+const imgSrc = project ? `../assets/projects/${project.toLowerCase().replace(" ", "-")}.png` : "../assets/projects/default.png";
 
 async function showTestnetProjects() {
   const client = await getClient();
@@ -302,3 +151,42 @@ async function showTestnetProjects() {
 
   hideLoadingAnimation();
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  showLoadingAnimation();
+
+  const testnetTabButton = document.getElementById("testnet-tab-button");
+  const mainnetTabButton = document.getElementById("mainnet-tab-button");
+  const testnetTabContent = document.getElementById("testnet-tab-content");
+  const mainnetTabContent = document.getElementById("mainnet-tab-content");
+  const headerMenuIpButtonIcon = document.querySelector(".header-menu-ip-list-button-icon");
+
+  document.querySelector(".sidebar-info-icon").setAttribute("src", imgSrc);
+  if (imgSrc == "../assets/projects/default.png") {
+    headerMenuIpButtonIcon.setAttribute("style", "display: none;");
+  } else {
+    headerMenuIpButtonIcon.setAttribute("src", imgSrc);
+  }
+  document.querySelector(".header-menu-ip-list-button-details-name").textContent = project;
+  document.querySelector(".header-menu-ip-list-button-details-ip").textContent = localStorage.getItem("ip");
+
+  showTestnetProjects();
+  createHeaderMenu();
+
+  testnetTabButton.addEventListener("click", () => {
+    testnetTabButton.setAttribute("class", "each-nodes-page-tab active-tab");
+    mainnetTabButton.setAttribute("class", "each-nodes-page-tab");
+    mainnetTabContent.setAttribute("style", "display: none;");
+    testnetTabContent.setAttribute("style", "display: flex;");
+  });
+  mainnetTabButton.addEventListener("click", () => {
+    testnetTabButton.setAttribute("class", "each-nodes-page-tab");
+    mainnetTabButton.setAttribute("class", "each-nodes-page-tab active-tab");
+    testnetTabContent.setAttribute("style", "display: none;");
+    mainnetTabContent.setAttribute("style", "display: flex;");
+  });
+
+  window.addEventListener("click", (e) => {
+    hideMenuWhenClickedOutside(e);
+  });
+});

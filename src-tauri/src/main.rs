@@ -6,10 +6,11 @@
 use serde_json::{self, json, Value};
 use ssh2::{DisconnectCode, Session};
 use std::{
+    char,
     io::{prelude::Read, Write},
     thread, time,
 };
-use tauri::{LogicalSize, Manager};
+use tauri::{regex, LogicalSize, Manager};
 
 struct SessionManager {
     open_session: Session,
@@ -153,32 +154,86 @@ fn cpu_mem_sync_stop() {
 async fn cpu_mem_sync(window: tauri::Window) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
-            my_boxed_session.stop_cpu_mem_sync = false;
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            channel.exec(&*format!("
+                export PATH=$PATH:/usr/local/go/bin:/root/go/bin;
+                while true; 
+                    do
+                        cpu_mem=\"$(top -b -n1 | awk '/Cpu\\(s\\)/{{print \"CPU:\" 100-$8}} /MiB Mem/{{print \"MEM:\"($4-$6)/$4*100}}')\"; 
+                        service_status=\"$(systemctl is-active $(bash -c -l 'echo -n $EXECUTE') 2>/dev/null)\";
+                        sync_status=\"$($(bash -c -l 'echo -n $EXECUTE') status 2>&1 | jq -r '\"HEIGHT:\\(.SyncInfo.latest_block_height)\", \"CATCHUP:\\(.SyncInfo.catching_up)\", \"VERSION:\\(.NodeInfo.version)\"' 2>/dev/null)\";
+                        echo -n \"$cpu_mem\nSTATUS:$service_status\n$sync_status\"; 
+                        sleep 1; echo ''; sleep 1; echo ''; sleep 1; echo ''; sleep 1; echo ''; sleep 1;
+                    done
+            ")).unwrap();
             loop {
                 if my_boxed_session.stop_cpu_mem_sync {
-                    break;
+                    channel.close().unwrap();
+                    return;
                 }
-                let channel_result = my_boxed_session.open_session.channel_session();
-                let mut channel = match channel_result {
-                    Ok(channel) => channel,
-                    Err(err) => {
-                        println!("Error opening channel: {}", err);
-                        window.eval("message('Session timed out, please log in again.', { title: 'Error', type: 'error' }); window.location.href = '../index.html';").unwrap();
-                        return;
-                    }
-                };
-                let mut s = String::new();
-                channel.exec("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; echo $(top -b -n1 | awk '/Cpu\\(s\\)/{{print 100-$8}} /MiB Mem/{{print ($4-$6)/$4*100}}'; echo \\'$(systemctl is-active $(bash -c -l 'echo $EXECUTE'))\\'; $(bash -c -l 'echo $EXECUTE') status 2>&1 | jq .SyncInfo.latest_block_height,.SyncInfo.catching_up,.NodeInfo.version)").unwrap();
-                channel.read_to_string(&mut s).unwrap();
+                let mut buf = [0u8; 1024];
+                let len = channel.read(&mut buf).unwrap();
+                let s = std::str::from_utf8(&buf[0..len]).unwrap();
                 println!("{}", s);
-                window
-                    .eval(&*format!(
-                        "window.updateCpuMemSync({});",
-                        s.trim().split_whitespace().collect::<Vec<&str>>().join(",")
-                    ))
-                    .unwrap();
-                channel.close().unwrap();
-                thread::sleep(time::Duration::from_secs(5));
+                if s.contains("STATUS") {
+                    window
+                        .eval(&*format!(
+                            "window.updateStatus('{}')",
+                            regex::Regex::new(r"STATUS:(\w+)")
+                                .unwrap()
+                                .captures(s)
+                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
+                                .unwrap_or("")
+                        ))
+                        .unwrap();
+                }
+                if s.contains("CPU") {
+                    window
+                        .eval(&*format!(
+                            "window.updateCpuMem('{}', '{}')",
+                            regex::Regex::new(r"CPU:(\w+)")
+                                .unwrap()
+                                .captures(s)
+                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
+                                .unwrap_or(""),
+                            regex::Regex::new(r"MEM:(\w+)")
+                                .unwrap()
+                                .captures(s)
+                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
+                                .unwrap_or("")
+                        ))
+                        .unwrap();
+                    std::io::stdout().flush().unwrap();
+                }
+                if s.contains("HEIGHT") {
+                    window
+                        .eval(&*format!(
+                            "window.updateSync('{}', '{}');",
+                            regex::Regex::new(r"HEIGHT:(\w+)")
+                                .unwrap()
+                                .captures(s)
+                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
+                                .unwrap_or(""),
+                            regex::Regex::new(r"CATCHUP:(\w+)")
+                                .unwrap()
+                                .captures(s)
+                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
+                                .unwrap_or("")
+                        ))
+                        .unwrap();
+                }
+                if s.contains("VERSION") {
+                    window
+                        .eval(&*format!(
+                            "window.updateVersion('{}')",
+                            regex::Regex::new(r"VERSION:(.*)")
+                                .unwrap()
+                                .captures(s)
+                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
+                                .unwrap_or("")
+                        ))
+                        .unwrap();
+                }
             }
         }
     }
@@ -508,13 +563,11 @@ fn check_wallet_password(passw: String) -> bool {
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             if s.contains("address") {
-                println!("password correct");
                 GLOBAL_STRUCT.as_mut().unwrap().walletpassword = passw.to_string();
                 channel.close().unwrap();
                 delete_wallet("testifpasswordcorrect".to_string());
                 true
             } else {
-                println!("password incorrect");
                 channel.close().unwrap();
                 false
             }
@@ -621,7 +674,7 @@ fn start_stop_restart_node(action: String) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-            let command: String = format!("bash -c -l 'systemctl {action} $EXECUTE'");
+            let command: String = format!("bash -c -l 'systemctl {} $EXECUTE'", action);
             channel.exec(&*command).unwrap();
             channel.close().unwrap();
         }
