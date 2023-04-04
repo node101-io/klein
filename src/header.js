@@ -95,13 +95,12 @@ const createHeaderMenu = function () {
     });
     logoutButton.addEventListener('click', function () {
         showLoadingAnimation();
-        invoke("cpu_mem_sync_stop");
+        tauri.invoke("cpu_mem_sync_stop");
         setTimeout(() => {
-            invoke("log_out");
-            window.location.href = "../index.html";
+            tauri.invoke("log_out");
+            window.location.href = "../login.html";
         }, 1000);
     });
-
 }
 
 const hideMenuWhenClickedOutside = function (e) {

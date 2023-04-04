@@ -1,7 +1,7 @@
-const { invoke } = window.__TAURI__.tauri;
+const { tauri } = window.__TAURI__;
 
 // alt kısım şimdilik kolaylık olsun diye var kalkacak
-localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Lava Network"},{"ip":"213.43.64.436","icon":"Shentu"}]');
+localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Band"},{"ip":"213.43.64.436","icon":"Shentu"}]');
 localStorage.setItem("notifications", '[{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":true,"text":"Example notif!"},{"unread":true,"text":"Example notif!"}]');
 // üst kısım şimdilik kolaylık olsun diye var kalkacak
 
@@ -45,7 +45,7 @@ function showSelectedItem(ip, icon) {
   ipInputEl.value = ip
   ipInputEl.style.setProperty("display", "none");
   selectedItemEl.style.setProperty("display", "flex");
-  selectedItemEl.children[0].src = `assets/projects/${icon.toLowerCase().replace(" ", "-")}.png`;
+  selectedItemEl.children[0].src = `../assets/projects/${icon.toLowerCase().replace(" ", "-")}.png`;
   selectedItemEl.children[1].textContent = icon;
   selectedItemEl.children[2].textContent = ip;
 }
@@ -124,7 +124,7 @@ window.addEventListener("DOMContentLoaded", () => {
         });
         img = document.createElement("img");
         img.setAttribute("class", "each-autocomplete-item-icon");
-        img.setAttribute("src", `assets/projects/${ipAddresses[i].icon.toLowerCase().replace(" ", "-")}.png`);
+        img.setAttribute("src", `../assets/projects/${ipAddresses[i].icon.toLowerCase().replace(" ", "-")}.png`);
         div1 = document.createElement("div");
         div1.textContent = ipAddresses[i].icon;
         div2 = document.createElement("div");
@@ -151,7 +151,7 @@ window.addEventListener("DOMContentLoaded", () => {
     else {
       showLoadingAnimation();
       // invoke("log_in", { ip: ipInputEl.value, password: passwordInputEl.value, remember: checkboxInputEl.checked });
-      invoke("log_in", { ip: ipInputEl.value, password: "node101bos", remember: checkboxInputEl.checked });
+      tauri.invoke("log_in", { ip: ipInputEl.value, password: "node101bos", remember: checkboxInputEl.checked });
     }
   });
 

@@ -1,6 +1,4 @@
-const { invoke } = window.__TAURI__.tauri;
-const { message, ask } = window.__TAURI__.dialog;
-const { writeText } = window.__TAURI__.clipboard;
+const { tauri, dialog, clipboard } = window.__TAURI__;
 
 const ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
 const notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
@@ -50,10 +48,10 @@ async function updateNodeInfo(obj) {
   hideLoadingAnimation();
 }
 function showCreatedWallet(mnemonic) {
-  message(mnemonic.slice(1, -1), { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" });
+  dialog.message(mnemonic.slice(1, -1), { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" });
   document.querySelectorAll(".each-input-field")[0].value = "";
 
-  invoke("show_wallets");
+  tauri.invoke("show_wallets");
 }
 function showWallets(list) {
   let walletList = document.getElementById("page-wallet-list");
@@ -92,8 +90,8 @@ function showWallets(list) {
       outputfieldiconcopy.setAttribute("class", "each-output-field-icon-copy");
       outputfieldiconcopy.setAttribute("viewBox", "0 0 17 16");
       outputfieldiconcopy.addEventListener("click", function () {
-        writeText(this.previousSibling.title);
-        message("Copied to clipboard.", { title: "Success", type: "success" });
+        clipboard.writeText(this.previousSibling.title);
+        dialog.message("Copied to clipboard.", { title: "Success", type: "success" });
       });
 
       path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -103,10 +101,10 @@ function showWallets(list) {
       outputfieldicondelete.setAttribute("class", "each-output-field-icon-delete");
       outputfieldicondelete.setAttribute("viewBox", "0 0 17 16");
       outputfieldicondelete.addEventListener("click", async function () {
-        if (await ask("This action cannot be reverted. Are you sure?", { title: "Delete Wallet", type: "warning" })) {
+        if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Wallet", type: "warning" })) {
           showLoadingAnimation();
-          invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent }).then(() => {
-            invoke("show_wallets").then(() => {
+          tauri.invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent }).then(() => {
+            tauri.invoke("show_wallets").then(() => {
               hideLoadingAnimation();
             });
           });
@@ -131,17 +129,12 @@ function showWallets(list) {
   hideLoadingAnimation();
 }
 function updateSync(height, catchup) {
-  if (typeof catchup == "undefined") {
-    syncStatusChart.options.barColor = "#FF2632";
-    syncStatusChart.update(100);
-    document.querySelectorAll(".each-page-chart-percentage")[0].textContent = "!";
-    document.querySelector(".each-page-chart-text-pop-up").innerText = "Node has stopped!";
-  } else if (!catchup) {
+  if (catchup == "false") {
     syncStatusChart.options.barColor = "#43BE66";
     syncStatusChart.update(100);
     document.querySelectorAll(".each-page-chart-percentage")[0].textContent = (height);
     document.querySelector(".each-page-chart-text-pop-up").innerText = "Synced!\n\nCurrent Block:\n" + height;
-  } else {
+  } else if (catchup == "true") {
     syncStatusChart.options.barColor = "#0F62FE";
     (async () => {
       await new Promise(resolve => setTimeout(resolve, 2300));
@@ -151,15 +144,20 @@ function updateSync(height, catchup) {
     })();
     document.querySelectorAll(".each-page-chart-percentage")[0].textContent = height;
     document.querySelector(".each-page-chart-text-pop-up").innerText = `Syncing...\n\nCurrent Block:\n${height}`;
+  } else if (catchup == "error") {
+    syncStatusChart.options.barColor = "#FF2632";
+    syncStatusChart.update(100);
+    document.querySelectorAll(".each-page-chart-percentage")[0].textContent = "!";
+    document.querySelector(".each-page-chart-text-pop-up").innerText = "Node has stopped!";
   }
 }
 function updateCpuMem(cpu, mem) {
   if (cpu < 100) {
     cpuStatusChart.update(Math.floor(cpu));
-    document.querySelectorAll(".each-page-chart-percentage")[2].textContent = Math.floor(cpu) + "%";
+    document.querySelectorAll(".each-page-chart-percentage")[1].textContent = Math.floor(cpu) + "%";
   }
   memStatusChart.update(Math.floor(mem));
-  document.querySelectorAll(".each-page-chart-percentage")[1].textContent = Math.floor(mem) + "%";
+  document.querySelectorAll(".each-page-chart-percentage")[2].textContent = Math.floor(mem) + "%";
 }
 function updateStatus(status) {
   if (status == "active") {
@@ -182,8 +180,8 @@ function endInstallation() {
   document.querySelectorAll(".each-progress-bar-status-icon")[0].setAttribute("style", "display: unset;")
   document.querySelector(".progress-bar").setAttribute("value", "100");
   document.querySelector(".progress-bar-text-right").textContent = "100%";
-  invoke("check_if_password_needed").then(() => {
-    invoke("cpu_mem_sync");
+  tauri.invoke("check_if_password_needed").then(() => {
+    tauri.invoke("cpu_mem_sync");
   });
 }
 
@@ -200,29 +198,29 @@ function walletsSetup() {
     }, 100);
   });
   document.querySelectorAll(".each-button")[0].addEventListener("click", async function (e) {
-    if (await invoke("if_wallet_exists", { walletname: document.querySelectorAll(".each-input-field")[0].value })) {
-      if (await ask("This action will override the existing wallet. Are you sure?", { title: "Override Wallet", type: "warning" })) {
+    if (await tauri.invoke("if_wallet_exists", { walletname: document.querySelectorAll(".each-input-field")[0].value })) {
+      if (await dialog.ask("This action will override the existing wallet. Are you sure?", { title: "Override Wallet", type: "warning" })) {
         showLoadingAnimation();
-        invoke("delete_wallet", { walletname: document.querySelectorAll(".each-input-field")[0].value }).then(() => {
-          invoke("create_wallet", { walletname: document.querySelectorAll(".each-input-field")[0].value });
+        tauri.invoke("delete_wallet", { walletname: document.querySelectorAll(".each-input-field")[0].value }).then(() => {
+          tauri.invoke("create_wallet", { walletname: document.querySelectorAll(".each-input-field")[0].value });
         });
       }
     } else {
       showLoadingAnimation();
-      invoke("create_wallet", { walletname: document.querySelectorAll(".each-input-field")[0].value });
+      tauri.invoke("create_wallet", { walletname: document.querySelectorAll(".each-input-field")[0].value });
     }
   });
   document.querySelectorAll(".each-button")[1].addEventListener("click", async function (e) {
-    if (await invoke("if_wallet_exists", { walletname: document.querySelectorAll(".each-input-field")[1].value })) {
-      if (await ask("This action will override the existing wallet. Are you sure?", { title: "Override Wallet", type: "warning" })) {
+    if (await tauri.invoke("if_wallet_exists", { walletname: document.querySelectorAll(".each-input-field")[1].value })) {
+      if (await dialog.ask("This action will override the existing wallet. Are you sure?", { title: "Override Wallet", type: "warning" })) {
         showLoadingAnimation();
-        invoke("delete_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value }).then(() => {
+        tauri.invoke("delete_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value }).then(() => {
           mnemonic = "";
           document.querySelectorAll(".each-mnemonic-input-field").forEach((input) => {
             mnemonic += input.value + " ";
           });
           mnemonic = mnemonic.slice(0, -1);
-          invoke("recover_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, mnemo: mnemonic });
+          tauri.invoke("recover_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, mnemo: mnemonic });
         });
       }
     } else {
@@ -232,26 +230,26 @@ function walletsSetup() {
         mnemonic += input.value + " ";
       });
       mnemonic = mnemonic.slice(0, -1);
-      invoke("recover_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, mnemo: mnemonic });
+      tauri.invoke("recover_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, mnemo: mnemonic });
     }
   });
 }
 function walletsLoginSetup() {
   document.querySelector(".each-input-helper-text").addEventListener("click", async () => {
-    if (await ask("This action will delete all the wallets. Are you sure you want to continue?", { title: "Reset Keyring", type: "warning" })) {
-      invoke("delete_keyring");
+    if (await dialog.ask("This action will delete all the wallets. Are you sure you want to continue?", { title: "Reset Keyring", type: "warning" })) {
+      tauri.invoke("delete_keyring");
       localStorage.setItem("keyring", '{"required": true, "exists": false}');
       await changePage("page-content/wallets-create-keyring.html", createKeyringSetup);
     }
   });
   document.querySelector(".each-button").addEventListener("click", () => {
     showLoadingAnimation();
-    invoke("check_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value }).then(async (result) => {
+    tauri.invoke("check_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value }).then(async (result) => {
       if (result) {
         await changePage("page-content/wallets.html", walletsSetup);
-        invoke("show_wallets");
+        tauri.invoke("show_wallets");
       } else {
-        message("", { title: "Wrong password.", type: "error" });
+        dialog.message("", { title: "Wrong password.", type: "error" });
         hideLoadingAnimation();
       }
     });
@@ -260,14 +258,14 @@ function walletsLoginSetup() {
 function createKeyringSetup() {
   document.querySelector(".each-button").addEventListener("click", async () => {
     if (document.querySelectorAll(".each-input-field")[0].value !== document.querySelectorAll(".each-input-field")[1].value) {
-      message("Passphrases do not match.", { type: "error" });
+      dialog.message("Passphrases do not match.", { type: "error" });
     }
     else if (document.querySelectorAll(".each-input-field")[0].value.length < 8) {
-      message("Passphrase must be at least 8 characters.", { type: "error" });
+      dialog.message("Passphrase must be at least 8 characters.", { type: "error" });
     }
     else {
       showLoadingAnimation();
-      invoke("create_keyring", { passphrase: document.querySelector(".each-input-field").value });
+      tauri.invoke("create_keyring", { passphrase: document.querySelector(".each-input-field").value });
       localStorage.setItem("keyring", '{"required": true, "exists": true}');
       await changePage("page-content/wallets-login.html", walletsLoginSetup);
       hideLoadingAnimation();
@@ -276,28 +274,28 @@ function createKeyringSetup() {
 }
 function nodeOperationSetup() {
   document.querySelectorAll(".each-page-manage-node-button")[0].addEventListener("click", async () => {
-    invoke("start_stop_restart_node", { action: "start" });
+    tauri.invoke("start_stop_restart_node", { action: "start" });
   });
   document.querySelectorAll(".each-page-manage-node-button")[1].addEventListener("click", async () => {
-    invoke("start_stop_restart_node", { action: "stop" });
+    tauri.invoke("start_stop_restart_node", { action: "stop" });
   });
   document.querySelectorAll(".each-page-manage-node-button")[2].addEventListener("click", async () => {
-    invoke("start_stop_restart_node", { action: "restart" });
+    tauri.invoke("start_stop_restart_node", { action: "restart" });
   });
   document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
-    invoke("update_node");
+    tauri.invoke("update_node");
   });
   document.querySelector(".delete-node-button").addEventListener("click", async () => {
-    if (await ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
+    if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
       showLoadingAnimation();
-      invoke("delete_node").then(() => {
-        invoke("cpu_mem_sync_stop");
+      tauri.invoke("delete_node").then(() => {
+        tauri.invoke("cpu_mem_sync_stop");
         localStorage.setItem("project", "");
         localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses.map((ip) => {
           return ip.ip === localStorage.getItem("ip") ? { ...ip, icon: "" } : ip;
         })));
         setTimeout(() => {
-          message("Node deleted successfully.", { title: "Success", type: "success" });
+          dialog.message("Node deleted successfully.", { title: "Success", type: "success" });
           window.location.href = "../home-page/home-page.html";
         }, 1000);
       });
@@ -339,7 +337,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses.map((ip) => {
       return ip.ip === localStorage.getItem("ip") ? { ...ip, icon: project } : ip;
     })));
-    invoke("install_node");
+    tauri.invoke("install_node");
     await changePage("page-content/installation.html");
     for (let i = 0; i < 100; i++) {
       console.log(document.querySelectorAll(".each-progress-bar-status-icon")[0].getAttribute("style"));
@@ -353,8 +351,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
   else {
     await changePage("page-content/node-operations.html", nodeOperationSetup);
-    invoke("check_if_password_needed").then(() => {
-      invoke("cpu_mem_sync");
+    tauri.invoke("check_if_password_needed").then(() => {
+      tauri.invoke("cpu_mem_sync");
     });
   }
 
@@ -382,15 +380,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   createHeaderMenu();
 
   validatorAddress.addEventListener("click", function () {
-    writeText(validatorAddressText.innerText);
-    message("Copied to clipboard.", { title: "Success", type: "success" });
+    clipboard.writeText(validatorAddressText.innerText);
+    dialog.message("Copied to clipboard.", { title: "Success", type: "success" });
   })
   homePageButton.addEventListener("click", function () {
     showLoadingAnimation();
-    invoke("cpu_mem_sync_stop");
-    setTimeout(() => {
-      window.location.href = "../home-page/home-page.html";
-    }, 1000);
+    tauri.invoke("cpu_mem_sync_stop").then(() => {
+      setTimeout(() => {
+        // window.location.href = "../home-page/home-page.html";
+        window.location.replace("../home-page/home-page.html");
+      }, 2000);
+    });
   });
   nodeOperationsButton.addEventListener("click", async function () {
     await changePage("page-content/node-operations.html", nodeOperationSetup);
@@ -442,7 +442,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   })
   nodeInformationButton.addEventListener("click", function () {
     showLoadingAnimation();
-    invoke("node_info");
+    tauri.invoke("node_info");
   });
 
   window.addEventListener("click", async (e) => {

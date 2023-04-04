@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <link rel="stylesheet" href="manage-node.css" />
+  <link rel="stylesheet" href="../header.css" type="text/css">
+  <link rel="stylesheet" href="../loading-animation.css" type="text/css">
+  <link rel="stylesheet" href="manage-node.css" type="text/css" />
 </head>
 
 <body class="prevent-select">
@@ -251,6 +253,26 @@
                 <div class="each-page-chart-percentage"></div>
               </div>
               <div class="each-page-chart-text">
+                CPU
+                <svg class="each-page-chart-text-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8.5 10.9998V6.99976H6.5V7.99976H7.5V10.9998H6V11.9998H10V10.9998H8.5Z" />
+                  <path
+                    d="M8 3.99976C7.85167 3.99976 7.70666 4.04375 7.58333 4.12616C7.45999 4.20857 7.36386 4.3257 7.30709 4.46275C7.25033 4.59979 7.23548 4.75059 7.26441 4.89608C7.29335 5.04156 7.36478 5.1752 7.46967 5.28009C7.57456 5.38498 7.7082 5.45641 7.85369 5.48535C7.99917 5.51429 8.14997 5.49943 8.28701 5.44267C8.42406 5.3859 8.54119 5.28977 8.6236 5.16644C8.70602 5.0431 8.75 4.89809 8.75 4.74976C8.75 4.55085 8.67098 4.36008 8.53033 4.21943C8.38968 4.07878 8.19892 3.99976 8 3.99976Z" />
+                  <path
+                    d="M8 14.9998C6.61553 14.9998 5.26216 14.5892 4.11101 13.82C2.95987 13.0509 2.06266 11.9576 1.53285 10.6785C1.00303 9.39946 0.86441 7.99199 1.13451 6.63413C1.4046 5.27626 2.07129 4.02898 3.05026 3.05001C4.02922 2.07104 5.2765 1.40436 6.63437 1.13426C7.99224 0.864165 9.3997 1.00279 10.6788 1.5326C11.9579 2.06242 13.0511 2.95962 13.8203 4.11077C14.5895 5.26191 15 6.61529 15 7.99976C15 9.85627 14.2625 11.6368 12.9497 12.9495C11.637 14.2623 9.85652 14.9998 8 14.9998ZM8 1.99976C6.81332 1.99976 5.65328 2.35165 4.66658 3.01094C3.67989 3.67023 2.91085 4.6073 2.45673 5.70366C2.0026 6.80002 1.88378 8.00641 2.11529 9.1703C2.3468 10.3342 2.91825 11.4033 3.75736 12.2424C4.59648 13.0815 5.66558 13.653 6.82946 13.8845C7.99335 14.116 9.19975 13.9972 10.2961 13.543C11.3925 13.0889 12.3295 12.3199 12.9888 11.3332C13.6481 10.3465 14 9.18645 14 7.99976C14 6.40846 13.3679 4.88234 12.2426 3.75712C11.1174 2.6319 9.5913 1.99976 8 1.99976Z" />
+                </svg>
+              </div>
+              <div class="each-page-chart-text-pop-up">
+                This is the CPU usage stat of your remote server.
+              </div>
+            </div>
+          </div>
+          <div class="container">
+            <div class="box">
+              <div class="each-page-chart">
+                <div class="each-page-chart-percentage"></div>
+              </div>
+              <div class="each-page-chart-text">
                 Memory
                 <svg class="each-page-chart-text-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                   <path d="M8.5 10.9998V6.99976H6.5V7.99976H7.5V10.9998H6V11.9998H10V10.9998H8.5Z" />
@@ -265,31 +287,75 @@
               </div>
             </div>
           </div>
-          <div class="container">
-            <div class="box">
-              <div class="each-page-chart">
-                <div class="each-page-chart-percentage"></div>
-              </div>
-              <div class="each-page-chart-text">
-                Cpu
-                <svg class="each-page-chart-text-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8.5 10.9998V6.99976H6.5V7.99976H7.5V10.9998H6V11.9998H10V10.9998H8.5Z" />
-                  <path
-                    d="M8 3.99976C7.85167 3.99976 7.70666 4.04375 7.58333 4.12616C7.45999 4.20857 7.36386 4.3257 7.30709 4.46275C7.25033 4.59979 7.23548 4.75059 7.26441 4.89608C7.29335 5.04156 7.36478 5.1752 7.46967 5.28009C7.57456 5.38498 7.7082 5.45641 7.85369 5.48535C7.99917 5.51429 8.14997 5.49943 8.28701 5.44267C8.42406 5.3859 8.54119 5.28977 8.6236 5.16644C8.70602 5.0431 8.75 4.89809 8.75 4.74976C8.75 4.55085 8.67098 4.36008 8.53033 4.21943C8.38968 4.07878 8.19892 3.99976 8 3.99976Z" />
-                  <path
-                    d="M8 14.9998C6.61553 14.9998 5.26216 14.5892 4.11101 13.82C2.95987 13.0509 2.06266 11.9576 1.53285 10.6785C1.00303 9.39946 0.86441 7.99199 1.13451 6.63413C1.4046 5.27626 2.07129 4.02898 3.05026 3.05001C4.02922 2.07104 5.2765 1.40436 6.63437 1.13426C7.99224 0.864165 9.3997 1.00279 10.6788 1.5326C11.9579 2.06242 13.0511 2.95962 13.8203 4.11077C14.5895 5.26191 15 6.61529 15 7.99976C15 9.85627 14.2625 11.6368 12.9497 12.9495C11.637 14.2623 9.85652 14.9998 8 14.9998ZM8 1.99976C6.81332 1.99976 5.65328 2.35165 4.66658 3.01094C3.67989 3.67023 2.91085 4.6073 2.45673 5.70366C2.0026 6.80002 1.88378 8.00641 2.11529 9.1703C2.3468 10.3342 2.91825 11.4033 3.75736 12.2424C4.59648 13.0815 5.66558 13.653 6.82946 13.8845C7.99335 14.116 9.19975 13.9972 10.2961 13.543C11.3925 13.0889 12.3295 12.3199 12.9888 11.3332C13.6481 10.3465 14 9.18645 14 7.99976C14 6.40846 13.3679 4.88234 12.2426 3.75712C11.1174 2.6319 9.5913 1.99976 8 1.99976Z" />
-                </svg>
-              </div>
-              <div class="each-page-chart-text-pop-up">
-                This is the CPU usage stat of your remote server.
-              </div>
-            </div>
-          </div>
         </div>
         <div class="all-page-content" id="content-of-page">
           <!-- inner HTML -->
         </div>
       </div>
+    </div>
+    <div class="all-home-wrapper" style="display: none;">
+      <div class="overlay-top"></div>
+      <div class="nodes-page-wrapper">
+        <div class="nodes-page-tabs">
+          <button class="each-nodes-page-tab active-tab" id="testnet-tab-button">Testnet</button>
+          <button class="each-nodes-page-tab" id="mainnet-tab-button">Mainnet</button>
+        </div>
+        <div class="nodes-page-projects" id="testnet-tab-content"></div>
+        <div class="nodes-page-projects" id="mainnet-tab-content" style="display: none;">
+          <div class="each-node-page-project">
+            <div class="project-header">
+              <img class="project-icon" src="../assets/projects/aleo.png">
+              <div class="project-details">
+                <div class="project-details-heading">ALEO</div>
+                <div class="project-details-tags">
+                  <span class="each-project-detail-tag incentivized-tag">Incentivized</span>
+                  <span class="each-project-detail-tag active-tag">Active</span>
+                </div>
+                <div class="project-rating">
+                  <div class="project-rating-heading">Rating</div>
+                  <span class="each-project-rating-value">
+                    <span class="each-project-rating-value-on" style="display: unset;"></span>
+                  </span>
+                  <span class="each-project-rating-value">
+                    <span class="each-project-rating-value-on" style="display: unset;"></span>
+                  </span>
+                  <span class="each-project-rating-value">
+                    <span class="each-project-rating-value-on" style="display: unset;"></span>
+                  </span>
+                  <span class="each-project-rating-value">
+                    <span class="each-project-rating-value-on" style="display: none;"></span>
+                  </span>
+                  <span class="each-project-rating-value">
+                    <span class="each-project-rating-value-on" style="display: none;"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="project-description">
+              Stake your coins to our validators in the projects you choose. node101
+              gives you the opportunity to stake the best projects.
+            </div>
+            <div class="project-buttons">
+              <button class="each-project-button install-button">
+                <div>Install Node</div>
+                <svg class="each-project-button-svg" width="14" height="14" viewBox="0 0 14 14">
+                  <path
+                    d="M 12.656854,8.1649583 11.949748,7.4578515 7.4985105,11.909089 V 0.17818725 H 6.5014899 V 11.909089 L 2.0502527,7.4578515 1.343146,8.1649583 7.0000002,13.821813 Z" />
+                </svg>
+              </button>
+              <button class="each-project-button discover-button">
+                <div>Discover</div>
+                <svg class="each-project-button-svg" width="10" height="10" viewBox="0 0 10 10"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2 0V1H8.295L0 9.295L0.705 10L9 1.705V8H10V0H2Z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="overlay-bottom"></div>
+
     </div>
   </div>
   <script src="../loading-animation.js"></script>

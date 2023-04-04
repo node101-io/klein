@@ -5,12 +5,8 @@
 
 use serde_json::{self, json, Value};
 use ssh2::{DisconnectCode, Session};
-use std::{
-    char,
-    io::{prelude::Read, Write},
-    thread, time,
-};
-use tauri::{regex, LogicalSize, Manager};
+use std::io::{prelude::Read, Write};
+use tauri::{api::version, regex, LogicalSize, Manager};
 
 struct SessionManager {
     open_session: Session,
@@ -96,7 +92,7 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
                             println!("Found project: {}", item.0);
                             window
                                 .eval(&format!(
-                                    "window.loadNewPage('manage-node/manage-node.html', {}, '{}')",
+                                    "window.loadNewPage('../manage-node/manage-node.html', {}, '{}')",
                                     remember, item.0
                                 ))
                                 .unwrap();
@@ -150,6 +146,15 @@ fn cpu_mem_sync_stop() {
     }
 }
 
+fn get_capture(s: &str, regex_str: &str) -> String {
+    regex::Regex::new(regex_str)
+        .unwrap()
+        .captures(s)
+        .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
+        .unwrap_or("")
+        .to_string()
+}
+
 #[tauri::command(async)]
 async fn cpu_mem_sync(window: tauri::Window) {
     unsafe {
@@ -174,64 +179,37 @@ async fn cpu_mem_sync(window: tauri::Window) {
                 let mut buf = [0u8; 1024];
                 let len = channel.read(&mut buf).unwrap();
                 let s = std::str::from_utf8(&buf[0..len]).unwrap();
+
                 println!("{}", s);
-                if s.contains("STATUS") {
+
+                let status = get_capture(s, r"STATUS:(\w+)");
+                let cpu = get_capture(s, r"CPU:(\w+)");
+                let mem = get_capture(s, r"MEM:(\w+)");
+                let height = get_capture(s, r"HEIGHT:(\w+)");
+                let catchup = get_capture(s, r"CATCHUP:(\w+)");
+                let version = get_capture(s, r"VERSION:(.*)");
+                if !status.is_empty() {
                     window
-                        .eval(&*format!(
-                            "window.updateStatus('{}')",
-                            regex::Regex::new(r"STATUS:(\w+)")
-                                .unwrap()
-                                .captures(s)
-                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
-                                .unwrap_or("")
-                        ))
+                        .eval(&*format!("window.updateStatus('{status}')"))
                         .unwrap();
                 }
-                if s.contains("CPU") {
+                if !cpu.is_empty() {
                     window
-                        .eval(&*format!(
-                            "window.updateCpuMem('{}', '{}')",
-                            regex::Regex::new(r"CPU:(\w+)")
-                                .unwrap()
-                                .captures(s)
-                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
-                                .unwrap_or(""),
-                            regex::Regex::new(r"MEM:(\w+)")
-                                .unwrap()
-                                .captures(s)
-                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
-                                .unwrap_or("")
-                        ))
-                        .unwrap();
-                    std::io::stdout().flush().unwrap();
-                }
-                if s.contains("HEIGHT") {
-                    window
-                        .eval(&*format!(
-                            "window.updateSync('{}', '{}');",
-                            regex::Regex::new(r"HEIGHT:(\w+)")
-                                .unwrap()
-                                .captures(s)
-                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
-                                .unwrap_or(""),
-                            regex::Regex::new(r"CATCHUP:(\w+)")
-                                .unwrap()
-                                .captures(s)
-                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
-                                .unwrap_or("")
-                        ))
+                        .eval(&*format!("window.updateCpuMem('{cpu}', '{mem}')"))
                         .unwrap();
                 }
-                if s.contains("VERSION") {
+                if !height.is_empty() {
                     window
-                        .eval(&*format!(
-                            "window.updateVersion('{}')",
-                            regex::Regex::new(r"VERSION:(.*)")
-                                .unwrap()
-                                .captures(s)
-                                .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
-                                .unwrap_or("")
-                        ))
+                        .eval(&*format!("window.updateSync('{height}', '{catchup}');"))
+                        .unwrap();
+                } else if !(s == "\n") {
+                    window
+                        .eval(&*format!("window.updateSync('!', 'error');"))
+                        .unwrap();
+                }
+                if !version.is_empty() {
+                    window
+                        .eval(&*format!("window.updateVersion('{version}')"))
                         .unwrap();
                 }
             }

@@ -1,6 +1,4 @@
-const { invoke } = window.__TAURI__.tauri;
-const { message, confirm } = window.__TAURI__.dialog;
-const { fetch, getClient, Body } = window.__TAURI__.http;
+const { tauri, dialog, http } = window.__TAURI__;
 
 const ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
 const notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
@@ -8,7 +6,7 @@ const project = localStorage.getItem("project");
 const imgSrc = project ? `../assets/projects/${project.toLowerCase().replace(" ", "-")}.png` : "../assets/projects/default.png";
 
 async function showTestnetProjects() {
-  const client = await getClient();
+  const client = await http.getClient();
   const authenticate = await client.post('https://admin.node101.io/api/authenticate', {
     type: 'Json',
     payload: { key: "b8737b4ca31571d769506c4373f5c476e0a022bf58d5e0595c0e37eabb881ad150b8c447f58d5f80f6ffe5ced6f21fe0502c12cf32ab33c6f0787aea5ccff153" },
@@ -108,7 +106,7 @@ async function showTestnetProjects() {
     installButton.appendChild(textDiv);
     installButton.appendChild(installButtonSVG)
     installButton.addEventListener("click", async function () {
-      if (await confirm("Node is going to be installed, please confirm.", projects[i].name)) {
+      if (await tauri.confirm("Node is going to be installed, please confirm.", projects[i].name)) {
         localStorage.setItem('installation', 'true');
         localStorage.setItem('project', projects[i].name);
         window.location.href = '../manage-node/manage-node.html';
@@ -154,7 +152,6 @@ async function showTestnetProjects() {
 
 window.addEventListener("DOMContentLoaded", () => {
   showLoadingAnimation();
-
   const testnetTabButton = document.getElementById("testnet-tab-button");
   const mainnetTabButton = document.getElementById("mainnet-tab-button");
   const testnetTabContent = document.getElementById("testnet-tab-content");
