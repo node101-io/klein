@@ -1,12 +1,10 @@
 function showLoadingAnimation() {
     scrollto = window.scrollY;
-    document.querySelector(".all-wrapper").style.setProperty("pointer-events", "none");
-    document.querySelector(".all-wrapper").style.setProperty("display", "none");
-    document.querySelector(".boxes").style.setProperty("display", "unset");
+    document.querySelector(".all-wrapper").setAttribute("style", "pointer-events: none; display: none;");
+    document.querySelector(".boxes").setAttribute("style", "display: unset;");
 }
 function hideLoadingAnimation() {
-    document.querySelector(".boxes").style.setProperty("display", "none");
-    document.querySelector(".all-wrapper").style.removeProperty("display");
-    document.querySelector(".all-wrapper").style.removeProperty("pointer-events");
-    window.scrollTo(0, scrollto);
+    document.querySelector(".boxes").setAttribute("style", "display: none;");
+    document.querySelector(".all-wrapper").setAttribute("style", "pointer-events: unset; display: unset;");
+    if (typeof scrollto !== "undefined") { window.scrollTo(0, scrollto) };
 }

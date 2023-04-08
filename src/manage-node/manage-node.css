@@ -17,6 +17,10 @@
   animation: increase-var 2s forwards;
 }
 
+/* ::-webkit-scrollbar {
+  width: 8px;
+} */
+
 ::-webkit-scrollbar-track {
   background: var(--third-color);
   border-radius: 5px;
@@ -145,12 +149,12 @@ html {
   opacity: 0.8;
 }
 
-.active-tag {
+.sidebar-active-tag {
   background: #c9ef94;
   color: #2f6514;
 }
 
-.inactive-tag {
+.sidebar-inactive-tag {
   background: #B53D43;
   color: #ffffff;
 }
@@ -265,11 +269,229 @@ html {
   flex-direction: column;
 }
 
+/* HOME PAGE */
 .all-home-wrapper {
   height: fit-content;
   min-height: fit-content;
   display: flex;
   justify-content: center;
+}
+
+.overlay-top {
+  position: absolute;
+  top: 212px;
+  margin-right: calc(5vw + 20px);
+  margin-left: 5vw;
+  width: calc(90vw - 20px);
+  height: 5vh;
+  background: linear-gradient(180deg, rgba(18, 18, 18, 1) 0%, rgba(18, 18, 18, 0.5) 50%, rgba(18, 18, 18, 0) 100%);
+  z-index: 89;
+}
+
+.overlay-bottom {
+  position: absolute;
+  top: 92vh;
+  margin-right: calc(5vw + 20px);
+  margin-left: 5vw;
+  width: calc(90vw - 20px);
+  height: 5vh;
+  background: linear-gradient(0deg, rgba(18, 18, 18, 1) 0%, rgba(18, 18, 18, 0.5) 50%, rgba(18, 18, 18, 0) 100%);
+  z-index: 99;
+}
+
+.nodes-page-wrapper {
+  width: 100%;
+  margin-top: 40px;
+}
+
+.nodes-page-tabs {
+  display: flex;
+  margin-left: 5vw;
+}
+
+.each-nodes-page-tab {
+  border: none;
+  cursor: pointer;
+  width: 200px;
+  height: 50px;
+  font-size: 16px;
+  margin-right: 20px;
+  color: var(--second-text-color);
+  background-color: rgba(0, 0, 0, 0.8);
+  transition: background-color 0.2s;
+}
+
+.each-nodes-page-tab:hover {
+  background-color: var(--third-color);
+}
+
+.active-tab {
+  border-bottom: var(--main-color) solid 1px;
+}
+
+.nodes-page-projects {
+  display: flex;
+  flex-wrap: wrap;
+  height: calc(97vh - 92px - 120px);
+  margin-top: 30px;
+  margin-left: 5vw;
+  margin-right: 5vw;
+  padding-top: 30px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.each-node-page-project {
+  width: calc(30vw - 45px);
+  height: fit-content;
+  margin-bottom: 50px;
+  margin-right: 40px;
+}
+
+.project-header {
+  display: flex;
+  margin-bottom: 18px;
+}
+
+.project-icon {
+  margin-right: 20px;
+  width: 100px;
+  height: 100px;
+}
+
+.project-details {
+  display: flex;
+  flex-direction: column;
+  height: 100px;
+  justify-content: space-between;
+}
+
+.project-details-heading {
+  font-size: 26px;
+  color: var(--logo-color);
+}
+
+.project-details-tags {
+  display: flex;
+}
+
+.each-project-detail-tag {
+  display: flex;
+  font-size: 14px;
+  height: 24px;
+  padding-left: 15px;
+  padding-right: 15px;
+  margin-right: 12px;
+  border-radius: 12px;
+  align-items: center;
+}
+
+.active-tag {
+  color: rgba(226, 248, 215, 1);
+  background-color: rgba(0, 93, 93, 1);
+}
+
+.upcoming-tag {
+  color: var(--main-color);
+  background-color: var(--divider-color);
+}
+
+.incentivized-tag {
+  color: var(--divider-color);
+  background-color: var(--main-color);
+}
+
+.project-rating {
+  display: flex;
+  align-items: center;
+}
+
+.project-rating span {
+  margin-right: 6px;
+}
+
+.each-project-rating-value {
+  position: relative;
+  height: 12px;
+  width: 12px;
+  background-color: transparent;
+  border-radius: 50%;
+  border: var(--main-color) solid 1px;
+}
+
+.each-project-rating-value-on {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  height: 6px;
+  width: 6px;
+  background-color: var(--main-color);
+  border-radius: 50%;
+}
+
+.project-rating-heading {
+  font-size: 16px;
+  margin-right: 10px;
+  color: var(--logo-color);
+}
+
+.project-description {
+  margin-top: 20px;
+  color: var(--logo-color);
+  font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.project-buttons {
+  display: flex;
+  margin-top: 20px;
+}
+
+.each-project-button {
+  color: var(--logo-color);
+  display: flex;
+  align-items: center;
+  width: 180px;
+  height: 36px;
+  border: none;
+  margin-right: 10px;
+  justify-content: space-between;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.each-project-button:hover {
+  opacity: 0.8;
+}
+
+.install-button {
+  background-color: var(--main-color);
+}
+
+.install-button:disabled:hover {
+  opacity: 1;
+}
+
+.install-button:disabled {
+  background-color: var(--border-color);
+  cursor: not-allowed;
+}
+
+.install-button:disabled:first-child {
+  color: var(--second-text-color);
+}
+
+.discover-button {
+  background-color: rgba(90, 104, 114, 1);
+}
+
+.each-project-button-svg {
+  fill: var(--logo-color);
 }
 
 

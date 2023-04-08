@@ -27,15 +27,12 @@ html {
   height: 100vh;
   margin: 0px;
   padding: 0px;
-  overflow: hidden;
   background: var(--background-color);
 }
 
 body {
   margin: 0px;
   padding: 0px;
-  overflow-x: hidden;
-  overflow-y: auto;
 }
 
 .prevent-select {
@@ -67,9 +64,10 @@ body {
 }
 
 .all-content-wrapper {
-  height: fit-content;
+  height: calc(80vh - 60px);
   min-height: fit-content;
-  margin-top: auto;
+  display: flex;
+  align-items: center;
 }
 
 .login-page-wrapper {

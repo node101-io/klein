@@ -3,21 +3,20 @@
     windows_subsystem = "windows"
 )]
 
-use serde_json::{self, json, Value};
+use serde_json::{self, Value};
 use ssh2::{DisconnectCode, Session};
 use std::io::{prelude::Read, Write};
-use tauri::{api::version, regex, LogicalSize, Manager};
+use tauri::{regex, LogicalSize, Manager};
 
 struct SessionManager {
     open_session: Session,
     stop_cpu_mem_sync: bool,
     walletpassword: String,
 }
-
 static mut GLOBAL_STRUCT: Option<SessionManager> = None;
 
 #[tauri::command(async)]
-async fn log_in(ip: String, password: String, remember: bool, window: tauri::Window) {
+fn log_in(ip: String, password: String) -> (bool, String) {
     let tcp = std::net::TcpStream::connect(format!("{ip}:22")).unwrap();
     tcp.set_read_timeout(Some(std::time::Duration::from_secs(1)))
         .unwrap();
@@ -26,51 +25,6 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
     sess.handshake().unwrap();
     let res = sess.userauth_password("root", &password);
 
-    let client = reqwest::Client::new();
-    let auth_response = client
-        .post("https://admin.node101.io/api/authenticate")
-        .json(&json!({ "key": "b8737b4ca31571d769506c4373f5c476e0a022bf58d5e0595c0e37eabb881ad150b8c447f58d5f80f6ffe5ced6f21fe0502c12cf32ab33c6f0787aea5ccff153" }))
-        .send().await.unwrap();
-    let cookie = auth_response
-        .headers()
-        .get("set-cookie")
-        .unwrap()
-        .to_str()
-        .unwrap();
-
-    let mut projects_data: Vec<Vec<(String, String)>> = Vec::new();
-    let mut page_num = 0;
-    loop {
-        let page_data = client
-            .get(format!(
-                "https://admin.node101.io/api/projects?page={page_num}"
-            ))
-            .header("Cookie", cookie)
-            .send()
-            .await
-            .unwrap();
-        let v: Value = serde_json::from_str(&page_data.text().await.unwrap()).unwrap();
-        let page_data: Vec<(String, String)> = v["projects"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .map(|p| {
-                (
-                    p.get("name").and_then(Value::as_str).unwrap().to_owned(),
-                    p.get("wizard_key")
-                        .map(|v| v.to_string().replace("\"", ""))
-                        .unwrap(),
-                )
-            })
-            .collect();
-
-        if page_data.is_empty() {
-            break;
-        }
-        projects_data.push(page_data);
-        page_num += 1;
-    }
-
     if res.is_ok() {
         unsafe {
             GLOBAL_STRUCT = Some(SessionManager {
@@ -78,48 +32,23 @@ async fn log_in(ip: String, password: String, remember: bool, window: tauri::Win
                 stop_cpu_mem_sync: false,
                 walletpassword: String::new(),
             });
-
             if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
                 let mut channel = my_boxed_session.open_session.channel_session().unwrap();
                 channel.exec("bash -c -l 'echo $EXECUTE'").unwrap();
                 let mut s = String::new();
                 channel.read_to_string(&mut s).unwrap();
-
-                let mut found = false;
-                for page_data in projects_data {
-                    for item in page_data {
-                        if s.trim() == item.1 {
-                            println!("Found project: {}", item.0);
-                            window
-                                .eval(&format!(
-                                    "window.loadNewPage('../manage-node/manage-node.html', {}, '{}')",
-                                    remember, item.0
-                                ))
-                                .unwrap();
-                            found = true;
-                            break;
-                        }
-                    }
-                    if found {
-                        break;
-                    }
-                }
-                if !found {
-                    window
-                        .eval(&format!(
-                            "window.loadNewPage('home-page/home-page.html', {remember}, '')"
-                        ))
-                        .unwrap();
-                }
                 channel.close().unwrap();
+                (true, s.trim().to_string())
+            } else {
+                (false, String::new())
             }
         }
     } else {
-        window.eval("window.showLoginError()").unwrap();
+        (false, String::new())
     }
 }
 
-#[tauri::command(async)] // DÜZELT
+#[tauri::command(async)]
 fn log_out() {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
@@ -131,10 +60,21 @@ fn log_out() {
                     None,
                 )
                 .unwrap();
-
             GLOBAL_STRUCT = None;
         }
     }
+}
+
+#[tauri::command(async)]
+fn log_in_again(ip: String, password: String) -> bool {
+    let tcp = std::net::TcpStream::connect(format!("{}:22", ip)).unwrap();
+    tcp.set_read_timeout(Some(std::time::Duration::from_secs(1)))
+        .unwrap();
+    let mut sess = Session::new().unwrap();
+    sess.set_tcp_stream(tcp);
+    sess.handshake().unwrap();
+    let res = sess.userauth_password("root", &password);
+    res.is_ok()
 }
 
 #[tauri::command(async)]
@@ -144,15 +84,6 @@ fn cpu_mem_sync_stop() {
             my_boxed_session.stop_cpu_mem_sync = true;
         }
     }
-}
-
-fn get_capture(s: &str, regex_str: &str) -> String {
-    regex::Regex::new(regex_str)
-        .unwrap()
-        .captures(s)
-        .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
-        .unwrap_or("")
-        .to_string()
 }
 
 #[tauri::command(async)]
@@ -171,6 +102,7 @@ async fn cpu_mem_sync(window: tauri::Window) {
                         sleep 1; echo ''; sleep 1; echo ''; sleep 1; echo ''; sleep 1; echo ''; sleep 1;
                     done
             ")).unwrap();
+            my_boxed_session.stop_cpu_mem_sync = false;
             loop {
                 if my_boxed_session.stop_cpu_mem_sync {
                     channel.close().unwrap();
@@ -180,41 +112,32 @@ async fn cpu_mem_sync(window: tauri::Window) {
                 let len = channel.read(&mut buf).unwrap();
                 let s = std::str::from_utf8(&buf[0..len]).unwrap();
 
-                println!("{}", s);
-
-                let status = get_capture(s, r"STATUS:(\w+)");
-                let cpu = get_capture(s, r"CPU:(\w+)");
-                let mem = get_capture(s, r"MEM:(\w+)");
-                let height = get_capture(s, r"HEIGHT:(\w+)");
-                let catchup = get_capture(s, r"CATCHUP:(\w+)");
-                let version = get_capture(s, r"VERSION:(.*)");
-                if !status.is_empty() {
-                    window
-                        .eval(&*format!("window.updateStatus('{status}')"))
-                        .unwrap();
-                }
-                if !cpu.is_empty() {
-                    window
-                        .eval(&*format!("window.updateCpuMem('{cpu}', '{mem}')"))
-                        .unwrap();
-                }
-                if !height.is_empty() {
-                    window
-                        .eval(&*format!("window.updateSync('{height}', '{catchup}');"))
-                        .unwrap();
-                } else if !(s == "\n") {
-                    window
-                        .eval(&*format!("window.updateSync('!', 'error');"))
-                        .unwrap();
-                }
-                if !version.is_empty() {
-                    window
-                        .eval(&*format!("window.updateVersion('{version}')"))
+                if s != "\n" {
+                    let _ = window
+                        .emit(
+                            "cpu_mem_sync",
+                            serde_json::json!({
+                                "status": get_capture(s, r"STATUS:(\w+)"),
+                                "cpu": get_capture(s, r"CPU:(\w+)"),
+                                "mem": get_capture(s, r"MEM:(\w+)"),
+                                "height": get_capture(s, r"HEIGHT:(\w+)"),
+                                "catchup": get_capture(s, r"CATCHUP:(\w+)"),
+                                "version": get_capture(s, r"VERSION:(.*)")
+                            }),
+                        )
                         .unwrap();
                 }
             }
         }
     }
+}
+fn get_capture(s: &str, regex_str: &str) -> String {
+    regex::Regex::new(regex_str)
+        .unwrap()
+        .captures(s)
+        .map(|captures| captures.get(1).map(|m| m.as_str()).unwrap_or(""))
+        .unwrap_or("")
+        .to_string()
 }
 
 // #[tauri::command(async)]
@@ -254,7 +177,7 @@ async fn cpu_mem_sync(window: tauri::Window) {
 // }
 
 #[tauri::command(async)]
-fn node_info(window: tauri::Window) {
+fn node_info() -> String {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
@@ -263,31 +186,13 @@ fn node_info(window: tauri::Window) {
                 .unwrap();
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
-            window
-                .eval(&*format!("window.updateNodeInfo({})", s))
-                .unwrap();
             channel.close().unwrap();
+            s
+        } else {
+            "".to_string()
         }
     }
 }
-
-// #[tauri::command(async)]
-// fn systemctl_statusnode(node_name: String) {
-//     unsafe {
-//         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
-//             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-//             channel
-//                 .exec(&format!(
-//                     "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; systemctl status {node_name};"
-//                 ))
-//                 .unwrap();
-//             let mut s = String::new();
-//             channel.read_to_string(&mut s).unwrap();
-//             println!("{}", s);
-//             channel.close().unwrap();
-//         }
-//     }
-// }
 
 #[tauri::command(async)]
 fn delete_node() {
@@ -447,7 +352,7 @@ fn install_node(window: tauri::Window) {
 }
 
 #[tauri::command(async)]
-fn check_if_password_needed(window: tauri::Window) {
+fn if_password_required() -> bool {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
@@ -457,27 +362,21 @@ fn check_if_password_needed(window: tauri::Window) {
                 ))
                 .unwrap();
             if channel.read(&mut [0u8; 1024]).unwrap() == 0 {
-                println!("password needed");
                 channel.close().unwrap();
-                window
-                    .eval(&format!(
-                        "localStorage.setItem('keyring', '{{\"required\": true, \"exists\": {}}}')",
-                        check_if_keyring_exist()
-                    ))
-                    .unwrap();
+                true
             } else {
                 delete_wallet("testifpasswordneeded".to_string());
-                println!("password not needed");
-                window
-                    .eval("localStorage.setItem('keyring', 'false')")
-                    .unwrap();
+                true
             }
+        } else {
+            println!("error in if_password_required");
+            true
         }
     }
 }
 
 #[tauri::command(async)]
-fn check_if_keyring_exist() -> bool {
+fn if_keyring_exist() -> bool {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
@@ -489,10 +388,9 @@ fn check_if_keyring_exist() -> bool {
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             channel.close().unwrap();
-            println!("keyring exists: {}", s);
             s.contains("yes")
         } else {
-            println!("error in check_if_keyring_exist");
+            println!("error in if_keyring_exist");
             true
         }
     }
@@ -557,7 +455,7 @@ fn check_wallet_password(passw: String) -> bool {
 }
 
 #[tauri::command(async)]
-fn create_wallet(walletname: String, window: tauri::Window) {
+fn create_wallet(walletname: String) -> String {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
@@ -569,15 +467,11 @@ fn create_wallet(walletname: String, window: tauri::Window) {
                 ))
                 .unwrap();
             channel.read_to_string(&mut s).unwrap();
-            println!("{}", s);
-            let v: Value = serde_json::from_str(&s).unwrap();
-            window
-                .eval(&format!(
-                    "window.showCreatedWallet('{}')",
-                    v["mnemonic"].to_string()
-                ))
-                .unwrap();
             channel.close().unwrap();
+            s
+        } else {
+            println!("error in create_wallet");
+            "".to_string()
         }
     }
 }
@@ -610,7 +504,7 @@ fn if_wallet_exists(walletname: String) -> bool {
 }
 
 #[tauri::command(async)]
-fn show_wallets(window: tauri::Window) {
+fn show_wallets() -> String {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
@@ -622,8 +516,11 @@ fn show_wallets(window: tauri::Window) {
             let mut s = String::new();
             channel.read_to_string(&mut s).unwrap();
             println!("{}", s);
-            window.eval(&format!("window.showWallets({})", s)).unwrap();
             channel.close().unwrap();
+            s
+        } else {
+            println!("error in show_wallets");
+            "".to_string()
         }
     }
 }
@@ -679,22 +576,25 @@ fn start_stop_restart_node(action: String) {
 // }
 
 #[tauri::command(async)]
-fn recover_wallet(walletname: String, mnemo: String) {
+fn recover_wallet(walletname: String, mnemo: String, passwordneed: bool) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let mut s = String::new();
             channel
-                .exec(
-                    &*format!("echo -e '{}\n{}\n' | bash -c -l '$EXECUTE keys add {} --recover --output json'", // PAROLA İSTEMEYENLERDE ÇALIŞMIYOR!!!
-                    my_boxed_session.walletpassword,
+                .exec(&*format!(
+                    "echo -e '{}\n{}' | bash -c -l '$EXECUTE keys add {} --recover --output json'",
                     mnemo,
+                    if passwordneed {
+                        my_boxed_session.walletpassword.to_string() + "\n"
+                    } else {
+                        "".to_string()
+                    },
                     walletname
-                ),
-                )
+                ))
                 .unwrap();
             channel.read_to_string(&mut s).unwrap();
-            println!("hahaha{}", s);
+            println!("Recovered: {}", s);
             channel.close().unwrap();
         }
     }
@@ -742,6 +642,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             log_in,
+            log_in_again,
             log_out,
             cpu_mem_sync,
             cpu_mem_sync_stop,
@@ -759,11 +660,11 @@ fn main() {
             recover_wallet,
             // vote,
             if_wallet_exists,
-            check_if_password_needed,
-            check_if_keyring_exist,
+            if_password_required,
+            if_keyring_exist,
             create_keyring,
             delete_keyring,
-            check_wallet_password
+            check_wallet_password,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

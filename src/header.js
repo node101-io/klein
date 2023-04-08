@@ -28,7 +28,7 @@ const createHeaderMenu = function () {
         ipListItem.appendChild(ipListItemName);
         ipListItem.appendChild(ipListItemIp);
         ipListItem.addEventListener("click", () => {
-            console.log(ipAddresses[i].ip);
+            createPasswordPrompt(ipAddresses[i].ip);
         });
         submenuIpList.appendChild(ipListItem);
     }
@@ -39,7 +39,7 @@ const createHeaderMenu = function () {
         headerMenuIpButtonIcon.setAttribute("src", imgSrc);
     }
     headerMenuIpButtonName.textContent = project;
-    headerMenuIpButtonIp.textContent = localStorage.getItem("ip");
+    headerMenuIpButtonIp.textContent = sessionStorage.getItem("ip");
 
     nodeIcons.addEventListener('click', function () {
         if (headerMenu.style.display == "block") {
@@ -98,10 +98,81 @@ const createHeaderMenu = function () {
         tauri.invoke("cpu_mem_sync_stop");
         setTimeout(() => {
             tauri.invoke("log_out");
-            window.location.href = "../login.html";
+            console.log(window.location.href);
+            window.location.href = "../login/login.html";
         }, 1000);
     });
 }
+
+const createPasswordPrompt = function (ip) {
+    headerMenu.setAttribute("style", "display: none;");
+    submenuIpList.setAttribute("style", "display: none;");
+    submenuNotifications.setAttribute("style", "display: none;");
+    scrollbarBackground.setAttribute("style", "display: none;");
+
+    promptDiv = document.createElement("div");
+    closeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    closeSvg.setAttribute("class", "switch-ip-prompt-close");
+    closeSvg.setAttribute("viewBox", "0 0 24 24");
+    closeSvg.setAttribute("stroke", "var(--divider-color)");
+    closeSvg.setAttribute("stroke-width", "2");
+    closePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    closePath.setAttribute("d", "M6 18L18 6M6 6l12 12");
+    closeSvg.addEventListener("click", () => {
+        promptDiv.remove();
+    });
+    closeSvg.appendChild(closePath);
+    promptDiv.appendChild(closeSvg);
+    promptInDiv = document.createElement("div");
+    promptDiv.setAttribute("class", "switch-ip-prompt");
+    promptTitle = document.createElement("div");
+    promptTitle.setAttribute("class", "each-input-label");
+    promptTitle.innerText = ip;
+    promptInput = document.createElement("input");
+    promptInput.setAttribute("class", "each-input-field");
+    promptInput.setAttribute("placeholder", "Password");
+    promptInput.setAttribute("type", "password");
+    promptLoginButton = document.createElement("div");
+    promptLoginButton.setAttribute("class", "each-button");
+    promptLoginButton.setAttribute("style", "margin-top: 16px; margin-left: auto;");
+    promptLoginButton.addEventListener("click", async () => {
+        showLoadingAnimation();
+        if (await tauri.invoke("log_in_again", { ip: ip, password: promptInput.value })) {
+            tauri.invoke("log_in", {
+                ip: ip,
+                password: promptInput.value
+            }).then((res) => {
+                const found = projects.reduce((acc, project) => {
+                    if (project.wizard_key !== null) {
+                        acc.push(project.wizard_key);
+                    }
+                    return acc;
+                }, []).find(item => item === res[1]);
+                const project = res[1] ? projects.find(item => item.wizard_key === found).name : "";
+                ipAddresses.find(item => item.ip === ip).icon = project;
+
+                localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+                sessionStorage.setItem("ip", ip);
+                sessionStorage.setItem("project", project);
+                sessionStorage.setItem("secondpage", found ? "manage-node" : "home-page");
+                setTimeout(() => {
+                    tauri.invoke("cpu_mem_sync_stop");
+                    window.location.reload();
+                }, 1000);
+            });
+        } else {
+            dialog.message("Incorrect password", "Please try again", "error");
+            hideLoadingAnimation();
+        }
+    });
+    promptLoginButton.innerText = "Login";
+    promptInDiv.appendChild(promptTitle);
+    promptInDiv.appendChild(promptInput);
+    promptInDiv.appendChild(promptLoginButton);
+    promptDiv.appendChild(promptInDiv);
+    document.querySelector(".all-wrapper").appendChild(promptDiv);
+    promptInput.focus();
+};
 
 const hideMenuWhenClickedOutside = function (e) {
     if (headerMenu.style.display == "block" && !e.target.closest(".header-menu") && !e.target.closest(".header-node-icon")) {
