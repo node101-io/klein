@@ -24,7 +24,6 @@ fn log_in(ip: String, password: String) -> (bool, String) {
     sess.set_tcp_stream(tcp);
     sess.handshake().unwrap();
     let res = sess.userauth_password("root", &password);
-
     if res.is_ok() {
         unsafe {
             GLOBAL_STRUCT = Some(SessionManager {
@@ -653,7 +652,6 @@ fn main() {
             show_wallets,
             delete_wallet,
             start_stop_restart_node,
-            // systemctl_statusnode,
             delete_node,
             // update_node,
             // send_token,
@@ -665,6 +663,7 @@ fn main() {
             create_keyring,
             delete_keyring,
             check_wallet_password,
+            // create_validator,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
