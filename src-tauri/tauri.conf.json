@@ -68,7 +68,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "wizard",
       "longDescription": "",
       "macOS": {
         "entitlements": null,

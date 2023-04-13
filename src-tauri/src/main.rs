@@ -212,32 +212,61 @@ fn delete_node() {
     }
 }
 
-// #[tauri::command(async)]
-// fn create_validator(
-//     amount: String,
-//     wallet_name: String,
-//     moniker_name: String,
-//     password: String,
-//     website: String,
-//     keybase_id: String,
-//     contact: String,
-//     com_rate: String,
-//     com_max: String,
-//     com_ch_rate: String,
-//     fees: String,
-//     details: String,
-// ) {
-//     unsafe {
-//         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
-//             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-//             let mut s = String::new();
-//             channel.exec(&format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{password}\" | $(bash -c -l 'echo $EXECUTE') tx staking create-validator --amount={amount}$DENOM --pubkey=$($EXECUTE tendermint show-validator) --moniker={moniker_name}  --chain-id=$CHAIN_ID --commission-rate={com_rate} --commission-max-rate={com_max} --commission-max-change-rate={com_ch_rate} --gas='auto' --gas-prices='{fees}$DENOM' --from={wallet_name} --website={website} --identity={keybase_id} --conta ")).unwrap();
-//             channel.read_to_string(&mut s).unwrap();
-//             println!("{}", s);
-//             channel.close().unwrap();
-//         }
-//     }
-// }
+#[tauri::command(async)]
+fn create_validator(
+    website: String,
+    amount: String,
+    wallet_name: String,
+    com_rate: String,
+    moniker_name: String,
+    keybase_id: String,
+    contact: String,
+    fees: String,
+    details: String,
+) {
+    unsafe {
+        if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
+            let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+            let mut s = String::new();
+            // channel.exec(&format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; bash -c -l \"$EXECUTE tx staking create-validator --amount='1$DENOM' --pubkey=\\$($EXECUTE tendermint show-validator) --from=valitest --commission-max-change-rate=0.1 --commission-max-rate=0.2 --commission-rate=0.05 --min-self-delegation=1 --moniker=node101\"")).unwrap();
+            println!("{}", &format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; bash -c -l \"$EXECUTE tx checkpointing create-validator -y \
+                    --pubkey=\\$($EXECUTE tendermint show-validator) \
+                    --amount={amount}$DENOM \
+                    --from={wallet_name} \
+                    --moniker={moniker_name} \
+                    --website={website} \
+                    --identity={keybase_id} \
+                    --security-contact={contact} \
+                    --commission-rate={com_rate} \
+                    --commission-max-rate=0.20 \
+                    --commission-max-change-rate=0.01 \
+                    --fees={fees}$DENOM \
+                    --min-self-delegation=1 \
+                    --details={details}\""
+                ));
+            channel
+                .exec(&format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; baylond tx checkpointing create-validator -y \
+                    --output json \
+                    --pubkey=\\$(babylond tendermint show-validator) \
+                    --amount={amount}ubbn \
+                    --from={wallet_name} \
+                    --moniker={moniker_name} \
+                    --website={website} \
+                    --identity={keybase_id} \
+                    --security-contact={contact} \
+                    --commission-rate={com_rate} \
+                    --commission-max-rate=0.20 \
+                    --commission-max-change-rate=0.01 \
+                    --fees={fees}ubbn \
+                    --min-self-delegation=1 \
+                    --details={details}"
+                )).unwrap();
+            channel.read_to_string(&mut s).unwrap();
+            println!("{}", s);
+            channel.close().unwrap();
+        }
+    }
+}
 
 // #[tauri::command(async)]
 // fn edit_validator(
@@ -357,14 +386,18 @@ fn if_password_required() -> bool {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             channel
                 .exec(&format!(
-                    "yes | bash -c -l '$EXECUTE keys add testifpasswordneeded'"
+                    "yes | bash -c -l '$EXECUTE keys add testifpasswordneeded --output json'"
                 ))
                 .unwrap();
-            if channel.read(&mut [0u8; 1024]).unwrap() == 0 {
+            let mut buf = [0u8; 1024];
+            channel.read(&mut buf).unwrap();
+            let s = std::str::from_utf8(&buf[9..29]).unwrap();
+            if s == "testifpasswordneeded" {
                 channel.close().unwrap();
-                true
-            } else {
                 delete_wallet("testifpasswordneeded".to_string());
+                false
+            } else {
+                channel.close().unwrap();
                 true
             }
         } else {
@@ -663,7 +696,7 @@ fn main() {
             create_keyring,
             delete_keyring,
             check_wallet_password,
-            // create_validator,
+            create_validator,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
