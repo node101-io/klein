@@ -1,6 +1,6 @@
 const { tauri, dialog, clipboard, http } = window.__TAURI__;
 
-localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Babylon"},{"ip":"213.136.73.17","icon":"Lava Network"}]');
+localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Babylon"},{"ip":"213.136.73.17","icon":"Nibiru"}]');
 localStorage.setItem("notifications", '[{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":true,"text":"Example notif!"},{"unread":true,"text":"Example notif!"}]');
 
 const projects = [];

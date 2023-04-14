@@ -39,18 +39,8 @@ tevent.listen('cpu_mem_sync', (event) => {
         eachSidebarTag[1].classList.add("version-tag");
     }
 });
+
 const loadNodePage = async () => {
-    tauri.invoke("create_validator", {
-        website: "node101.io",
-        amount: "1",
-        walletName: "valitest",
-        comRate: "0.05",
-        monikerName: "node101",
-        keybaseId: "",
-        contact: "hello@node101.io",
-        fees: "20",
-        details: "detailstest",
-    });
     updateHeader();
 
     document.querySelector(".all-header-wrapper").setAttribute("style", "display: flex;");
@@ -177,6 +167,358 @@ const installationSetup = async () => {
         await new Promise(r => setTimeout(r, i * i / 0.015));
     }
 };
+const nodeOperationSetup = () => {
+    document.querySelectorAll(".each-page-manage-node-button")[0].addEventListener("click", async () => {
+        tauri.invoke("start_stop_restart_node", { action: "start" });
+    });
+    document.querySelectorAll(".each-page-manage-node-button")[1].addEventListener("click", async () => {
+        tauri.invoke("start_stop_restart_node", { action: "stop" });
+    });
+    document.querySelectorAll(".each-page-manage-node-button")[2].addEventListener("click", async () => {
+        tauri.invoke("start_stop_restart_node", { action: "restart" });
+    });
+    document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
+        tauri.invoke("update_node");
+    });
+    document.querySelector(".delete-node-button").addEventListener("click", async () => {
+        if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
+            showLoadingAnimation();
+            tauri.invoke("delete_node").then(() => {
+                tauri.invoke("cpu_mem_sync_stop");
+                currentIp.icon = "";
+                localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses.map((ip) => {
+                    return ip.ip === currentIp.ip ? { ...ip, icon: "Empty Server" } : ip;
+                })));
+                setTimeout(() => {
+                    dialog.message("Node deleted successfully.", { title: "Success", type: "success" });
+                    loadHomePage();
+                }, 1000);
+            });
+        }
+    });
+};
+const createValidatorSetup = () => {
+    const validatorWarning = document.getElementById("create-validator-warning");
+    const validatorWarningText = document.getElementById("create-validator-warning-text");
+
+    const amountInput = document.querySelectorAll(".each-input-field")[0];
+    const walletNameInput = document.querySelectorAll(".each-input-field")[1];
+    const monikerNameInput = document.querySelectorAll(".each-input-field")[2];
+    const walletPasswordInput = document.querySelectorAll(".each-input-field")[3];
+    const websiteInput = document.querySelectorAll(".each-input-field")[4];
+    const keybaseIdentityInput = document.querySelectorAll(".each-input-field")[5];
+    const securityContactInput = document.querySelectorAll(".each-input-field")[6];
+    const commissionRateInput = document.querySelectorAll(".each-input-field")[7];
+    const feesInput = document.querySelectorAll(".each-input-field")[8];
+    const detailsInput = document.querySelectorAll(".each-input-field")[9];
+
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        // tauri.invoke("create_validator", {
+        //     website: websiteInput.value,
+        //     amount: amountInput.value,
+        //     walletName: walletNameInput.value,
+        //     comRate: commissionRateInput.value,
+        //     monikerName: monikerNameInput.value,
+        //     keybaseId: keybaseIdentityInput.value,
+        //     contact: securityContactInput.value,
+        //     fees: feesInput.value,
+        //     details: detailsInput.value,
+        // });
+        tauri.invoke("create_validator", {
+            website: "node101.io",
+            amount: "20",
+            walletName: "valitest",
+            comRate: "0.05",
+            monikerName: "node101",
+            keybaseId: "",
+            contact: "hello@node101.io",
+            fees: "5000",
+            details: "detailstest",
+        }).then((res) => {
+            if (res[0]) {
+                dialog.message("Validator created successfully. " + res[1], { title: "Success", type: "success" });
+            } else {
+                validatorWarning.setAttribute("style", "display: flex;");
+                validatorWarning.classList.add("warning-animation");
+                setTimeout(() => {
+                    validatorWarning.classList.remove("warning-animation");
+                }, 500);
+                validatorWarningText.textContent = "An error occurred!";
+            }
+            hideLoadingAnimation();
+        });
+    });
+};
+const editValidatorSetup = () => {
+    const validatorWarning = document.getElementById("edit-validator-warning");
+    const validatorWarningText = document.getElementById("edit-validator-warning-text");
+
+    const amountInput = document.querySelectorAll(".each-input-field")[0];
+    const walletNameInput = document.querySelectorAll(".each-input-field")[1];
+    const websiteInput = document.querySelectorAll(".each-input-field")[2];
+    const walletPasswordInput = document.querySelectorAll(".each-input-field")[3];
+    const securityContactInput = document.querySelectorAll(".each-input-field")[4];
+    const keybaseIdentityInput = document.querySelectorAll(".each-input-field")[5];
+    const commissionRateInput = document.querySelectorAll(".each-input-field")[6];
+    const detailsInput = document.querySelectorAll(".each-input-field")[7];
+
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        tauri.invoke("edit_validator", {
+            website: websiteInput.value,
+            amount: amountInput.value,
+            walletName: walletNameInput.value,
+            comRate: commissionRateInput.value,
+            keybaseId: keybaseIdentityInput.value,
+            contact: securityContactInput.value,
+            details: detailsInput.value,
+        }).then((res) => {
+            if (res) {
+                dialog.message("Validator edited successfully.", { title: "Success", type: "success" });
+            }
+            else {
+                validatorWarning.setAttribute("style", "display: flex;");
+                validatorWarning.classList.add("warning-animation");
+                setTimeout(() => {
+                    validatorWarning.classList.remove("warning-animation");
+                }, 500);
+                validatorWarningText.textContent = "An error occurred!";
+            }
+            hideLoadingAnimation();
+        });
+    });
+};
+const withdrawRewardsSetup = () => {
+    const withdrawWarning = document.getElementById("withdraw-rewards-warning");
+    const withdrawWarningText = document.getElementById("withdraw-rewards-warning-text");
+
+    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
+    const feesInput = document.querySelectorAll(".each-input-field")[1];
+    const walletPasswordInput = document.querySelectorAll(".each-input-field")[2];
+
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        tauri.invoke("withdraw_rewards", {
+            walletName: walletNameInput.value,
+            fees: feesInput.value,
+        }).then((res) => {
+            if (res) {
+                dialog.message("Rewards withdrawn successfully.", { title: "Success", type: "success" });
+            } else {
+                withdrawWarning.setAttribute("style", "display: flex;");
+                withdrawWarning.classList.add("warning-animation");
+                setTimeout(() => {
+                    withdrawWarning.classList.remove("warning-animation");
+                }, 500);
+                withdrawWarningText.textContent = "An error occurred!";
+            }
+            hideLoadingAnimation();
+        });
+    });
+};
+const delegateSetup = () => {
+    const delegateWarning = document.getElementById("delegate-warning");
+    const delegateWarningText = document.getElementById("delegate-warning-text");
+
+    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
+    const validatorValoperInput = document.querySelectorAll(".each-input-field")[1];
+    const walletPasswordInput = document.querySelectorAll(".each-input-field")[2];
+    const amountInput = document.querySelectorAll(".each-input-field")[3];
+
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        tauri.invoke("delegate", {
+            walletName: walletNameInput.value,
+            validatorValoper: validatorValoperInput.value,
+            amount: amountInput.value,
+        }).then((res) => {
+            if (res) {
+                dialog.message("Delegate successful.", { title: "Success", type: "success" });
+            } else {
+                delegateWarning.setAttribute("style", "display: flex;");
+                delegateWarning.classList.add("warning-animation");
+                setTimeout(() => {
+                    delegateWarning.classList.remove("warning-animation");
+                }, 500);
+                delegateWarningText.textContent = "An error occurred!";
+            }
+            hideLoadingAnimation();
+        });
+    });
+};
+const redelegateSetup = () => {
+    const redelegateWarning = document.getElementById("redelegate-warning");
+    const redelegateWarningText = document.getElementById("redelegate-warning-text");
+
+    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
+    const destinationValidatorInput = document.querySelectorAll(".each-input-field")[1];
+    const walletPasswordInput = document.querySelectorAll(".each-input-field")[2];
+    const feesInput = document.querySelectorAll(".each-input-field")[3];
+    const firstValidatorInput = document.querySelectorAll(".each-input-field")[4];
+
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        tauri.invoke("redelegate", {
+            walletName: walletNameInput.value,
+            destinationValidator: destinationValidatorInput.value,
+            fees: feesInput.value,
+            firstValidator: firstValidatorInput.value,
+        }).then((res) => {
+            if (res) {
+                dialog.message("Redelegate successful.", { title: "Success", type: "success" });
+            } else {
+                redelegateWarning.setAttribute("style", "display: flex;");
+                redelegateWarning.classList.add("warning-animation");
+                setTimeout(() => {
+                    redelegateWarning.classList.remove("warning-animation");
+                }, 500);
+                redelegateWarningText.textContent = "An error occurred!";
+            }
+            hideLoadingAnimation();
+        });
+    });
+};
+const voteSetup = () => {
+    const voteWarning = document.getElementById("vote-warning");
+    const voteWarningText = document.getElementById("vote-warning-text");
+
+    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
+    const proposalNumberInput = document.querySelectorAll(".each-input-field")[1];
+    const walletPasswordInput = document.querySelectorAll(".each-input-field")[2];
+
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        tauri.invoke("vote", {
+            walletName: walletNameInput.value,
+            proposalNumber: proposalNumberInput.value,
+            selectedOption: document.querySelector(".each-input-radio-option:checked").nextElementSibling.textContent.toLowerCase(),
+        }).then((res) => {
+            if (res) {
+                dialog.message("Vote successful.", { title: "Success", type: "success" });
+            } else {
+                voteWarning.setAttribute("style", "display: flex;");
+                voteWarning.classList.add("warning-animation");
+                setTimeout(() => {
+                    voteWarning.classList.remove("warning-animation");
+                }, 500);
+                voteWarningText.textContent = "An error occurred!";
+            }
+            hideLoadingAnimation();
+        });
+    });
+};
+const unjailSetup = () => {
+    const unjailWarning = document.getElementById("unjail-warning");
+    const unjailWarningText = document.getElementById("unjail-warning-text");
+
+    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
+    const feesInput = document.querySelectorAll(".each-input-field")[1];
+    const walletPasswordInput = document.querySelectorAll(".each-input-field")[2];
+
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        tauri.invoke("unjail", {
+            walletName: walletNameInput.value,
+            fees: feesInput.value,
+        }).then((res) => {
+            if (res) {
+                dialog.message("Unjail successful.", { title: "Success", type: "success" });
+            } else {
+                unjailWarning.setAttribute("style", "display: flex;");
+                unjailWarning.classList.add("warning-animation");
+                setTimeout(() => {
+                    unjailWarning.classList.remove("warning-animation");
+                }, 500);
+                unjailWarningText.textContent = "An error occurred!";
+            }
+            hideLoadingAnimation();
+        });
+    });
+};
+const sendTokenSetup = () => {
+    const sendTokenWarning = document.getElementById("send-token-warning");
+    const sendTokenWarningText = document.getElementById("send-token-warning-text");
+
+    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
+    const walletPasswordInput = document.querySelectorAll(".each-input-field")[1];
+    const receiverAddressInput = document.querySelectorAll(".each-input-field")[2];
+    const amountInput = document.querySelectorAll(".each-input-field")[3];
+
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        tauri.invoke("send_token", {
+            walletName: walletNameInput.value,
+            receiverAddress: receiverAddressInput.value,
+            amount: amountInput.value,
+        }).then((res) => {
+            if (res) {
+                dialog.message("Send token successful.", { title: "Success", type: "success" });
+            } else {
+                sendTokenWarning.setAttribute("style", "display: flex;");
+                sendTokenWarning.classList.add("warning-animation");
+                setTimeout(() => {
+                    sendTokenWarning.classList.remove("warning-animation");
+                }, 500);
+                sendTokenWarningText.textContent = "An error occurred!";
+            }
+            hideLoadingAnimation();
+        });
+    });
+};
+const createKeyringSetup = () => {
+    const keyringWarning = document.getElementById("create-keyring-warning");
+    const keyringWarningText = document.getElementById("create-keyring-warning-text");
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        if (document.querySelectorAll(".each-input-field")[0].value.length < 8) {
+            keyringWarning.setAttribute("style", "display: flex;");
+            keyringWarning.classList.add("warning-animation");
+            setTimeout(() => {
+                keyringWarning.classList.remove("warning-animation");
+            }, 500);
+            keyringWarningText.textContent = "Passphrase must be at least 8 characters.";
+        }
+        else if (document.querySelectorAll(".each-input-field")[0].value !== document.querySelectorAll(".each-input-field")[1].value) {
+            keyringWarning.setAttribute("style", "display: flex;");
+            keyringWarning.classList.add("warning-animation");
+            setTimeout(() => {
+                keyringWarning.classList.remove("warning-animation");
+            }, 500);
+            keyringWarningText.textContent = "Passphrases do not match.";
+        }
+        else {
+            showLoadingAnimation();
+            await tauri.invoke("create_keyring", { passphrase: document.querySelector(".each-input-field").value });
+            sessionStorage.setItem("keyring", '{"required": true, "exists": true}');
+            await changePage("page-content/wallets-login.html", walletsLoginSetup);
+            hideLoadingAnimation();
+        }
+    });
+};
+const walletsLoginSetup = () => {
+    document.querySelector(".each-input-helper-text").addEventListener("click", async () => {
+        if (await dialog.ask("This action will delete all the wallets. Are you sure you want to continue?", { title: "Reset Keyring", type: "warning" })) {
+            await tauri.invoke("delete_keyring");
+            sessionStorage.setItem("keyring", '{"required": true, "exists": false}');
+            await changePage("page-content/wallets-create-keyring.html", createKeyringSetup);
+        }
+    });
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        if (await tauri.invoke("check_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value })) {
+            await changePage("page-content/wallets.html", walletsSetup);
+            await showWallets();
+        }
+        else {
+            document.querySelector(".wallets-login-warning").setAttribute("style", "display: flex;");
+            document.querySelector(".wallets-login-warning").classList.add("warning-animation");
+            setTimeout(() => {
+                document.querySelector(".wallets-login-warning").classList.remove("warning-animation");
+            }, 500);
+        }
+        hideLoadingAnimation();
+    });
+};
 const walletsSetup = async () => {
     showLoadingAnimation();
     await showWallets();
@@ -224,89 +566,6 @@ const walletsSetup = async () => {
         hideLoadingAnimation();
     });
     hideLoadingAnimation();
-};
-const walletsLoginSetup = () => {
-    document.querySelector(".each-input-helper-text").addEventListener("click", async () => {
-        if (await dialog.ask("This action will delete all the wallets. Are you sure you want to continue?", { title: "Reset Keyring", type: "warning" })) {
-            await tauri.invoke("delete_keyring");
-            sessionStorage.setItem("keyring", '{"required": true, "exists": false}');
-            await changePage("page-content/wallets-create-keyring.html", createKeyringSetup);
-        }
-    });
-    document.querySelector(".each-button").addEventListener("click", async () => {
-        showLoadingAnimation();
-        if (await tauri.invoke("check_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value })) {
-            await changePage("page-content/wallets.html", walletsSetup);
-            await showWallets();
-        }
-        else {
-            document.querySelector(".wallets-login-warning").setAttribute("style", "display: flex;");
-            document.querySelector(".wallets-login-warning").classList.add("warning-animation");
-            setTimeout(() => {
-                document.querySelector(".wallets-login-warning").classList.remove("warning-animation");
-            }, 500);
-        }
-        hideLoadingAnimation();
-    });
-};
-const createKeyringSetup = () => {
-    const keyringWarning = document.getElementById("create-keyring-warning");
-    const keyringWarningText = document.getElementById("create-keyring-warning-text");
-    document.querySelector(".each-button").addEventListener("click", async () => {
-        if (document.querySelectorAll(".each-input-field")[0].value.length < 8) {
-            keyringWarning.setAttribute("style", "display: flex;");
-            keyringWarning.classList.add("warning-animation");
-            setTimeout(() => {
-                keyringWarning.classList.remove("warning-animation");
-            }, 500);
-            keyringWarningText.textContent = "Passphrase must be at least 8 characters.";
-        }
-        else if (document.querySelectorAll(".each-input-field")[0].value !== document.querySelectorAll(".each-input-field")[1].value) {
-            keyringWarning.setAttribute("style", "display: flex;");
-            keyringWarning.classList.add("warning-animation");
-            setTimeout(() => {
-                keyringWarning.classList.remove("warning-animation");
-            }, 500);
-            keyringWarningText.textContent = "Passphrases do not match.";
-        }
-        else {
-            showLoadingAnimation();
-            await tauri.invoke("create_keyring", { passphrase: document.querySelector(".each-input-field").value });
-            sessionStorage.setItem("keyring", '{"required": true, "exists": true}');
-            await changePage("page-content/wallets-login.html", walletsLoginSetup);
-            hideLoadingAnimation();
-        }
-    });
-};
-const nodeOperationSetup = () => {
-    document.querySelectorAll(".each-page-manage-node-button")[0].addEventListener("click", async () => {
-        tauri.invoke("start_stop_restart_node", { action: "start" });
-    });
-    document.querySelectorAll(".each-page-manage-node-button")[1].addEventListener("click", async () => {
-        tauri.invoke("start_stop_restart_node", { action: "stop" });
-    });
-    document.querySelectorAll(".each-page-manage-node-button")[2].addEventListener("click", async () => {
-        tauri.invoke("start_stop_restart_node", { action: "restart" });
-    });
-    document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
-        tauri.invoke("update_node");
-    });
-    document.querySelector(".delete-node-button").addEventListener("click", async () => {
-        if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
-            showLoadingAnimation();
-            tauri.invoke("delete_node").then(() => {
-                tauri.invoke("cpu_mem_sync_stop");
-                currentIp.icon = "";
-                localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses.map((ip) => {
-                    return ip.ip === currentIp.ip ? { ...ip, icon: "Empty Server" } : ip;
-                })));
-                setTimeout(() => {
-                    dialog.message("Node deleted successfully.", { title: "Success", type: "success" });
-                    loadHomePage();
-                }, 1000);
-            });
-        }
-    });
 };
 
 const setupNodePage = () => {
@@ -367,6 +626,9 @@ const setupNodePage = () => {
         dialog.message("Copied to clipboard.", { title: "Success", type: "success" });
     });
 
+    nodeOperationsButton.addEventListener("click", async function () {
+        await changePage("page-content/node-operations.html", nodeOperationSetup);
+    });
     homePageButton.addEventListener("click", function () {
         showLoadingAnimation();
         tauri.invoke("cpu_mem_sync_stop").then(() => {
@@ -375,43 +637,40 @@ const setupNodePage = () => {
             }, 1000);
         });
     });
-
-    nodeOperationsButton.addEventListener("click", async function () {
-        await changePage("page-content/node-operations.html", nodeOperationSetup);
+    validatorOperationsButton.addEventListener("click", function () {
+        if (window.getComputedStyle(subButtonsDiv).getPropertyValue("display") == "none") {
+            subButtonsDiv.setAttribute("style", "display: block");
+            validatorOperationsArrow.setAttribute("style", "transform: rotate(-180deg); transition: 0.5s;");
+        }
+        else {
+            validatorOperationsArrow.setAttribute("style", "transform: rotate(0); transition: 0.5s;");
+            subButtonsDiv.setAttribute("style", "display: none");
+        }
     });
-
     createValidatorButton.addEventListener("click", async function () {
-        await changePage("page-content/create-validator.html");
+        await changePage("page-content/create-validator.html", createValidatorSetup);
     });
-
     editValidatorButton.addEventListener("click", async function () {
-        await changePage("page-content/edit-validator.html");
+        await changePage("page-content/edit-validator.html", editValidatorSetup);
     });
-
     withdrawRewardsButton.addEventListener("click", async function () {
-        await changePage("page-content/withdraw-rewards.html");
+        await changePage("page-content/withdraw-rewards.html", withdrawRewardsSetup);
     });
-
-    unjailButton.addEventListener("click", async function () {
-        await changePage("page-content/unjail.html");
-    });
-
     delegateTokenButton.addEventListener("click", async function () {
-        await changePage("page-content/delegate-token.html");
+        await changePage("page-content/delegate-token.html", delegateSetup);
     });
-
-    sendTokenButton.addEventListener("click", async function () {
-        await changePage("page-content/send-token.html");
-    });
-
     redelegateTokenButton.addEventListener("click", async function () {
-        await changePage("page-content/redelegate-token.html");
+        await changePage("page-content/redelegate-token.html", redelegateSetup);
     });
-
     voteButton.addEventListener("click", async function () {
-        await changePage("page-content/vote.html");
+        await changePage("page-content/vote.html", voteSetup);
     });
-
+    unjailButton.addEventListener("click", async function () {
+        await changePage("page-content/unjail.html", unjailSetup);
+    });
+    sendTokenButton.addEventListener("click", async function () {
+        await changePage("page-content/send-token.html", sendTokenSetup);
+    });
     walletsButton.addEventListener("click", async function () {
         if (JSON.parse(sessionStorage.getItem("keyring")).required) {
             if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
@@ -423,18 +682,6 @@ const setupNodePage = () => {
             await changePage("page-content/wallets.html", walletsSetup);
         }
     });
-
-    validatorOperationsButton.addEventListener("click", function () {
-        if (window.getComputedStyle(subButtonsDiv).getPropertyValue("display") == "none") {
-            subButtonsDiv.setAttribute("style", "display: block");
-            validatorOperationsArrow.setAttribute("style", "transform: rotate(-180deg); transition: 0.5s;");
-        }
-        else {
-            validatorOperationsArrow.setAttribute("style", "transform: rotate(0); transition: 0.5s;");
-            subButtonsDiv.setAttribute("style", "display: none");
-        }
-    });
-
     nodeInformationButton.addEventListener("click", function () {
         showLoadingAnimation();
         tauri.invoke("node_info").then(async (obj) => {
