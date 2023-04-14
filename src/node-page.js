@@ -233,11 +233,20 @@ const createValidatorSetup = () => {
             monikerName: "node101",
             keybaseId: "",
             contact: "hello@node101.io",
-            fees: "5000",
+            fees: "500",
             details: "detailstest",
         }).then((res) => {
             if (res[0]) {
-                dialog.message("Validator created successfully. " + res[1], { title: "Success", type: "success" });
+                if (JSON.parse(res[1]).raw_log == "") {
+                    dialog.message("Tx Hash: \n" + res[1].txhash, { title: "Success", type: "info" });
+                } else {
+                    validatorWarning.setAttribute("style", "display: flex;");
+                    validatorWarning.classList.add("warning-animation");
+                    setTimeout(() => {
+                        validatorWarning.classList.remove("warning-animation");
+                    }, 500);
+                    validatorWarningText.textContent = JSON.parse(res[1]).raw_log;
+                }
             } else {
                 validatorWarning.setAttribute("style", "display: flex;");
                 validatorWarning.classList.add("warning-animation");
