@@ -56,15 +56,15 @@ const setupLoginPage = () => {
 
     ipInputEl.addEventListener("keydown", function (e) {
         x = document.querySelectorAll(".each-autocomplete-item");
-        if (e.keyCode == 40) {
+        if (e.key == "ArrowDown") {
             focusedIndex++;
             highlightItem(x);
         }
-        else if (e.keyCode == 38) {
+        else if (e.key == "ArrowUp") {
             focusedIndex--;
             highlightItem(x);
         }
-        else if (e.keyCode == 13 && focusedIndex > -1) {
+        else if (e.key == "Enter" && focusedIndex > -1) {
             x[focusedIndex].click();
         }
     });
@@ -99,6 +99,12 @@ const setupLoginPage = () => {
         selectedItemEl.setAttribute("style", "display: none;");
         ipInputEl.setAttribute("style", "display: unset;");
         ipInputEl.focus();
+    });
+
+    passwordInputEl.addEventListener("keydown", function (e) {
+        if (e.key == "Enter") {
+            loginButtonEl.click();
+        }
     });
 
     loginButtonEl.addEventListener("click", function () {

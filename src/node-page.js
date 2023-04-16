@@ -1,5 +1,3 @@
-const { event: tevent } = window.__TAURI__;
-
 tevent.listen('cpu_mem_sync', (event) => {
     console.log(event.payload);
 
@@ -29,13 +27,19 @@ tevent.listen('cpu_mem_sync', (event) => {
         eachSidebarTag[0].classList.remove("sidebar-inactive-tag");
         eachSidebarTag[0].classList.add("sidebar-active-tag");
         eachSidebarTag[0].textContent = "Active";
+    } else if (event.payload.status == "") {
+        eachSidebarTag[0].textContent = "Loading...";
     } else {
         eachSidebarTag[0].classList.add("sidebar-inactive-tag");
         eachSidebarTag[0].classList.remove("sidebar-active-tag");
         eachSidebarTag[0].textContent = event.payload.status.charAt(0).toUpperCase() + event.payload.status.slice(1);
     }
     if (event.payload.version) {
-        eachSidebarTag[1].textContent = "Version " + event.payload.version;
+        version_new = event.payload.version.charAt(0).toLowerCase() == "v" ? event.payload.version : "v" + event.payload.version
+        if (document.querySelector(".each-page-manage-node-button")) {
+            document.querySelectorAll(".each-page-manage-node-button")[3].disabled = (version_new == latest_tag);
+        }
+        eachSidebarTag[1].textContent = version_new;
         eachSidebarTag[1].classList.add("version-tag");
     }
 });
@@ -67,7 +71,7 @@ const loadNodePage = async () => {
 const changePage = async (page, callback) => {
     document.getElementById("content-of-page").innerHTML = await (await fetch(page)).text();
     if (callback) {
-        callback();
+        await callback();
     }
 };
 const createWallet = async (walletname) => {
@@ -81,16 +85,14 @@ const showWallets = async () => {
     const walletList = document.getElementById("page-wallet-list");
     await tauri.invoke("show_wallets").then((list) => {
         list = list.length ? JSON.parse(list) : [];
-        console.log(list);
         walletList.innerHTML = list.length ? "" : `<div class="each-row">No wallets found.</div>`;
-
-        let adet = list.length;
-        while (adet > 0) {
+        count = list.length;
+        while (count > 0) {
             row = document.createElement("div");
             row.setAttribute("class", "each-row");
 
-            tekrar = adet == 1 ? 1 : 2;
-            for (let i = 0; i < tekrar; i++) {
+            repeat = count == 1 ? 1 : 2;
+            for (let i = 0; i < repeat; i++) {
                 halfrow = document.createElement("div");
                 halfrow.setAttribute("class", "each-row-half");
 
@@ -98,14 +100,14 @@ const showWallets = async () => {
                 label.setAttribute("class", "each-input-label");
 
                 balancetext = "";
-                if (list[adet - i - 1].balance.balances.length) {
-                    for (let m = 0; m < list[adet - i - 1].balance.balances.length; m++) {
-                        balancetext += parseInt((list[adet - i - 1].balance.balances[m].amount / 1000000) * 100) / 100 + " " + list[adet - i - 1].balance.balances[m].denom.slice(1) + "\n";
+                if (list[count - i - 1].balance.balances.length) {
+                    for (let m = 0; m < list[count - i - 1].balance.balances.length; m++) {
+                        balancetext += parseInt((list[count - i - 1].balance.balances[m].amount / 1000000) * 100) / 100 + " " + list[count - i - 1].balance.balances[m].denom.slice(1) + "\n";
                     };
                 } else {
                     balancetext = "No tokens found.";
                 }
-                label.textContent = list[adet - i - 1].name;
+                label.textContent = list[count - i - 1].name;
 
                 outputgroup = document.createElement("div");
                 outputgroup.setAttribute("class", "each-output-group");
@@ -115,8 +117,8 @@ const showWallets = async () => {
 
                 outputfield = document.createElement("div");
                 outputfield.setAttribute("class", "each-output-field");
-                outputfield.textContent = list[adet - i - 1].address.substring(0, 4) + "..." + list[adet - i - 1].address.substring(list[adet - i - 1].address.length - 4);
-                outputfield.setAttribute("title", list[adet - i - 1].address);
+                outputfield.textContent = list[count - i - 1].address.substring(0, 4) + "..." + list[count - i - 1].address.substring(list[count - i - 1].address.length - 4);
+                outputfield.setAttribute("title", list[count - i - 1].address);
 
                 outputfieldiconcopy = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 outputfieldiconcopy.setAttribute("class", "each-output-field-icon-copy");
@@ -160,7 +162,7 @@ const showWallets = async () => {
                 row.appendChild(halfrow);
             }
             walletList.appendChild(row);
-            adet = adet - 2;
+            count = count - 2;
         }
     });
 };
@@ -183,7 +185,12 @@ const installationSetup = async () => {
         await new Promise(r => setTimeout(r, i * i / 0.015));
     }
 };
-const nodeOperationSetup = () => {
+const nodeOperationSetup = async () => {
+    const client = await http.getClient();
+    // latest_tag = await client.get("https://api.github.com/repos/bandprotocol/chain/releases/latest", {
+    latest_tag = (await client.get("https://api.github.com/repos/NibiruChain/nibiru/releases/latest", {
+        type: 'Json'
+    })).data.name;
     document.querySelectorAll(".each-page-manage-node-button")[0].addEventListener("click", async () => {
         tauri.invoke("start_stop_restart_node", { action: "start" });
     });
@@ -194,7 +201,8 @@ const nodeOperationSetup = () => {
         tauri.invoke("start_stop_restart_node", { action: "restart" });
     });
     document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
-        tauri.invoke("update_node");
+        // tauri.invoke("update_node");
+        console.log("update_node");
     });
     document.querySelector(".delete-node-button").addEventListener("click", async () => {
         if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
@@ -506,7 +514,7 @@ const sendTokenSetup = () => {
         });
     });
 };
-const createKeyringSetup = () => {
+const createKeyringSetup = (page_html, page_setup) => {
     const keyringWarning = document.getElementById("create-keyring-warning");
     const keyringWarningText = document.getElementById("create-keyring-warning-text");
     document.querySelector(".each-button").addEventListener("click", async () => {
@@ -530,31 +538,33 @@ const createKeyringSetup = () => {
             showLoadingAnimation();
             await tauri.invoke("create_keyring", { passphrase: document.querySelector(".each-input-field").value });
             sessionStorage.setItem("keyring", '{"required": true, "exists": true}');
-            await changePage("page-content/wallets-login.html", walletsLoginSetup);
+            await changePage("page-content/keyring-auth.html", () => keyringAuthSetup(page_html, page_setup));
             hideLoadingAnimation();
         }
     });
 };
-const walletsLoginSetup = () => {
+const keyringAuthSetup = (page_html, page_setup) => {
     document.querySelector(".each-input-helper-text").addEventListener("click", async () => {
         if (await dialog.ask("This action will delete all the wallets. Are you sure you want to continue?", { title: "Reset Keyring", type: "warning" })) {
+            showLoadingAnimation();
             await tauri.invoke("delete_keyring");
             sessionStorage.setItem("keyring", '{"required": true, "exists": false}');
-            await changePage("page-content/wallets-create-keyring.html", createKeyringSetup);
+            await changePage("page-content/create-keyring.html", () => createKeyringSetup(page_html, page_setup));
+            hideLoadingAnimation();
         }
     });
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
-        if (await tauri.invoke("check_wallet_password", { passw: document.querySelectorAll(".each-input-field")[0].value })) {
-            await changePage("page-content/wallets.html", walletsSetup);
-            await showWallets();
+        if (await tauri.invoke("check_keyring_passphrase", { passw: document.querySelectorAll(".each-input-field")[0].value })) {
+            await changePage(page_html, page_setup);
         }
         else {
-            document.querySelector(".wallets-login-warning").setAttribute("style", "display: flex;");
-            document.querySelector(".wallets-login-warning").classList.add("warning-animation");
+            document.getElementById("keyring-auth-warning").setAttribute("style", "display: flex;");
+            document.getElementById("keyring-auth-warning").classList.add("warning-animation");
             setTimeout(() => {
-                document.querySelector(".wallets-login-warning").classList.remove("warning-animation");
+                document.getElementById("keyring-auth-warning").classList.remove("warning-animation");
             }, 500);
+            document.getElementById("keyring-auth-warning-text").textContent = "Incorrect passphrase.";
         }
         hideLoadingAnimation();
     });
@@ -688,7 +698,15 @@ const setupNodePage = () => {
         }
     });
     createValidatorButton.addEventListener("click", async function () {
-        await changePage("page-content/create-validator.html", createValidatorSetup);
+        if (JSON.parse(sessionStorage.getItem("keyring")).required) {
+            if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
+                await changePage("page-content/keyring-auth.html", () => keyringAuthSetup("page-content/create-validator.html", createValidatorSetup));
+            } else {
+                await changePage("page-content/create-keyring.html", () => createKeyringSetup("page-content/create-validator.html", createValidatorSetup));
+            }
+        } else {
+            await changePage("page-content/create-validator.html", createValidatorSetup);
+        }
     });
     editValidatorButton.addEventListener("click", async function () {
         await changePage("page-content/edit-validator.html", editValidatorSetup);
@@ -714,9 +732,9 @@ const setupNodePage = () => {
     walletsButton.addEventListener("click", async function () {
         if (JSON.parse(sessionStorage.getItem("keyring")).required) {
             if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
-                await changePage("page-content/wallets-login.html", walletsLoginSetup);
+                await changePage("page-content/keyring-auth.html", () => keyringAuthSetup("page-content/wallets.html", walletsSetup));
             } else {
-                await changePage("page-content/wallets-create-keyring.html", createKeyringSetup);
+                await changePage("page-content/create-keyring.html", () => createKeyringSetup("page-content/wallets.html", walletsSetup));
             }
         } else {
             await changePage("page-content/wallets.html", walletsSetup);
@@ -732,30 +750,35 @@ const setupNodePage = () => {
                 await changePage("page-content/node-information.html");
                 let fields = document.querySelectorAll(".each-output-field");
                 obj = JSON.parse(obj);
-                fields[0].textContent = obj.NodeInfo.protocol_version.p2p;
-                fields[1].textContent = obj.NodeInfo.protocol_version.block;
-                fields[2].textContent = obj.NodeInfo.protocol_version.app;
-                fields[3].textContent = obj.NodeInfo.id;
-                fields[4].textContent = obj.NodeInfo.listen_addr;
-                fields[5].textContent = obj.NodeInfo.network;
-                fields[6].textContent = obj.NodeInfo.version;
-                fields[7].textContent = obj.NodeInfo.channels;
-                fields[8].textContent = obj.NodeInfo.moniker;
-                fields[9].textContent = obj.NodeInfo.other.tx_index;
-                fields[10].textContent = obj.NodeInfo.other.rpc_address;
-                fields[11].textContent = obj.SyncInfo.latest_block_hash;
-                fields[12].textContent = obj.SyncInfo.latest_app_hash;
-                fields[13].textContent = obj.SyncInfo.latest_block_height;
-                fields[14].textContent = obj.SyncInfo.latest_block_time;
-                fields[15].textContent = obj.SyncInfo.earliest_block_hash;
-                fields[16].textContent = obj.SyncInfo.earliest_app_hash;
-                fields[17].textContent = obj.SyncInfo.earliest_block_height;
-                fields[18].textContent = obj.SyncInfo.earliest_block_time;
-                fields[19].textContent = obj.SyncInfo.catching_up;
-                // fields[20].textContent = obj.ValidatorInfo.Address;
-                // fields[21].textContent = obj.ValidatorInfo.PubKey.type;
-                // fields[22].textContent = obj.ValidatorInfo.PubKey.value;
-                // fields[23].textContent = obj.ValidatorInfo.VotingPower;
+                const data = [
+                    obj.NodeInfo.protocol_version.p2p,
+                    obj.NodeInfo.protocol_version.block,
+                    obj.NodeInfo.protocol_version.app,
+                    obj.NodeInfo.id,
+                    obj.NodeInfo.listen_addr,
+                    obj.NodeInfo.network,
+                    obj.NodeInfo.version,
+                    obj.NodeInfo.channels,
+                    obj.NodeInfo.moniker,
+                    obj.NodeInfo.other.tx_index,
+                    obj.NodeInfo.other.rpc_address,
+                    obj.SyncInfo.latest_block_hash,
+                    obj.SyncInfo.latest_app_hash,
+                    obj.SyncInfo.latest_block_height,
+                    obj.SyncInfo.latest_block_time,
+                    obj.SyncInfo.earliest_block_hash,
+                    obj.SyncInfo.earliest_app_hash,
+                    obj.SyncInfo.earliest_block_height,
+                    obj.SyncInfo.earliest_block_time,
+                    obj.SyncInfo.catching_up,
+                    obj.ValidatorInfo.Address,
+                    obj.ValidatorInfo.PubKey.type,
+                    obj.ValidatorInfo.PubKey.value,
+                    obj.ValidatorInfo.VotingPower,
+                ];
+                for (let i = 0; i < data.length; i++) {
+                    fields[i].textContent = data[i];
+                }
             }
             hideLoadingAnimation();
         });

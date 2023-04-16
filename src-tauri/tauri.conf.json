@@ -7,7 +7,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "wizardproject",
+    "productName": "Node Wizard",
     "version": "0.0.0"
   },
   "tauri": {
@@ -16,40 +16,19 @@
       "clipboard": {
         "all": true
       },
-      "window": {
-        "center": true
-      },
-      "fs": {
-        "all": true,
-        "readFile": true,
-        "writeFile": true,
-        "readDir": true,
-        "copyFile": true,
-        "createDir": true,
-        "removeDir": true,
-        "removeFile": true,
-        "renameFile": true,
-        "scope": [
-          "**"
-        ]
-      },
       "dialog": {
-        "all": true,
-        "open": true,
-        "save": true
+        "message": true,
+        "ask": true,
+        "confirm": true
       },
       "shell": {
-        "all": false,
         "open": true
       },
-      "protocol": {
-        "all": true
-      },
       "http": {
-        "all": true,
         "request": true,
         "scope": [
-          "https://admin.node101.io/api/*"
+          "https://admin.node101.io/api/*",
+          "https://api.github.com/*"
         ]
       }
     },
@@ -68,7 +47,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "wizard",
+      "identifier": "nodewizard",
       "longDescription": "",
       "macOS": {
         "entitlements": null,

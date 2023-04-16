@@ -18,24 +18,6 @@
   animation: increase-var 2s forwards;
 }
 
-/* ::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--third-color);
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--main-color);
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  opacity: 0.8;
-} */
-
 * {
   color: var(--text-color);
   margin: 0;
@@ -849,6 +831,7 @@ html {
   display: flex;
   flex-direction: row;
   align-items: center;
+  border: none;
   height: 48px;
   width: fit-content;
   padding: 0 16px;
@@ -858,6 +841,12 @@ html {
 
 .each-page-manage-node-button:hover {
   background: rgba(26, 26, 26, 1);
+}
+
+.each-page-manage-node-button:disabled {
+  background: var(--second-color);
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .each-page-manage-node-button-icon {
@@ -896,6 +885,7 @@ html {
 
 .delete-node-button-name {
   color: rgba(250, 77, 86, 1);
+  font-size: 15px;
 }
 
 .page-progress-bar {

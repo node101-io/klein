@@ -1,7 +1,10 @@
-const { tauri, dialog, clipboard, http } = window.__TAURI__;
+const { tauri, dialog, clipboard, http, event: tevent } = window.__TAURI__;
 
-localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Babylon","validator_addr":""},{"ip":"213.136.73.17","icon":"Nibiru","validator_addr":"nibi1y2kza3dstaqhk87p9yel5xyksa8atddmz6n63m"}]');
+// for development purposes
+localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Band","validator_addr":""},{"ip":"213.136.73.17","icon":"Nibiru","validator_addr":"nibi1y2kza3dstaqhk87p9yel5xyksa8atddmz6n63m"}]');
 localStorage.setItem("notifications", '[{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":true,"text":"Example notif!"},{"unread":true,"text":"Example notif!"}]');
+tauri.invoke("cpu_mem_sync_stop");
+// end of development purposes
 
 const projects = [];
 const ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];

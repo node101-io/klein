@@ -93,9 +93,9 @@ const showTestnetProjects = async () => {
                     return ip.ip === currentIp.ip ? { ...ip, icon: currentIp.icon } : ip;
                 })));
                 currentIp.icon = projects[i].name;
-                tauri.invoke("install_node");
+                tauri.invoke("install_node", { identifier: projects[i].identifier });
+                await loadNodePage();
                 await changePage("page-content/installation.html", installationSetup);
-                loadNodePage();
             };
         });
         discoverButton = document.createElement("button");
@@ -125,9 +125,7 @@ const showTestnetProjects = async () => {
         testnetTabContent.prepend(gonnaPrepend);
         document.querySelector(".install-button").replaceWith(document.querySelector(".install-button").cloneNode(true));
         document.querySelector(".install-button").addEventListener("click", function () {
-            document.querySelector(".all-home-wrapper").setAttribute("style", "display: none;");
-            document.querySelector(".all-node-wrapper").setAttribute("style", "display: flex;");
-            tauri.invoke("cpu_mem_sync");
+            loadNodePage();
         });
         document.querySelector(".install-button").firstChild.textContent = "Manage Node";
         document.querySelector(".install-button").firstChild.nextSibling.setAttribute("style", "transform: rotate(-90deg);");

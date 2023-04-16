@@ -2,6 +2,7 @@ const updateHeader = function () {
     if (currentIp.icon == "Empty Server") {
         imgSrc = "assets/default.png";
     } else {
+        console.log(currentIp);
         imgSrc = projects.find(item => item.name == currentIp.icon).image;
     }
     document.querySelector(".header-node-icon").setAttribute("src", imgSrc);
@@ -48,6 +49,11 @@ const setupHeader = function () {
         promptInput.setAttribute("class", "each-input-field");
         promptInput.setAttribute("placeholder", "Password");
         promptInput.setAttribute("type", "password");
+        promptInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                promptLoginButton.click();
+            }
+        });
         promptLoginButton = document.createElement("div");
         promptLoginButton.setAttribute("class", "each-button");
         promptLoginButton.setAttribute("style", "margin-top: 16px; margin-left: auto;");
@@ -65,7 +71,7 @@ const setupHeader = function () {
                         return acc;
                     }, []).find(item => item === res[1]);
                     currentIp = ipAddresses.find(item => item.ip === ip);
-                    currentIp.icon = res[1] ? projects.find(item => item.wizard_key === found).name : "";
+                    currentIp.icon = res[1] ? projects.find(item => item.wizard_key === found).name : "Empty Server";
                     ipAddresses.find(item => item.ip === ip).icon = currentIp.icon;
                     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
                     tauri.invoke("cpu_mem_sync_stop");
