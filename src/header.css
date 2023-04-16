@@ -166,6 +166,15 @@
   margin-bottom: 20px;
 }
 
+.header-submenu-ip-list::-webkit-scrollbar-thumb {
+  background: var(--main-color);
+  border-radius: 5px;
+}
+
+.header-submenu-ip-list::-webkit-scrollbar-thumb:hover {
+  opacity: 0.8;
+}
+
 .each-header-submenu-ip-list-item {
   display: flex;
   align-items: center;
@@ -229,6 +238,15 @@
 .header-submenu-notifications::-webkit-scrollbar-track {
   margin-top: 20px;
   margin-bottom: 20px;
+}
+
+.header-submenu-notifications::-webkit-scrollbar-thumb {
+  background: var(--main-color);
+  border-radius: 5px;
+}
+
+.header-submenu-notifications::-webkit-scrollbar-thumb:hover {
+  opacity: 0.8;
 }
 
 .each-header-submenu-notifications-item {

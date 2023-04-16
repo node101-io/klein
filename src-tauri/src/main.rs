@@ -362,7 +362,7 @@ fn show_wallets() -> String {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_ref() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let command: String = format!(
-                "yes \"{}\" | bash -c -l '$EXECUTE keys list --output json'",
+                "yes \"{}\" | bash -c -l 'echo -n \"[\"; first=true; $EXECUTE keys list --output json | jq -c \".[]\" | while read -r line; do address=$(echo $line | jq -r \".address\"); balances=$($EXECUTE query bank balances $address --output json); if [ $first = true ]; then echo -n \"{{\\\"name\\\": \\\"$(echo $line | jq -r \".name\")\\\", \\\"address\\\": \\\"$address\\\", \\\"balance\\\": $balances, \\\"denom\\\": \\\"$DENOM\\\"}}\"; first=false; else echo -n \",{{\\\"name\\\": \\\"$(echo $line | jq -r \".name\")\\\", \\\"address\\\": \\\"$address\\\", \\\"balance\\\": $balances}}\"; fi; done; echo \"]\"'",
                 GLOBAL_STRUCT.as_mut().unwrap().walletpassword,
             );
             channel.exec(&*command).unwrap();
@@ -372,7 +372,7 @@ fn show_wallets() -> String {
             s
         } else {
             println!("error in show_wallets");
-            "".to_string()
+            String::new()
         }
     }
 }
@@ -563,12 +563,13 @@ fn create_validator(
     contact: String,
     fees: String,
     details: String,
+    project_name: String,
 ) -> (bool, String) {
     unsafe {
         if let Some(my_boxed_session) = GLOBAL_STRUCT.as_mut() {
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let mut s = String::new();
-            channel.exec(&format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; bash -c -l '$EXECUTE tx staking create-validator -y \
+            channel.exec(&format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; bash -c -l '$EXECUTE tx {operation} create-validator -y \
                 --pubkey=$($EXECUTE tendermint show-validator) \
                 --amount={amount}$DENOM \
                 --from={wallet_name} \
@@ -581,7 +582,8 @@ fn create_validator(
                 --commission-max-change-rate=0.01 \
                 --fees={fees}$DENOM \
                 --min-self-delegation=1 \
-                --details={details}'"
+                --details={details}'", 
+                operation = if project_name == "Babylon" { "checkpointing" } else { "staking" }
             )).unwrap();
             channel.read_to_string(&mut s).unwrap();
             channel.close().unwrap();
@@ -607,7 +609,6 @@ fn edit_validator(
             let mut channel = my_boxed_session.open_session.channel_session().unwrap();
             let mut s = String::new();
             channel.exec(&format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; bash -c -l \"$EXECUTE tx staking edit-validator \
-                --pubkey=$($EXECUTE tendermint show-validator) \
                 --amount={amount}$DENOM \
                 --from={wallet_name} \
                 --website={website} \

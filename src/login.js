@@ -124,12 +124,12 @@ const setupLoginPage = () => {
                     return acc;
                 }, []).find(item => item === res[1]);
 
-                currentIp = ipAddresses.find(ip => ip.ip === ipInputEl.value);
+                currentIp = ipAddresses.find(item => item.ip === ipInputEl.value);
                 if (currentIp) {
-                    currentIp.icon = res[1] ? projects.find(item => item.wizard_key === found).name : "";
+                    currentIp.icon = res[1] ? projects.find(item => item.wizard_key === found).name : "Empty Server";
                 } else if (checkboxInputEl.checked) {
-                    ipAddresses.push({ ip: ipInputEl.value, icon: res[1] ? projects.find(item => item.wizard_key === found).name : "" });
-                    currentIp = ipAddresses.find(ip => ip.ip === ipInputEl.value);
+                    ipAddresses.push({ ip: ipInputEl.value, icon: res[1] ? projects.find(item => item.wizard_key === found).name : "Empty Server" });
+                    currentIp = ipAddresses.find(item => item.ip === ipInputEl.value);
                 }
                 localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
                 document.querySelector(".selected-item-modify").click();

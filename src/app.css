@@ -20,7 +20,7 @@
 
 /* ::-webkit-scrollbar {
   width: 8px;
-} */
+}
 
 ::-webkit-scrollbar-track {
   background: var(--third-color);
@@ -34,7 +34,7 @@
 
 ::-webkit-scrollbar-thumb:hover {
   opacity: 0.8;
-}
+} */
 
 * {
   color: var(--text-color);
@@ -592,6 +592,24 @@ html {
   overflow-y: auto;
 }
 
+.nodes-page-projects::-webkit-scrollbar {
+  width: 8px;
+}
+
+.nodes-page-projects::-webkit-scrollbar-track {
+  background: var(--third-color);
+  border-radius: 5px;
+}
+
+.nodes-page-projects::-webkit-scrollbar-thumb {
+  background: var(--main-color);
+  border-radius: 5px;
+}
+
+.nodes-page-projects::-webkit-scrollbar-thumb:hover {
+  opacity: 0.8;
+}
+
 .each-node-page-project {
   width: calc(30vw - 45px);
   height: fit-content;
@@ -791,10 +809,11 @@ html {
   top: 300px;
   height: fit-content;
   width: fit-content;
-  max-width: 200px;
+  max-width: 230px;
   background-color: var(--third-color);
   align-items: center;
   padding: 20px 20px;
+  animation: pop-up 0.2s ease;
 }
 
 .each-page-chart-text-pop-up::after {
@@ -1042,6 +1061,47 @@ progress {
   font-size: 16px;
   color: rgba(149, 149, 149, 1);
   overflow: auto;
+}
+
+.each-output-field:hover+.each-output-field-pop-up {
+  display: flex;
+}
+
+.each-output-field-pop-up {
+  display: none;
+  position: absolute;
+  top: 60px;
+  height: fit-content;
+  width: fit-content;
+  min-width: 100px;
+  background-color: var(--third-color);
+  align-items: center;
+  padding: 20px 20px;
+  animation: pop-up 0.2s ease;
+}
+
+@keyframes pop-up {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+.each-output-field-pop-up::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  top: -8px;
+  left: 40px;
+  border: 8px solid transparent;
+  border-top: none;
+  border-bottom-color: var(--third-color);
 }
 
 .each-output-field-icon-copy {

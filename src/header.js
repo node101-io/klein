@@ -1,5 +1,9 @@
 const updateHeader = function () {
-    const imgSrc = currentIp.icon ? projects.find(item => item.name == currentIp.icon).image : "assets/default.png";
+    if (currentIp.icon == "Empty Server") {
+        imgSrc = "assets/default.png";
+    } else {
+        imgSrc = projects.find(item => item.name == currentIp.icon).image;
+    }
     document.querySelector(".header-node-icon").setAttribute("src", imgSrc);
     document.querySelector(".header-menu-ip-list-button-icon").setAttribute("src", imgSrc);
     document.querySelector(".header-menu-ip-list-button-details-ip").textContent = currentIp.ip;
@@ -115,7 +119,7 @@ const setupHeader = function () {
             ipListItemIp = document.createElement("div");
             ipListItemIp.setAttribute("class", "each-header-submenu-ip-list-item-ip");
             ipListItemIp.innerText = ipAddresses[i].ip;
-            ipAddresses[i].icon == "" ? ipListItemIcon.setAttribute("style", "display: none;") : ipListItem.appendChild(ipListItemIcon);
+            ipAddresses[i].icon == "Empty Server" ? ipListItemIcon.setAttribute("style", "display: none;") : ipListItem.appendChild(ipListItemIcon);
             ipListItem.appendChild(ipListItemName);
             ipListItem.appendChild(ipListItemIp);
             ipListItem.addEventListener("click", () => {

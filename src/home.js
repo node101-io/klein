@@ -89,10 +89,14 @@ const showTestnetProjects = async () => {
         installButton.appendChild(installButtonSVG)
         installButton.addEventListener("click", async function () {
             if (await dialog.confirm("Node is going to be installed, please confirm.", projects[i].name)) {
-                sessionStorage.setItem("installation", "true");
+                localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses.map((ip) => {
+                    return ip.ip === currentIp.ip ? { ...ip, icon: currentIp.icon } : ip;
+                })));
                 currentIp.icon = projects[i].name;
+                tauri.invoke("install_node");
+                await changePage("page-content/installation.html", installationSetup);
                 loadNodePage();
-            }
+            };
         });
         discoverButton = document.createElement("button");
         discoverButton.setAttribute("class", "each-project-button discover-button");

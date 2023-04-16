@@ -5,7 +5,7 @@ tevent.listen('cpu_mem_sync', (event) => {
 
     syncStatusChart.options.barColor = event.payload.catchup == "true" ? "#0F62FE" : event.payload.catchup == "false" ? "#43BE66" : "#FF2632";
     syncStatusChartPercent.textContent = event.payload.catchup == "true" || event.payload.catchup == "false" ? event.payload.height : "!";
-    syncStatusChartPopupText.innerText = event.payload.catchup == "true" ? "Syncing...\n\nCurrent Block:\n" + event.payload.height : event.payload.catchup == "false" ? "Synced!\n\nCurrent Block:\n" + event.payload.height : "Can't get sync status!";
+    syncStatusChartPopupText.innerText = event.payload.catchup == "true" ? "Syncing...\n\nCurrent Block:\n" + event.payload.height : event.payload.catchup == "false" ? "Synced!" : "Can't get sync status!";
     if (event.payload.catchup == "true") {
         setTimeout(() => {
             syncStatusChart.update(100);
@@ -50,21 +50,18 @@ const loadNodePage = async () => {
 
     document.querySelector(".sidebar-info-details-name").textContent = currentIp.icon;
     document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? projects.find(item => item.name == currentIp.icon).image : "assets/default.png");
+    if (ipAddresses.find(item => item.ip == currentIp.ip).validator_addr) {
+        document.querySelector(".sidebar-info-details-copy").setAttribute("style", "display: flex;");
+        document.querySelector(".sidebar-info-details-copy-address").textContent = ipAddresses.find(item => item.ip == currentIp.ip).validator_addr;
+    } else {
+        document.querySelector(".sidebar-info-details-copy").setAttribute("style", "display: none;");
+    }
 
     document.querySelector(".all-node-wrapper").setAttribute("style", "display: unset;");
-    if (sessionStorage.getItem("installation") == "true") {
-        sessionStorage.setItem("installation", "false");
-        localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses.map((ip) => {
-            return ip.ip === currentIp.ip ? { ...ip, icon: currentIp.icon } : ip;
-        })));
-        tauri.invoke("install_node");
-        await changePage("page-content/installation.html", installationSetup);
-    }
-    else {
-        await changePage("page-content/node-operations.html", nodeOperationSetup);
-        sessionStorage.setItem("keyring", `{ "required": ${await tauri.invoke("if_password_required")}, "exists": ${await tauri.invoke("if_keyring_exist")} }`);
-        tauri.invoke("cpu_mem_sync");
-    }
+    await changePage("page-content/node-operations.html", nodeOperationSetup);
+    sessionStorage.setItem("keyring", `{ "required": ${await tauri.invoke("if_password_required")}, "exists": ${await tauri.invoke("if_keyring_exist")} }`);
+    tauri.invoke("cpu_mem_sync");
+
     hideLoadingAnimation();
 }
 const changePage = async (page, callback) => {
@@ -84,6 +81,7 @@ const showWallets = async () => {
     const walletList = document.getElementById("page-wallet-list");
     await tauri.invoke("show_wallets").then((list) => {
         list = list.length ? JSON.parse(list) : [];
+        console.log(list);
         walletList.innerHTML = list.length ? "" : `<div class="each-row">No wallets found.</div>`;
 
         let adet = list.length;
@@ -98,10 +96,22 @@ const showWallets = async () => {
 
                 label = document.createElement("div");
                 label.setAttribute("class", "each-input-label");
+
+                balancetext = "";
+                if (list[adet - i - 1].balance.balances.length) {
+                    for (let m = 0; m < list[adet - i - 1].balance.balances.length; m++) {
+                        balancetext += parseInt((list[adet - i - 1].balance.balances[m].amount / 1000000) * 100) / 100 + " " + list[adet - i - 1].balance.balances[m].denom.slice(1) + "\n";
+                    };
+                } else {
+                    balancetext = "No tokens found.";
+                }
                 label.textContent = list[adet - i - 1].name;
 
                 outputgroup = document.createElement("div");
                 outputgroup.setAttribute("class", "each-output-group");
+                outputfieldpopup = document.createElement("div");
+                outputfieldpopup.setAttribute("class", "each-output-field-pop-up");
+                outputfieldpopup.innerText = balancetext;
 
                 outputfield = document.createElement("div");
                 outputfield.setAttribute("class", "each-output-field");
@@ -125,6 +135,11 @@ const showWallets = async () => {
                 outputfieldicondelete.addEventListener("click", async function () {
                     if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Wallet", type: "warning" })) {
                         showLoadingAnimation();
+                        console.log(this.previousSibling.previousSibling.getAttribute("title"));
+                        if (this.previousSibling.previousSibling.getAttribute("title") == document.querySelector(".sidebar-info-details-copy-address").textContent) {
+                            document.querySelector(".sidebar-info-details-copy-address").textContent = "";
+                            document.querySelector(".sidebar-info-details-copy").setAttribute("style", "display: none;");
+                        }
                         await tauri.invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent });
                         await showWallets();
                         hideLoadingAnimation();
@@ -137,6 +152,7 @@ const showWallets = async () => {
                 outputfieldiconcopy.appendChild(path1);
                 outputfieldicondelete.appendChild(path2);
                 outputgroup.appendChild(outputfield);
+                outputgroup.appendChild(outputfieldpopup);
                 outputgroup.appendChild(outputfieldiconcopy);
                 outputgroup.appendChild(outputfieldicondelete);
                 halfrow.appendChild(label);
@@ -213,50 +229,65 @@ const createValidatorSetup = () => {
     const detailsInput = document.querySelectorAll(".each-input-field")[9];
 
     document.querySelector(".each-button").addEventListener("click", async () => {
-        showLoadingAnimation();
-        // tauri.invoke("create_validator", {
-        //     website: websiteInput.value,
-        //     amount: amountInput.value,
-        //     walletName: walletNameInput.value,
-        //     comRate: commissionRateInput.value,
-        //     monikerName: monikerNameInput.value,
-        //     keybaseId: keybaseIdentityInput.value,
-        //     contact: securityContactInput.value,
-        //     fees: feesInput.value,
-        //     details: detailsInput.value,
-        // });
-        tauri.invoke("create_validator", {
-            website: "node101.io",
-            amount: "20",
-            walletName: "valitest",
-            comRate: "0.05",
-            monikerName: "node101",
-            keybaseId: "",
-            contact: "hello@node101.io",
-            fees: "500",
-            details: "detailstest",
-        }).then((res) => {
-            if (res[0]) {
-                if (JSON.parse(res[1]).raw_log == "") {
-                    dialog.message("Tx Hash: \n" + res[1].txhash, { title: "Success", type: "info" });
+        if (syncStatusChartPopupText.innerText.includes("Synced")) {
+            showLoadingAnimation();
+            // tauri.invoke("create_validator", {
+            //     website: websiteInput.value,
+            //     amount: amountInput.value,
+            //     walletName: walletNameInput.value,
+            //     comRate: commissionRateInput.value,
+            //     monikerName: monikerNameInput.value,
+            //     keybaseId: keybaseIdentityInput.value,
+            //     contact: securityContactInput.value,
+            //     fees: feesInput.value,
+            //     details: detailsInput.value,
+            // });
+            tauri.invoke("create_validator", {
+                website: "node101.io",
+                amount: "20",
+                walletName: "valitest",
+                comRate: "0.05",
+                monikerName: "node101",
+                keybaseId: "",
+                contact: "hello@node101.io",
+                fees: "500",
+                details: "detailstest",
+                projectName: currentIp.icon
+            }).then((res) => {
+                if (res[0]) {
+                    if (JSON.parse(res[1]).raw_log == "") {
+                        dialog.message("Tx Hash: \n" + res[1].txhash, { title: "Success", type: "info" });
+                        // update the validator_addr attribute in the ipAddresses array
+                        ipAddresses = ipAddresses.map((item) => {
+                            return item.ip === currentIp.ip ? { ...item, validator_addr: res[1].validator_addr } : item;
+                        });
+                        localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+                    } else {
+                        validatorWarning.setAttribute("style", "display: flex;");
+                        validatorWarning.classList.add("warning-animation");
+                        setTimeout(() => {
+                            validatorWarning.classList.remove("warning-animation");
+                        }, 500);
+                        validatorWarningText.textContent = JSON.parse(res[1]).raw_log;
+                    }
                 } else {
                     validatorWarning.setAttribute("style", "display: flex;");
                     validatorWarning.classList.add("warning-animation");
                     setTimeout(() => {
                         validatorWarning.classList.remove("warning-animation");
                     }, 500);
-                    validatorWarningText.textContent = JSON.parse(res[1]).raw_log;
+                    validatorWarningText.textContent = "An error occurred!";
                 }
-            } else {
-                validatorWarning.setAttribute("style", "display: flex;");
-                validatorWarning.classList.add("warning-animation");
-                setTimeout(() => {
-                    validatorWarning.classList.remove("warning-animation");
-                }, 500);
-                validatorWarningText.textContent = "An error occurred!";
-            }
-            hideLoadingAnimation();
-        });
+                hideLoadingAnimation();
+            });
+        } else {
+            validatorWarning.setAttribute("style", "display: flex;");
+            validatorWarning.classList.add("warning-animation");
+            setTimeout(() => {
+                validatorWarning.classList.remove("warning-animation");
+            }, 500);
+            validatorWarningText.textContent = "Please wait for the node to sync!";
+        }
     });
 };
 const editValidatorSetup = () => {
