@@ -45,6 +45,8 @@ tevent.listen('cpu_mem_sync', (event) => {
 });
 
 const loadNodePage = async () => {
+
+    tauri.invoke("validator_list");
     updateHeader();
 
     document.querySelector(".all-header-wrapper").setAttribute("style", "display: flex;");
@@ -221,6 +223,66 @@ const nodeOperationSetup = async () => {
         }
     });
 };
+const validatorListSetup = async () => {
+    showLoadingAnimation();
+    await tauri.invoke("validator_list").then((res) => {
+        res = JSON.parse(res);
+        console.log(res);
+        const contentOfPage = document.getElementById("content-of-page");
+        for (let i = 0; i < res.length; i++) {
+            valdiv = document.createElement("div");
+            valdiv.setAttribute("class", "each-row");
+
+            valname = document.createElement("div");
+            valname.setAttribute("class", "each-row-half");
+            valname.setAttribute("style", "width: 35%;");
+            valname.textContent = res[i].validator;
+
+            valvotingpower = document.createElement("div");
+            valvotingpower.setAttribute("class", "each-row-half");
+            valvotingpower.setAttribute("style", "width: 30%;");
+            valvotingpower.textContent = res[i].voting_power;
+
+            valcommission = document.createElement("div");
+            valcommission.setAttribute("class", "each-row-half");
+            valcommission.setAttribute("style", "width: 20%;");
+            valcommission.textContent = res[i].commission + "%";
+
+            valstaking = document.createElement("div");
+            valstaking.setAttribute("class", "each-row-half");
+            valstaking.setAttribute("style", "width: 15%;");
+
+            valstakebutton = document.createElement("div");
+            valstakebutton.setAttribute("class", "each-button");
+            valstakebutton.setAttribute("style", "margin-left: auto;");
+            valstakebutton.textContent = "Stake";
+            valstakebutton.addEventListener("click", async () => {
+                console.log(res[i].valoper);
+                if (JSON.parse(sessionStorage.getItem("keyring")).required) {
+                    if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
+                        await changePage("page-content/keyring-auth.html", () => keyringAuthSetup("page-content/delegate-token.html", () => delegateSetup(res[i].valoper)));
+                    } else {
+                        await changePage("page-content/create-keyring.html", () => createKeyringSetup("page-content/delegate-token.html", () => delegateSetup(res[i].valoper)));
+                    }
+                } else {
+                    await changePage("page-content/delegate-token.html", () => delegateSetup(res[i].valoper));
+                }
+            });
+            valstaking.appendChild(valstakebutton);
+
+            valdivider = document.createElement("div");
+            valdivider.setAttribute("class", "each-row-divider");
+
+            valdiv.appendChild(valname);
+            valdiv.appendChild(valvotingpower);
+            valdiv.appendChild(valcommission);
+            valdiv.appendChild(valstaking);
+            valdiv.appendChild(valdivider);
+            contentOfPage.appendChild(valdiv);
+        }
+    });
+    hideLoadingAnimation();
+};
 const createValidatorSetup = () => {
     const validatorWarning = document.getElementById("create-validator-warning");
     const validatorWarningText = document.getElementById("create-validator-warning-text");
@@ -228,13 +290,12 @@ const createValidatorSetup = () => {
     const amountInput = document.querySelectorAll(".each-input-field")[0];
     const walletNameInput = document.querySelectorAll(".each-input-field")[1];
     const monikerNameInput = document.querySelectorAll(".each-input-field")[2];
-    const walletPasswordInput = document.querySelectorAll(".each-input-field")[3];
+    const feesInput = document.querySelectorAll(".each-input-field")[3];
     const websiteInput = document.querySelectorAll(".each-input-field")[4];
     const keybaseIdentityInput = document.querySelectorAll(".each-input-field")[5];
     const securityContactInput = document.querySelectorAll(".each-input-field")[6];
     const commissionRateInput = document.querySelectorAll(".each-input-field")[7];
-    const feesInput = document.querySelectorAll(".each-input-field")[8];
-    const detailsInput = document.querySelectorAll(".each-input-field")[9];
+    const detailsInput = document.querySelectorAll(".each-input-field")[8];
 
     document.querySelector(".each-button").addEventListener("click", async () => {
         if (syncStatusChartPopupText.innerText.includes("Synced")) {
@@ -365,14 +426,15 @@ const withdrawRewardsSetup = () => {
         });
     });
 };
-const delegateSetup = () => {
+const delegateSetup = (valoper) => {
     const delegateWarning = document.getElementById("delegate-warning");
     const delegateWarningText = document.getElementById("delegate-warning-text");
 
     const walletNameInput = document.querySelectorAll(".each-input-field")[0];
     const validatorValoperInput = document.querySelectorAll(".each-input-field")[1];
-    const walletPasswordInput = document.querySelectorAll(".each-input-field")[2];
     const amountInput = document.querySelectorAll(".each-input-field")[3];
+
+    validatorValoperInput.value = valoper;
 
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
@@ -627,6 +689,7 @@ const setupNodePage = () => {
     const subButtonsDiv = document.querySelector(".sidebar-dropdown-subbuttons");
     const homePageButton = document.getElementById("home-page-button");
     const nodeOperationsButton = document.getElementById("node-operations-button");
+    const validatorListButton = document.getElementById("validator-list-button");
     const createValidatorButton = document.getElementById("create-validator-button");
     const editValidatorButton = document.getElementById("edit-validator-button");
     const withdrawRewardsButton = document.getElementById("withdraw-rewards-button");
@@ -697,6 +760,9 @@ const setupNodePage = () => {
             subButtonsDiv.setAttribute("style", "display: none");
         }
     });
+    validatorListButton.addEventListener("click", async function () {
+        await changePage("page-content/validator-list.html", validatorListSetup);
+    });
     createValidatorButton.addEventListener("click", async function () {
         if (JSON.parse(sessionStorage.getItem("keyring")).required) {
             if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
@@ -715,7 +781,16 @@ const setupNodePage = () => {
         await changePage("page-content/withdraw-rewards.html", withdrawRewardsSetup);
     });
     delegateTokenButton.addEventListener("click", async function () {
-        await changePage("page-content/delegate-token.html", delegateSetup);
+        if (JSON.parse(sessionStorage.getItem("keyring")).required) {
+            if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
+                await changePage("page-content/keyring-auth.html", () => keyringAuthSetup("page-content/delegate-token.html", () => delegateSetup("")));
+            } else {
+                await changePage("page-content/create-keyring.html", () => createKeyringSetup("page-content/delegate-token.html", () => delegateSetup("")));
+            }
+        } else {
+            await changePage("page-content/delegate-token.html", () => delegateSetup(""));
+        }
+
     });
     redelegateTokenButton.addEventListener("click", async function () {
         await changePage("page-content/redelegate-token.html", redelegateSetup);

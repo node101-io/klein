@@ -403,6 +403,23 @@ fn recover_wallet(walletname: String, mnemo: String, passwordneed: bool) {
     }
 }
 
+#[tauri::command(async)]
+fn validator_list() -> String {
+    if let Some(my_boxed_session) = unsafe { GLOBAL_STRUCT.as_ref() } {
+        let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+        channel.exec(&*format!(
+            "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; $(bash -c -l 'echo $EXECUTE') query staking validators --limit 2000 -o json | jq -r '.validators[] | select(.status==\"BOND_STATUS_BONDED\") | {{ validator: .description.moniker, voting_power: (.tokens | tonumber / pow(10; 6)), commission: (100 * (.commission.commission_rates.rate | tonumber)), valoper: .operator_address }}' | jq -s"
+        )).unwrap();
+        let mut s = String::new();
+        channel.read_to_string(&mut s).unwrap();
+        channel.close().unwrap();
+        s
+    } else {
+        println!("error in validator_list");
+        String::new()
+    }
+}
+
 // BELOW IS NOT TESTED YET
 #[tauri::command(async)]
 fn update_node(current_version: String) {
@@ -628,6 +645,7 @@ fn main() {
             create_validator,
             delegate_token,
             redelegate_token,
+            validator_list,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -129,7 +129,11 @@ const setupHeader = function () {
             ipListItem.appendChild(ipListItemName);
             ipListItem.appendChild(ipListItemIp);
             ipListItem.addEventListener("click", () => {
-                createPasswordPrompt(ipAddresses[i].ip);
+                if (currentIp.ip == ipAddresses[i].ip) {
+                    document.querySelector(".all-page-wrapper").click();
+                } else {
+                    createPasswordPrompt(ipAddresses[i].ip);
+                }
             });
             submenuIpList.appendChild(ipListItem);
         }
