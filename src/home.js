@@ -116,7 +116,6 @@ const showTestnetProjects = async () => {
         buttons.appendChild(discoverButton);
         row.appendChild(buttons);
         testnetTabContent.appendChild(row);
-        console.log(projects[i].name);
         if (projects[i].name == currentIp.icon) {
             gonnaPrepend = row;
         }

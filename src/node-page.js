@@ -45,7 +45,6 @@ tevent.listen('cpu_mem_sync', (event) => {
 });
 
 const loadNodePage = async () => {
-
     tauri.invoke("validator_list");
     updateHeader();
 
@@ -126,8 +125,8 @@ const showWallets = async () => {
                 outputfieldiconcopy.setAttribute("class", "each-output-field-icon-copy");
                 outputfieldiconcopy.setAttribute("viewBox", "0 0 17 16");
                 outputfieldiconcopy.addEventListener("click", function () {
-                    clipboard.writeText(this.previousSibling.title);
-                    dialog.message("Copied to clipboard.", { title: "Success", type: "success" });
+                    clipboard.writeText(this.previousSibling.previousSibling.title);
+                    dialog.message("Copied to clipboard.", { title: "Success", type: "info" });
                 });
 
                 path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -139,7 +138,6 @@ const showWallets = async () => {
                 outputfieldicondelete.addEventListener("click", async function () {
                     if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Wallet", type: "warning" })) {
                         showLoadingAnimation();
-                        console.log(this.previousSibling.previousSibling.getAttribute("title"));
                         if (this.previousSibling.previousSibling.getAttribute("title") == document.querySelector(".sidebar-info-details-copy-address").textContent) {
                             document.querySelector(".sidebar-info-details-copy-address").textContent = "";
                             document.querySelector(".sidebar-info-details-copy").setAttribute("style", "display: none;");
@@ -176,6 +174,17 @@ const endInstallation = async () => {
     sessionStorage.setItem("keyring", `{ "required": ${await tauri.invoke("if_password_required")}, "exists": ${await tauri.invoke("if_keyring_exist")} }`);
     tauri.invoke("cpu_mem_sync");
 };
+const handleKeyringExistance = async (page_to_load, setup_func) => {
+    if (JSON.parse(sessionStorage.getItem("keyring")).required) {
+        if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
+            await changePage("page-content/keyring-auth.html", () => keyringAuthSetup(page_to_load, setup_func));
+        } else {
+            await changePage("page-content/create-keyring.html", () => createKeyringSetup(page_to_load, setup_func));
+        }
+    } else {
+        await changePage(page_to_load, setup_func);
+    }
+};
 
 const installationSetup = async () => {
     for (let i = 0; i < 100; i++) {
@@ -202,6 +211,7 @@ const nodeOperationSetup = async () => {
     document.querySelectorAll(".each-page-manage-node-button")[2].addEventListener("click", async () => {
         tauri.invoke("start_stop_restart_node", { action: "restart" });
     });
+    document.querySelectorAll(".each-page-manage-node-button")[3].disabled = true;
     document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
         // tauri.invoke("update_node");
         console.log("update_node");
@@ -216,18 +226,18 @@ const nodeOperationSetup = async () => {
                     return ip.ip === currentIp.ip ? { ...ip, icon: "Empty Server" } : ip;
                 })));
                 setTimeout(() => {
-                    dialog.message("Node deleted successfully.", { title: "Success", type: "success" });
+                    dialog.message("Node deleted successfully.", { title: "Success", type: "info" });
                     loadHomePage();
                 }, 1000);
             });
         }
     });
+    window.scrollTo(0, 400);
 };
 const validatorListSetup = async () => {
     showLoadingAnimation();
     await tauri.invoke("validator_list").then((res) => {
         res = JSON.parse(res);
-        console.log(res);
         const contentOfPage = document.getElementById("content-of-page");
         for (let i = 0; i < res.length; i++) {
             valdiv = document.createElement("div");
@@ -235,17 +245,17 @@ const validatorListSetup = async () => {
 
             valname = document.createElement("div");
             valname.setAttribute("class", "each-row-half");
-            valname.setAttribute("style", "width: 35%;");
+            valname.setAttribute("style", "width: 35%; margin-right: 3%;");
             valname.textContent = res[i].validator;
 
             valvotingpower = document.createElement("div");
             valvotingpower.setAttribute("class", "each-row-half");
-            valvotingpower.setAttribute("style", "width: 30%;");
+            valvotingpower.setAttribute("style", "width: 25%; margin-right: 3%;");
             valvotingpower.textContent = res[i].voting_power;
 
             valcommission = document.createElement("div");
             valcommission.setAttribute("class", "each-row-half");
-            valcommission.setAttribute("style", "width: 20%;");
+            valcommission.setAttribute("style", "width: 15%; margin-right: 3%;");
             valcommission.textContent = res[i].commission + "%";
 
             valstaking = document.createElement("div");
@@ -257,16 +267,7 @@ const validatorListSetup = async () => {
             valstakebutton.setAttribute("style", "margin-left: auto;");
             valstakebutton.textContent = "Stake";
             valstakebutton.addEventListener("click", async () => {
-                console.log(res[i].valoper);
-                if (JSON.parse(sessionStorage.getItem("keyring")).required) {
-                    if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
-                        await changePage("page-content/keyring-auth.html", () => keyringAuthSetup("page-content/delegate-token.html", () => delegateSetup(res[i].valoper)));
-                    } else {
-                        await changePage("page-content/create-keyring.html", () => createKeyringSetup("page-content/delegate-token.html", () => delegateSetup(res[i].valoper)));
-                    }
-                } else {
-                    await changePage("page-content/delegate-token.html", () => delegateSetup(res[i].valoper));
-                }
+                await handleKeyringExistance("page-content/delegate-token.html", () => delegateSetup(res[i].valoper));
             });
             valstaking.appendChild(valstakebutton);
 
@@ -282,6 +283,7 @@ const validatorListSetup = async () => {
         }
     });
     hideLoadingAnimation();
+    window.scrollTo(0, 400);
 };
 const createValidatorSetup = () => {
     const validatorWarning = document.getElementById("create-validator-warning");
@@ -324,9 +326,8 @@ const createValidatorSetup = () => {
                 projectName: currentIp.icon
             }).then((res) => {
                 if (res[0]) {
-                    if (JSON.parse(res[1]).raw_log == "") {
-                        dialog.message("Tx Hash: \n" + res[1].txhash, { title: "Success", type: "info" });
-                        // update the validator_addr attribute in the ipAddresses array
+                    if (JSON.parse(res[1]).raw_log.length == 2) {
+                        dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
                         ipAddresses = ipAddresses.map((item) => {
                             return item.ip === currentIp.ip ? { ...item, validator_addr: res[1].validator_addr } : item;
                         });
@@ -358,6 +359,7 @@ const createValidatorSetup = () => {
             validatorWarningText.textContent = "Please wait for the node to sync!";
         }
     });
+    window.scrollTo(0, 400);
 };
 const editValidatorSetup = () => {
     const validatorWarning = document.getElementById("edit-validator-warning");
@@ -366,11 +368,10 @@ const editValidatorSetup = () => {
     const amountInput = document.querySelectorAll(".each-input-field")[0];
     const walletNameInput = document.querySelectorAll(".each-input-field")[1];
     const websiteInput = document.querySelectorAll(".each-input-field")[2];
-    const walletPasswordInput = document.querySelectorAll(".each-input-field")[3];
+    const commissionRateInput = document.querySelectorAll(".each-input-field")[3];
     const securityContactInput = document.querySelectorAll(".each-input-field")[4];
     const keybaseIdentityInput = document.querySelectorAll(".each-input-field")[5];
-    const commissionRateInput = document.querySelectorAll(".each-input-field")[6];
-    const detailsInput = document.querySelectorAll(".each-input-field")[7];
+    const detailsInput = document.querySelectorAll(".each-input-field")[6];
 
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
@@ -384,7 +385,7 @@ const editValidatorSetup = () => {
             details: detailsInput.value,
         }).then((res) => {
             if (res) {
-                dialog.message("Validator edited successfully.", { title: "Success", type: "success" });
+                dialog.message("Validator edited successfully.", { title: "Success", type: "info" });
             }
             else {
                 validatorWarning.setAttribute("style", "display: flex;");
@@ -397,23 +398,23 @@ const editValidatorSetup = () => {
             hideLoadingAnimation();
         });
     });
+    window.scrollTo(0, 400);
 };
 const withdrawRewardsSetup = () => {
     const withdrawWarning = document.getElementById("withdraw-rewards-warning");
     const withdrawWarningText = document.getElementById("withdraw-rewards-warning-text");
 
     const walletNameInput = document.querySelectorAll(".each-input-field")[0];
-    const feesInput = document.querySelectorAll(".each-input-field")[1];
-    const walletPasswordInput = document.querySelectorAll(".each-input-field")[2];
+    const valoperAddressInput = document.querySelectorAll(".each-input-field")[1];
 
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
         tauri.invoke("withdraw_rewards", {
             walletName: walletNameInput.value,
-            fees: feesInput.value,
+            fees: valoperAddressInput.value,
         }).then((res) => {
             if (res) {
-                dialog.message("Rewards withdrawn successfully.", { title: "Success", type: "success" });
+                dialog.message("Rewards withdrawn successfully.", { title: "Success", type: "info" });
             } else {
                 withdrawWarning.setAttribute("style", "display: flex;");
                 withdrawWarning.classList.add("warning-animation");
@@ -425,6 +426,7 @@ const withdrawRewardsSetup = () => {
             hideLoadingAnimation();
         });
     });
+    window.scrollTo(0, 400);
 };
 const delegateSetup = (valoper) => {
     const delegateWarning = document.getElementById("delegate-warning");
@@ -444,7 +446,7 @@ const delegateSetup = (valoper) => {
             amount: amountInput.value,
         }).then((res) => {
             if (res) {
-                dialog.message("Delegate successful.", { title: "Success", type: "success" });
+                dialog.message("Delegate successful.", { title: "Success", type: "info" });
             } else {
                 delegateWarning.setAttribute("style", "display: flex;");
                 delegateWarning.classList.add("warning-animation");
@@ -456,6 +458,7 @@ const delegateSetup = (valoper) => {
             hideLoadingAnimation();
         });
     });
+    window.scrollTo(0, 400);
 };
 const redelegateSetup = () => {
     const redelegateWarning = document.getElementById("redelegate-warning");
@@ -463,9 +466,9 @@ const redelegateSetup = () => {
 
     const walletNameInput = document.querySelectorAll(".each-input-field")[0];
     const destinationValidatorInput = document.querySelectorAll(".each-input-field")[1];
-    const walletPasswordInput = document.querySelectorAll(".each-input-field")[2];
+    const firstValidatorInput = document.querySelectorAll(".each-input-field")[2];
     const feesInput = document.querySelectorAll(".each-input-field")[3];
-    const firstValidatorInput = document.querySelectorAll(".each-input-field")[4];
+    const amountInput = document.querySelectorAll(".each-input-field")[4];
 
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
@@ -473,10 +476,11 @@ const redelegateSetup = () => {
             walletName: walletNameInput.value,
             destinationValidator: destinationValidatorInput.value,
             fees: feesInput.value,
+            amount: amountInput.value,
             firstValidator: firstValidatorInput.value,
         }).then((res) => {
             if (res) {
-                dialog.message("Redelegate successful.", { title: "Success", type: "success" });
+                dialog.message("Redelegate successful.", { title: "Success", type: "info" });
             } else {
                 redelegateWarning.setAttribute("style", "display: flex;");
                 redelegateWarning.classList.add("warning-animation");
@@ -488,6 +492,7 @@ const redelegateSetup = () => {
             hideLoadingAnimation();
         });
     });
+    window.scrollTo(0, 400);
 };
 const voteSetup = () => {
     const voteWarning = document.getElementById("vote-warning");
@@ -495,7 +500,6 @@ const voteSetup = () => {
 
     const walletNameInput = document.querySelectorAll(".each-input-field")[0];
     const proposalNumberInput = document.querySelectorAll(".each-input-field")[1];
-    const walletPasswordInput = document.querySelectorAll(".each-input-field")[2];
 
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
@@ -505,7 +509,7 @@ const voteSetup = () => {
             selectedOption: document.querySelector(".each-input-radio-option:checked").nextElementSibling.textContent.toLowerCase(),
         }).then((res) => {
             if (res) {
-                dialog.message("Vote successful.", { title: "Success", type: "success" });
+                dialog.message("Vote successful.", { title: "Success", type: "info" });
             } else {
                 voteWarning.setAttribute("style", "display: flex;");
                 voteWarning.classList.add("warning-animation");
@@ -517,6 +521,7 @@ const voteSetup = () => {
             hideLoadingAnimation();
         });
     });
+    window.scrollTo(0, 400);
 };
 const unjailSetup = () => {
     const unjailWarning = document.getElementById("unjail-warning");
@@ -524,7 +529,6 @@ const unjailSetup = () => {
 
     const walletNameInput = document.querySelectorAll(".each-input-field")[0];
     const feesInput = document.querySelectorAll(".each-input-field")[1];
-    const walletPasswordInput = document.querySelectorAll(".each-input-field")[2];
 
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
@@ -533,7 +537,7 @@ const unjailSetup = () => {
             fees: feesInput.value,
         }).then((res) => {
             if (res) {
-                dialog.message("Unjail successful.", { title: "Success", type: "success" });
+                dialog.message("Unjail successful.", { title: "Success", type: "info" });
             } else {
                 unjailWarning.setAttribute("style", "display: flex;");
                 unjailWarning.classList.add("warning-animation");
@@ -545,15 +549,16 @@ const unjailSetup = () => {
             hideLoadingAnimation();
         });
     });
+    window.scrollTo(0, 400);
 };
 const sendTokenSetup = () => {
     const sendTokenWarning = document.getElementById("send-token-warning");
     const sendTokenWarningText = document.getElementById("send-token-warning-text");
 
     const walletNameInput = document.querySelectorAll(".each-input-field")[0];
-    const walletPasswordInput = document.querySelectorAll(".each-input-field")[1];
-    const receiverAddressInput = document.querySelectorAll(".each-input-field")[2];
-    const amountInput = document.querySelectorAll(".each-input-field")[3];
+    const receiverAddressInput = document.querySelectorAll(".each-input-field")[1];
+    const amountInput = document.querySelectorAll(".each-input-field")[2];
+    const feesInput = document.querySelectorAll(".each-input-field")[3];
 
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
@@ -561,9 +566,19 @@ const sendTokenSetup = () => {
             walletName: walletNameInput.value,
             receiverAddress: receiverAddressInput.value,
             amount: amountInput.value,
+            fees: feesInput.value
         }).then((res) => {
             if (res) {
-                dialog.message("Send token successful.", { title: "Success", type: "success" });
+                if (JSON.parse(res[1]).raw_log.length == 2) {
+                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
+                } else {
+                    sendTokenWarning.setAttribute("style", "display: flex;");
+                    sendTokenWarning.classList.add("warning-animation");
+                    setTimeout(() => {
+                        sendTokenWarning.classList.remove("warning-animation");
+                    }, 500);
+                    sendTokenWarningText.textContent = JSON.parse(res[1]).raw_log;
+                }
             } else {
                 sendTokenWarning.setAttribute("style", "display: flex;");
                 sendTokenWarning.classList.add("warning-animation");
@@ -575,6 +590,7 @@ const sendTokenSetup = () => {
             hideLoadingAnimation();
         });
     });
+    window.scrollTo(0, 400);
 };
 const createKeyringSetup = (page_html, page_setup) => {
     const keyringWarning = document.getElementById("create-keyring-warning");
@@ -604,6 +620,7 @@ const createKeyringSetup = (page_html, page_setup) => {
             hideLoadingAnimation();
         }
     });
+    window.scrollTo(0, 400);
 };
 const keyringAuthSetup = (page_html, page_setup) => {
     document.querySelector(".each-input-helper-text").addEventListener("click", async () => {
@@ -630,6 +647,7 @@ const keyringAuthSetup = (page_html, page_setup) => {
         }
         hideLoadingAnimation();
     });
+    window.scrollTo(0, 400);
 };
 const walletsSetup = async () => {
     showLoadingAnimation();
@@ -678,6 +696,7 @@ const walletsSetup = async () => {
         hideLoadingAnimation();
     });
     hideLoadingAnimation();
+    window.scrollTo(0, 400);
 };
 
 const setupNodePage = () => {
@@ -736,7 +755,7 @@ const setupNodePage = () => {
     memStatusChartPercent = document.querySelectorAll(".each-page-chart-percentage")[2];
     validatorAddress.addEventListener("click", function () {
         clipboard.writeText(validatorAddressText.innerText);
-        dialog.message("Copied to clipboard.", { title: "Success", type: "success" });
+        dialog.message("Copied to clipboard.", { title: "Success", type: "info" });
     });
 
     nodeOperationsButton.addEventListener("click", async function () {
@@ -764,56 +783,31 @@ const setupNodePage = () => {
         await changePage("page-content/validator-list.html", validatorListSetup);
     });
     createValidatorButton.addEventListener("click", async function () {
-        if (JSON.parse(sessionStorage.getItem("keyring")).required) {
-            if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
-                await changePage("page-content/keyring-auth.html", () => keyringAuthSetup("page-content/create-validator.html", createValidatorSetup));
-            } else {
-                await changePage("page-content/create-keyring.html", () => createKeyringSetup("page-content/create-validator.html", createValidatorSetup));
-            }
-        } else {
-            await changePage("page-content/create-validator.html", createValidatorSetup);
-        }
+        await handleKeyringExistance("page-content/create-validator.html", createValidatorSetup);
     });
     editValidatorButton.addEventListener("click", async function () {
-        await changePage("page-content/edit-validator.html", editValidatorSetup);
+        await handleKeyringExistance("page-content/edit-validator.html", editValidatorSetup);
     });
     withdrawRewardsButton.addEventListener("click", async function () {
-        await changePage("page-content/withdraw-rewards.html", withdrawRewardsSetup);
+        await handleKeyringExistance("page-content/withdraw-rewards.html", withdrawRewardsSetup);
     });
     delegateTokenButton.addEventListener("click", async function () {
-        if (JSON.parse(sessionStorage.getItem("keyring")).required) {
-            if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
-                await changePage("page-content/keyring-auth.html", () => keyringAuthSetup("page-content/delegate-token.html", () => delegateSetup("")));
-            } else {
-                await changePage("page-content/create-keyring.html", () => createKeyringSetup("page-content/delegate-token.html", () => delegateSetup("")));
-            }
-        } else {
-            await changePage("page-content/delegate-token.html", () => delegateSetup(""));
-        }
-
+        await handleKeyringExistance("page-content/delegate-token.html", () => delegateSetup(""));
     });
     redelegateTokenButton.addEventListener("click", async function () {
-        await changePage("page-content/redelegate-token.html", redelegateSetup);
+        await handleKeyringExistance("page-content/redelegate-token.html", redelegateSetup);
     });
     voteButton.addEventListener("click", async function () {
-        await changePage("page-content/vote.html", voteSetup);
+        await handleKeyringExistance("page-content/vote.html", voteSetup);
     });
     unjailButton.addEventListener("click", async function () {
-        await changePage("page-content/unjail.html", unjailSetup);
+        await handleKeyringExistance("page-content/unjail.html", unjailSetup);
     });
     sendTokenButton.addEventListener("click", async function () {
-        await changePage("page-content/send-token.html", sendTokenSetup);
+        await handleKeyringExistance("page-content/send-token.html", sendTokenSetup);
     });
     walletsButton.addEventListener("click", async function () {
-        if (JSON.parse(sessionStorage.getItem("keyring")).required) {
-            if (JSON.parse(sessionStorage.getItem("keyring")).exists) {
-                await changePage("page-content/keyring-auth.html", () => keyringAuthSetup("page-content/wallets.html", walletsSetup));
-            } else {
-                await changePage("page-content/create-keyring.html", () => createKeyringSetup("page-content/wallets.html", walletsSetup));
-            }
-        } else {
-            await changePage("page-content/wallets.html", walletsSetup);
-        }
+        await handleKeyringExistance("page-content/wallets.html", walletsSetup);
     });
     nodeInformationButton.addEventListener("click", function () {
         showLoadingAnimation();

@@ -392,7 +392,7 @@ fn recover_wallet(walletname: String, mnemo: String, passwordneed: bool) {
                 if passwordneed {
                     my_boxed_session.walletpassword.to_string() + "\n"
                 } else {
-                    "".to_string()
+                    String::new()
                 },
                 walletname
             ))
@@ -431,32 +431,32 @@ fn update_node(current_version: String) {
             .exec(&format!("grep 'REPO=' .bash_profile | sed 's/^.*: //"))
             .unwrap();
         channel.read_to_string(&mut repo).unwrap();
-        println!("ASDAS {}", repo);
-        // let url = "https://api.github.com/repos/confio/tgrade/releases";
-        // let releases: Vec<Release> = reqwest::get(url).await?.json().await?;
-        // if releases.is_empty() {
-        //     println!("No releases found in the repository.");
-        // } else {
-        //     let latest_stable_release =
-        //         releases.into_iter().find(|release| !release.prerelease);
-        //     match latest_stable_release {
-        //         Some(release) => println!("Latest stable release: {}", release.tag_name),
-        //         None => println!("No stable releases found in the repository."),
-        //     }
-        // }
+        channel.close().unwrap();
+        println!("{}", repo);
     }
 }
 
 #[tauri::command(async)]
-fn delegate_token(wallet_name: String, validator_valoper: String, amount: String) {
+fn delegate_token(
+    wallet_name: String,
+    validator_valoper: String,
+    amount: String,
+    fees: String,
+) -> bool {
     if let Some(my_boxed_session) = unsafe { GLOBAL_STRUCT.as_ref() } {
         let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-        // channel.exec(&format!(
-        //     "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{password}\" | $EXECUTE tx staking delegate {valoper} {amount}$DENOM --from={wallet_name} --chain-id=$CHAIN_ID --gas='auto' --fees={fee}$DENOM ;")).unwrap();
+        channel.exec(&format!(
+            "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{password}\" | bash -c -l '$EXECUTE tx staking delegate {validator_valoper} {amount}$DENOM --from={wallet_name} --fees={fees}$DENOM --chain-id=$CHAIN_ID --gas=auto'",
+            password = my_boxed_session.walletpassword,
+        )).unwrap();
         let mut s = String::new();
         channel.read_to_string(&mut s).unwrap();
-        // println!("{}", s);
+        println!("{}", s);
         channel.close().unwrap();
+        true
+    } else {
+        println!("error in delegate_token");
+        false
     }
 }
 
@@ -465,58 +465,87 @@ fn redelegate_token(
     wallet_name: String,
     destination_validator: String,
     fees: String,
+    amount: String,
     first_validator: String,
-) {
+) -> bool {
     if let Some(my_boxed_session) = unsafe { GLOBAL_STRUCT.as_ref() } {
         let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-        // let command: String = format!(
-        //     "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{password}\" | $EXECUTE tx staking rewdelegate {first_address} {destination} {amount}$DENOM --from={wallet_name} --chain-id=$CHAIN_ID --gas='auto' --fees={fee}$DENOM ;");
-        // channel.exec(&*command).unwrap();
-        let mut s = String::new();
-        channel.read_to_string(&mut s).unwrap();
-        // println!("{}", s);
-        channel.close().unwrap();
-    }
-}
-
-#[tauri::command(async)]
-fn vote(wallet_name: String, proposal_number: String, selected_option: String) {
-    if let Some(my_boxed_session) = unsafe { GLOBAL_STRUCT.as_ref() } {
-        let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-        channel.exec(&*format!("bash -c -l \"$EXECUTE tx gov vote {proposal_number} {selected_option} --from {wallet_name} --chain-id=$CHAIN_ID -y\"")).unwrap();
+        let command: String = format!(
+            "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{password}\" |  bash -c -l '$EXECUTE tx staking rewdelegate {first_validator} {destination_validator} {amount}$DENOM --from={wallet_name} --fees={fees}$DENOM --chain-id=$CHAIN_ID --gas=auto'",
+            password = my_boxed_session.walletpassword,
+        );
+        channel.exec(&*command).unwrap();
         let mut s = String::new();
         channel.read_to_string(&mut s).unwrap();
         println!("{}", s);
         channel.close().unwrap();
+        true
+    } else {
+        println!("error in redelegate_token");
+        false
     }
 }
 
 #[tauri::command(async)]
-fn send_token(wallet_name: String, receiver_address: String, amount: String) {
+fn vote(wallet_name: String, proposal_number: String, selected_option: String) -> bool {
     if let Some(my_boxed_session) = unsafe { GLOBAL_STRUCT.as_ref() } {
         let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-        channel.exec(&*format!("bash -c -l \"$EXECUTE tx bank send {wallet_name} {receiver_address} {amount}$DENOM -y\"")).unwrap();
+        channel.exec(&*format!(
+            "yes '{password}' | bash -c -l '$EXECUTE tx gov vote {proposal_number} {selected_option} --from {wallet_name} --chain-id=$CHAIN_ID -y'",
+            password = my_boxed_session.walletpassword
+        )).unwrap();
         let mut s = String::new();
         channel.read_to_string(&mut s).unwrap();
         println!("{}", s);
         channel.close().unwrap();
+        true
+    } else {
+        println!("error in vote");
+        false
     }
 }
 
 #[tauri::command(async)]
-fn unjail() {
+fn send_token(
+    wallet_name: String,
+    receiver_address: String,
+    amount: String,
+    fees: String,
+) -> (bool, String) {
     if let Some(my_boxed_session) = unsafe { GLOBAL_STRUCT.as_ref() } {
         let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-        // let nd = &my_boxed_session.existing_node;
-        // let command: String = format!(
-        //     "yes \"{password}\" | export PATH=$PATH:/usr/local/go/bin:/root/go/bin; {nd} tx slashing unjail  --broadcast-mode=block --from=$WALLET_NAME --chain-id=$CHAIN_ID --gas=auto --fees {fees}$DENOM"
-        // );
-        // channel.exec(&command).unwrap();
+        channel.exec(&*format!(
+            "yes '{password}' | bash -c -l '$EXECUTE tx bank send {wallet_name} {receiver_address} {amount}$DENOM -y --fees={fees}$DENOM --output json'",
+            password = my_boxed_session.walletpassword
+        )).unwrap();
         let mut s = String::new();
         channel.read_to_string(&mut s).unwrap();
         println!("{}", s);
-        println!("Will return mnemonics if created first, if not then will return a success or anything.");
         channel.close().unwrap();
+        (true, s)
+    } else {
+        println!("error in send_token");
+        (false, String::new())
+    }
+}
+
+#[tauri::command(async)]
+fn unjail(wallet_name: String, fees: String) -> bool {
+    if let Some(my_boxed_session) = unsafe { GLOBAL_STRUCT.as_ref() } {
+        let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+        let command: String = format!(
+            "yes \"{password}\" | bash -c -l '$EXECUTE tx slashing unjail --from={wallet_name} --chain-id=$CHAIN_ID --gas=auto --fees{fees}$DENOM -y'",
+            password = my_boxed_session.walletpassword,
+        );
+        channel.exec(&command).unwrap();
+        let mut s = String::new();
+        channel.read_to_string(&mut s).unwrap();
+        println!("{}", s);
+        channel.close().unwrap();
+        true
+    } else {
+        println!("error in unjail");
+        false
     }
 }
 
@@ -537,6 +566,7 @@ fn create_validator(
         let mut channel = my_boxed_session.open_session.channel_session().unwrap();
         let mut s = String::new();
         channel.exec(&format!("export PATH=$PATH:/usr/local/go/bin:/root/go/bin; yes \"{password}\" | bash -c -l '$EXECUTE tx {operation} create-validator -y \
+                --output json \
                 --pubkey=$($EXECUTE tendermint show-validator) \
                 --amount={amount}$DENOM \
                 --from={wallet_name} \
@@ -594,15 +624,22 @@ fn edit_validator(
 }
 
 #[tauri::command(async)]
-fn withdraw_rewards() {
+fn withdraw_rewards(valoper_address: String, wallet_name: String) -> bool {
     if let Some(my_boxed_session) = unsafe { GLOBAL_STRUCT.as_ref() } {
         let mut channel = my_boxed_session.open_session.channel_session().unwrap();
-        // channel.exec(&format!(
-        //     "export PATH=$PATH:/usr/local/go/bin:/root/go/bin; $EXECUTE tx distribution withdraw-rewards {valoper} --from={wallet_name} --commission --chain-id=$CHAIN_ID;")).unwrap();
+        // $EXECUTE tx distribution withdraw-rewards $VALOPER_ADDRESS --from=$WALLET_NAME --commission --chain-id=$CHAIN_ID
+        channel.exec(&format!(
+            "yes '{password}' | bash -c -l '$EXECUTE tx distribution withdraw-rewards {valoper_address} --from={wallet_name} --commission --chain-id=$CHAIN_ID'",
+            password = my_boxed_session.walletpassword,
+        )).unwrap();
         let mut s = String::new();
         channel.read_to_string(&mut s).unwrap();
         println!("{}", s);
         channel.close().unwrap();
+        true
+    } else {
+        println!("error in withdraw_rewards");
+        false
     }
 }
 
