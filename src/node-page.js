@@ -208,8 +208,8 @@ const installationSetup = async () => {
 };
 const nodeOperationSetup = async () => {
     const client = await http.getClient();
-    // latest_tag = await client.get("https://api.github.com/repos/bandprotocol/chain/releases/latest", {
-    latest_tag = (await client.get("https://api.github.com/repos/NibiruChain/nibiru/releases/latest", {
+    const repoUrl = projects.find((project) => project.name === currentIp.icon).social_media_accounts.github;
+    latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
         type: 'Json'
     })).data.name;
     document.querySelectorAll(".each-page-manage-node-button")[3].disabled = true;
@@ -223,8 +223,7 @@ const nodeOperationSetup = async () => {
         tauri.invoke("start_stop_restart_node", { action: "restart" });
     });
     document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
-        // tauri.invoke("update_node");
-        console.log(projects.find((project) => project.name === currentIp.icon).social_media_accounts.github);
+        tauri.invoke("update_node", { latest_version: latest_tag });
     });
     document.querySelector(".delete-node-button").addEventListener("click", async () => {
         if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {

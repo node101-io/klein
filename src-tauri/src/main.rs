@@ -419,19 +419,16 @@ fn validator_list() -> String {
 
 // BELOW IS NOT FULLY TESTED YET
 #[tauri::command(async)]
-fn update_node(repo: String) {
+fn update_node(latest_version: String) {
     if let Some(my_boxed_session) = unsafe { GLOBAL_STRUCT.as_ref() } {
         let mut channel = my_boxed_session.open_session.channel_session().unwrap();
         channel
             .exec(&*format!(
-                // "bash -c -l 'systemctl stop $EXECUTE; \
-                // sudo rm -rf $(which $EXECUTE); \
-                // git fetch --tags; \
-                // tag=$(git describe --tags `git rev-list --tags --max-count=1`); \
-                // git checkout $tag -b latest; \
-                // make install; \
-                // systemctl restart $EXECUTE'"
-                ""
+                "bash -c -l 'systemctl stop $EXECUTE; \
+                git pull; \
+                git checkout {latest_version}; \
+                make install; \
+                systemctl restart $EXECUTE'"
             ))
             .unwrap();
         let mut s = String::new();
