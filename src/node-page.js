@@ -3,7 +3,7 @@ tevent.listen('cpu_mem_sync', (event) => {
 
     syncStatusChart.options.barColor = event.payload.catchup == "true" ? "#0F62FE" : event.payload.catchup == "false" ? "#43BE66" : "#FF2632";
     syncStatusChartPercent.textContent = event.payload.catchup == "true" || event.payload.catchup == "false" ? event.payload.height : "!";
-    syncStatusChartPopupText.innerText = event.payload.catchup == "true" ? "Syncing...\n\nCurrent Block:\n" + event.payload.height : event.payload.catchup == "false" ? "Synced!" : "Can't get sync status!";
+    syncStatusChartPopupText.innerText = event.payload.catchup == "true" ? "Syncing...\n\nCurrent Block: " + event.payload.height : event.payload.catchup == "false" ? "Node is synced!" : "Can't get sync status!";
     if (event.payload.catchup == "true") {
         setTimeout(() => {
             syncStatusChart.update(100);
@@ -185,6 +185,16 @@ const handleKeyringExistance = async (page_to_load, setup_func) => {
         await changePage(page_to_load, setup_func);
     }
 };
+const showErrorMessage = (message) => {
+    const warningEl = document.getElementById("inner-warning");
+    const warningElText = document.getElementById("inner-warning-text");
+    warningEl.setAttribute("style", "display: flex;");
+    warningEl.classList.add("warning-animation");
+    setTimeout(() => {
+        warningEl.classList.remove("warning-animation");
+    }, 500);
+    warningElText.textContent = message;
+}
 
 const installationSetup = async () => {
     for (let i = 0; i < 100; i++) {
@@ -202,6 +212,7 @@ const nodeOperationSetup = async () => {
     latest_tag = (await client.get("https://api.github.com/repos/NibiruChain/nibiru/releases/latest", {
         type: 'Json'
     })).data.name;
+    document.querySelectorAll(".each-page-manage-node-button")[3].disabled = true;
     document.querySelectorAll(".each-page-manage-node-button")[0].addEventListener("click", async () => {
         tauri.invoke("start_stop_restart_node", { action: "start" });
     });
@@ -211,10 +222,9 @@ const nodeOperationSetup = async () => {
     document.querySelectorAll(".each-page-manage-node-button")[2].addEventListener("click", async () => {
         tauri.invoke("start_stop_restart_node", { action: "restart" });
     });
-    document.querySelectorAll(".each-page-manage-node-button")[3].disabled = true;
     document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
         // tauri.invoke("update_node");
-        console.log("update_node");
+        console.log(projects.find((project) => project.name === currentIp.icon).social_media_accounts.github);
     });
     document.querySelector(".delete-node-button").addEventListener("click", async () => {
         if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
@@ -237,7 +247,8 @@ const nodeOperationSetup = async () => {
 const validatorListSetup = async () => {
     showLoadingAnimation();
     await tauri.invoke("validator_list").then((res) => {
-        res = JSON.parse(res);
+        console.log(res);
+        res = res ? JSON.parse(res) : [];
         const contentOfPage = document.getElementById("content-of-page");
         for (let i = 0; i < res.length; i++) {
             valdiv = document.createElement("div");
@@ -286,34 +297,19 @@ const validatorListSetup = async () => {
     window.scrollTo(0, 400);
 };
 const createValidatorSetup = () => {
-    const validatorWarning = document.getElementById("create-validator-warning");
-    const validatorWarningText = document.getElementById("create-validator-warning-text");
-
-    const amountInput = document.querySelectorAll(".each-input-field")[0];
-    const walletNameInput = document.querySelectorAll(".each-input-field")[1];
-    const monikerNameInput = document.querySelectorAll(".each-input-field")[2];
-    const feesInput = document.querySelectorAll(".each-input-field")[3];
-    const websiteInput = document.querySelectorAll(".each-input-field")[4];
-    const keybaseIdentityInput = document.querySelectorAll(".each-input-field")[5];
-    const securityContactInput = document.querySelectorAll(".each-input-field")[6];
-    const commissionRateInput = document.querySelectorAll(".each-input-field")[7];
-    const detailsInput = document.querySelectorAll(".each-input-field")[8];
-
     document.querySelector(".each-button").addEventListener("click", async () => {
         if (syncStatusChartPopupText.innerText.includes("Synced")) {
             showLoadingAnimation();
-            // tauri.invoke("create_validator", {
-            //     website: websiteInput.value,
-            //     amount: amountInput.value,
-            //     walletName: walletNameInput.value,
-            //     comRate: commissionRateInput.value,
-            //     monikerName: monikerNameInput.value,
-            //     keybaseId: keybaseIdentityInput.value,
-            //     contact: securityContactInput.value,
-            //     fees: feesInput.value,
-            //     details: detailsInput.value,
-            // });
             tauri.invoke("create_validator", {
+                // amount: document.querySelectorAll(".each-input-field")[0].value,
+                // walletName: document.querySelectorAll(".each-input-field")[1].value,
+                // monikerName: document.querySelectorAll(".each-input-field")[2].value,
+                // fees: document.querySelectorAll(".each-input-field")[3].value,
+                // website: document.querySelectorAll(".each-input-field")[4].value,
+                // keybaseId: document.querySelectorAll(".each-input-field")[5].value,
+                // contact: document.querySelectorAll(".each-input-field")[6].value,
+                // comRate: document.querySelectorAll(".each-input-field")[7].value,
+                // details: document.querySelectorAll(".each-input-field")[8].value,
                 website: "node101.io",
                 amount: "20",
                 walletName: "valitest",
@@ -333,95 +329,65 @@ const createValidatorSetup = () => {
                         });
                         localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
                     } else {
-                        validatorWarning.setAttribute("style", "display: flex;");
-                        validatorWarning.classList.add("warning-animation");
-                        setTimeout(() => {
-                            validatorWarning.classList.remove("warning-animation");
-                        }, 500);
-                        validatorWarningText.textContent = JSON.parse(res[1]).raw_log;
+                        showErrorMessage(JSON.parse(res[1]).raw_log);
                     }
                 } else {
-                    validatorWarning.setAttribute("style", "display: flex;");
-                    validatorWarning.classList.add("warning-animation");
-                    setTimeout(() => {
-                        validatorWarning.classList.remove("warning-animation");
-                    }, 500);
-                    validatorWarningText.textContent = "An error occurred!";
+                    showErrorMessage("An error occurred!");
                 }
                 hideLoadingAnimation();
             });
         } else {
-            validatorWarning.setAttribute("style", "display: flex;");
-            validatorWarning.classList.add("warning-animation");
-            setTimeout(() => {
-                validatorWarning.classList.remove("warning-animation");
-            }, 500);
-            validatorWarningText.textContent = "Please wait for the node to sync!";
+            showErrorMessage("Please wait for the node to sync!");
         }
     });
     window.scrollTo(0, 400);
 };
 const editValidatorSetup = () => {
-    const validatorWarning = document.getElementById("edit-validator-warning");
-    const validatorWarningText = document.getElementById("edit-validator-warning-text");
-
-    const amountInput = document.querySelectorAll(".each-input-field")[0];
-    const walletNameInput = document.querySelectorAll(".each-input-field")[1];
-    const websiteInput = document.querySelectorAll(".each-input-field")[2];
-    const commissionRateInput = document.querySelectorAll(".each-input-field")[3];
-    const securityContactInput = document.querySelectorAll(".each-input-field")[4];
-    const keybaseIdentityInput = document.querySelectorAll(".each-input-field")[5];
-    const detailsInput = document.querySelectorAll(".each-input-field")[6];
-
     document.querySelector(".each-button").addEventListener("click", async () => {
-        showLoadingAnimation();
-        tauri.invoke("edit_validator", {
-            website: websiteInput.value,
-            amount: amountInput.value,
-            walletName: walletNameInput.value,
-            comRate: commissionRateInput.value,
-            keybaseId: keybaseIdentityInput.value,
-            contact: securityContactInput.value,
-            details: detailsInput.value,
-        }).then((res) => {
-            if (res) {
-                dialog.message("Validator edited successfully.", { title: "Success", type: "info" });
-            }
-            else {
-                validatorWarning.setAttribute("style", "display: flex;");
-                validatorWarning.classList.add("warning-animation");
-                setTimeout(() => {
-                    validatorWarning.classList.remove("warning-animation");
-                }, 500);
-                validatorWarningText.textContent = "An error occurred!";
-            }
-            hideLoadingAnimation();
-        });
+        if (syncStatusChartPopupText.innerText.includes("Synced")) {
+            showLoadingAnimation();
+            tauri.invoke("edit_validator", {
+                amount: document.querySelectorAll(".each-input-field")[0].value,
+                walletName: document.querySelectorAll(".each-input-field")[1].value,
+                website: document.querySelectorAll(".each-input-field")[2].value,
+                comRate: document.querySelectorAll(".each-input-field")[3].value,
+                contact: document.querySelectorAll(".each-input-field")[4].value,
+                keybaseId: document.querySelectorAll(".each-input-field")[5].value,
+                details: document.querySelectorAll(".each-input-field")[6].value,
+            }).then((res) => {
+                if (res) {
+                    if (JSON.parse(res[1]).raw_log.length == 2) {
+                        dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
+                    } else {
+                        showErrorMessage(JSON.parse(res[1]).raw_log);
+                    }
+                }
+                else {
+                    showErrorMessage("An error occurred!");
+                }
+                hideLoadingAnimation();
+            });
+        } else {
+            showErrorMessage("Please wait for the node to sync!");
+        }
     });
     window.scrollTo(0, 400);
 };
 const withdrawRewardsSetup = () => {
-    const withdrawWarning = document.getElementById("withdraw-rewards-warning");
-    const withdrawWarningText = document.getElementById("withdraw-rewards-warning-text");
-
-    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
-    const valoperAddressInput = document.querySelectorAll(".each-input-field")[1];
-
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
         tauri.invoke("withdraw_rewards", {
-            walletName: walletNameInput.value,
-            fees: valoperAddressInput.value,
+            walletName: document.querySelectorAll(".each-input-field")[0].value,
+            fees: document.querySelectorAll(".each-input-field")[1].value,
         }).then((res) => {
             if (res) {
-                dialog.message("Rewards withdrawn successfully.", { title: "Success", type: "info" });
+                if (JSON.parse(res[1]).raw_log.length == 2) {
+                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
+                } else {
+                    showErrorMessage(JSON.parse(res[1]).raw_log);
+                }
             } else {
-                withdrawWarning.setAttribute("style", "display: flex;");
-                withdrawWarning.classList.add("warning-animation");
-                setTimeout(() => {
-                    withdrawWarning.classList.remove("warning-animation");
-                }, 500);
-                withdrawWarningText.textContent = "An error occurred!";
+                showErrorMessage("An error occurred!");
             }
             hideLoadingAnimation();
         });
@@ -429,31 +395,22 @@ const withdrawRewardsSetup = () => {
     window.scrollTo(0, 400);
 };
 const delegateSetup = (valoper) => {
-    const delegateWarning = document.getElementById("delegate-warning");
-    const delegateWarningText = document.getElementById("delegate-warning-text");
-
-    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
-    const validatorValoperInput = document.querySelectorAll(".each-input-field")[1];
-    const amountInput = document.querySelectorAll(".each-input-field")[3];
-
-    validatorValoperInput.value = valoper;
-
+    document.querySelectorAll(".each-input-field")[1].value = valoper;
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
         tauri.invoke("delegate", {
-            walletName: walletNameInput.value,
-            validatorValoper: validatorValoperInput.value,
-            amount: amountInput.value,
+            walletName: document.querySelectorAll(".each-input-field")[0].value,
+            validatorValoper: document.querySelectorAll(".each-input-field")[1].value,
+            amount: document.querySelectorAll(".each-input-field")[2].value,
         }).then((res) => {
             if (res) {
-                dialog.message("Delegate successful.", { title: "Success", type: "info" });
+                if (JSON.parse(res[1]).raw_log.length == 2) {
+                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
+                } else {
+                    showErrorMessage(JSON.parse(res[1]).raw_log);
+                }
             } else {
-                delegateWarning.setAttribute("style", "display: flex;");
-                delegateWarning.classList.add("warning-animation");
-                setTimeout(() => {
-                    delegateWarning.classList.remove("warning-animation");
-                }, 500);
-                delegateWarningText.textContent = "An error occurred!";
+                showErrorMessage("An error occurred!");
             }
             hideLoadingAnimation();
         });
@@ -461,33 +418,23 @@ const delegateSetup = (valoper) => {
     window.scrollTo(0, 400);
 };
 const redelegateSetup = () => {
-    const redelegateWarning = document.getElementById("redelegate-warning");
-    const redelegateWarningText = document.getElementById("redelegate-warning-text");
-
-    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
-    const destinationValidatorInput = document.querySelectorAll(".each-input-field")[1];
-    const firstValidatorInput = document.querySelectorAll(".each-input-field")[2];
-    const feesInput = document.querySelectorAll(".each-input-field")[3];
-    const amountInput = document.querySelectorAll(".each-input-field")[4];
-
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
         tauri.invoke("redelegate", {
-            walletName: walletNameInput.value,
-            destinationValidator: destinationValidatorInput.value,
-            fees: feesInput.value,
-            amount: amountInput.value,
-            firstValidator: firstValidatorInput.value,
+            walletName: document.querySelectorAll(".each-input-field")[0].value,
+            destinationValidator: document.querySelectorAll(".each-input-field")[1].value,
+            firstValidator: document.querySelectorAll(".each-input-field")[2].value,
+            fees: document.querySelectorAll(".each-input-field")[3].value,
+            amount: document.querySelectorAll(".each-input-field")[4].value,
         }).then((res) => {
             if (res) {
-                dialog.message("Redelegate successful.", { title: "Success", type: "info" });
+                if (JSON.parse(res[1]).raw_log.length == 2) {
+                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
+                } else {
+                    showErrorMessage(JSON.parse(res[1]).raw_log);
+                }
             } else {
-                redelegateWarning.setAttribute("style", "display: flex;");
-                redelegateWarning.classList.add("warning-animation");
-                setTimeout(() => {
-                    redelegateWarning.classList.remove("warning-animation");
-                }, 500);
-                redelegateWarningText.textContent = "An error occurred!";
+                showErrorMessage("An error occurred!");
             }
             hideLoadingAnimation();
         });
@@ -495,28 +442,21 @@ const redelegateSetup = () => {
     window.scrollTo(0, 400);
 };
 const voteSetup = () => {
-    const voteWarning = document.getElementById("vote-warning");
-    const voteWarningText = document.getElementById("vote-warning-text");
-
-    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
-    const proposalNumberInput = document.querySelectorAll(".each-input-field")[1];
-
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
         tauri.invoke("vote", {
-            walletName: walletNameInput.value,
-            proposalNumber: proposalNumberInput.value,
+            walletName: document.querySelectorAll(".each-input-field")[0].value,
+            proposalNumber: document.querySelectorAll(".each-input-field")[1].value,
             selectedOption: document.querySelector(".each-input-radio-option:checked").nextElementSibling.textContent.toLowerCase(),
         }).then((res) => {
             if (res) {
-                dialog.message("Vote successful.", { title: "Success", type: "info" });
+                if (JSON.parse(res[1]).raw_log.length == 2) {
+                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
+                } else {
+                    showErrorMessage(JSON.parse(res[1]).raw_log);
+                }
             } else {
-                voteWarning.setAttribute("style", "display: flex;");
-                voteWarning.classList.add("warning-animation");
-                setTimeout(() => {
-                    voteWarning.classList.remove("warning-animation");
-                }, 500);
-                voteWarningText.textContent = "An error occurred!";
+                showErrorMessage("An error occurred!");
             }
             hideLoadingAnimation();
         });
@@ -524,27 +464,20 @@ const voteSetup = () => {
     window.scrollTo(0, 400);
 };
 const unjailSetup = () => {
-    const unjailWarning = document.getElementById("unjail-warning");
-    const unjailWarningText = document.getElementById("unjail-warning-text");
-
-    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
-    const feesInput = document.querySelectorAll(".each-input-field")[1];
-
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
         tauri.invoke("unjail", {
-            walletName: walletNameInput.value,
-            fees: feesInput.value,
+            walletName: document.querySelectorAll(".each-input-field")[0].value,
+            fees: document.querySelectorAll(".each-input-field")[1].value,
         }).then((res) => {
             if (res) {
-                dialog.message("Unjail successful.", { title: "Success", type: "info" });
+                if (JSON.parse(res[1]).raw_log.length == 2) {
+                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
+                } else {
+                    showErrorMessage(JSON.parse(res[1]).raw_log);
+                }
             } else {
-                unjailWarning.setAttribute("style", "display: flex;");
-                unjailWarning.classList.add("warning-animation");
-                setTimeout(() => {
-                    unjailWarning.classList.remove("warning-animation");
-                }, 500);
-                unjailWarningText.textContent = "An error occurred!";
+                showErrorMessage("An error occurred!");
             }
             hideLoadingAnimation();
         });
@@ -552,40 +485,22 @@ const unjailSetup = () => {
     window.scrollTo(0, 400);
 };
 const sendTokenSetup = () => {
-    const sendTokenWarning = document.getElementById("send-token-warning");
-    const sendTokenWarningText = document.getElementById("send-token-warning-text");
-
-    const walletNameInput = document.querySelectorAll(".each-input-field")[0];
-    const receiverAddressInput = document.querySelectorAll(".each-input-field")[1];
-    const amountInput = document.querySelectorAll(".each-input-field")[2];
-    const feesInput = document.querySelectorAll(".each-input-field")[3];
-
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
         tauri.invoke("send_token", {
-            walletName: walletNameInput.value,
-            receiverAddress: receiverAddressInput.value,
-            amount: amountInput.value,
-            fees: feesInput.value
+            walletName: document.querySelectorAll(".each-input-field")[0].value,
+            receiverAddress: document.querySelectorAll(".each-input-field")[1].value,
+            amount: document.querySelectorAll(".each-input-field")[2].value,
+            fees: document.querySelectorAll(".each-input-field")[3].value
         }).then((res) => {
             if (res) {
                 if (JSON.parse(res[1]).raw_log.length == 2) {
                     dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
                 } else {
-                    sendTokenWarning.setAttribute("style", "display: flex;");
-                    sendTokenWarning.classList.add("warning-animation");
-                    setTimeout(() => {
-                        sendTokenWarning.classList.remove("warning-animation");
-                    }, 500);
-                    sendTokenWarningText.textContent = JSON.parse(res[1]).raw_log;
+                    showErrorMessage(JSON.parse(res[1]).raw_log);
                 }
             } else {
-                sendTokenWarning.setAttribute("style", "display: flex;");
-                sendTokenWarning.classList.add("warning-animation");
-                setTimeout(() => {
-                    sendTokenWarning.classList.remove("warning-animation");
-                }, 500);
-                sendTokenWarningText.textContent = "An error occurred!";
+                showErrorMessage("An error occurred!");
             }
             hideLoadingAnimation();
         });
@@ -593,24 +508,12 @@ const sendTokenSetup = () => {
     window.scrollTo(0, 400);
 };
 const createKeyringSetup = (page_html, page_setup) => {
-    const keyringWarning = document.getElementById("create-keyring-warning");
-    const keyringWarningText = document.getElementById("create-keyring-warning-text");
     document.querySelector(".each-button").addEventListener("click", async () => {
         if (document.querySelectorAll(".each-input-field")[0].value.length < 8) {
-            keyringWarning.setAttribute("style", "display: flex;");
-            keyringWarning.classList.add("warning-animation");
-            setTimeout(() => {
-                keyringWarning.classList.remove("warning-animation");
-            }, 500);
-            keyringWarningText.textContent = "Passphrase must be at least 8 characters.";
+            showErrorMessage("Passphrase must be at least 8 characters long!");
         }
         else if (document.querySelectorAll(".each-input-field")[0].value !== document.querySelectorAll(".each-input-field")[1].value) {
-            keyringWarning.setAttribute("style", "display: flex;");
-            keyringWarning.classList.add("warning-animation");
-            setTimeout(() => {
-                keyringWarning.classList.remove("warning-animation");
-            }, 500);
-            keyringWarningText.textContent = "Passphrases do not match.";
+            showErrorMessage("Passphrases do not match!");
         }
         else {
             showLoadingAnimation();
@@ -638,12 +541,7 @@ const keyringAuthSetup = (page_html, page_setup) => {
             await changePage(page_html, page_setup);
         }
         else {
-            document.getElementById("keyring-auth-warning").setAttribute("style", "display: flex;");
-            document.getElementById("keyring-auth-warning").classList.add("warning-animation");
-            setTimeout(() => {
-                document.getElementById("keyring-auth-warning").classList.remove("warning-animation");
-            }, 500);
-            document.getElementById("keyring-auth-warning-text").textContent = "Incorrect passphrase.";
+            showErrorMessage("Incorrect passphrase!");
         }
         hideLoadingAnimation();
     });
@@ -814,6 +712,7 @@ const setupNodePage = () => {
         tauri.invoke("node_info").then(async (obj) => {
             if (!obj) {
                 dialog.message("Node is not running.", { title: "Error", type: "error" });
+                hideLoadingAnimation();
             }
             else {
                 await changePage("page-content/node-information.html");
@@ -848,8 +747,9 @@ const setupNodePage = () => {
                 for (let i = 0; i < data.length; i++) {
                     fields[i].textContent = data[i];
                 }
+                hideLoadingAnimation();
+                window.scrollTo(0, 400);
             }
-            hideLoadingAnimation();
         });
     });
 };

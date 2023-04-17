@@ -797,6 +797,7 @@ html {
   align-items: center;
   padding: 20px 20px;
   animation: pop-up 0.2s ease;
+  z-index: 100;
 }
 
 .each-page-chart-text-pop-up::after {

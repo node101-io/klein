@@ -189,7 +189,7 @@ const setupHeader = function () {
     });
 
     window.addEventListener("click", async (e) => {
-        if (headerMenu.style.display == "block" && !e.target.closest(".header-menu") && !e.target.closest(".header-node-icon")) {
+        if (headerMenu.style.display == "block" && !e.target.closest(".header-menu") && !e.target.closest(".header-node-icons")) {
             headerMenu.setAttribute("style", "display: none;");
             submenuIpList.setAttribute("style", "display: none;");
             submenuNotifications.setAttribute("style", "display: none;");
