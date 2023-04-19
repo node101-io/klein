@@ -18,6 +18,7 @@ const setupLoginPage = () => {
     const loginButtonEl = document.querySelector(".login-page-login-button");
     const checkboxInputEl = document.getElementById("checkbox-input");
     const warningEl = document.querySelector(".warning");
+    const warningElText = document.querySelector(".warning-text");
 
     const highlightItem = (x) => {
         if (x.length > 1) {
@@ -33,7 +34,7 @@ const setupLoginPage = () => {
         ipInputEl.value = ip
         ipInputEl.setAttribute("style", "display: none;");
         selectedItemEl.setAttribute("style", "display: flex;");
-        selectedItemEl.children[0].setAttribute("src", projects.find(project => project.name == icon) ? projects.find(project => project.name == icon).image : "assets/default.png");
+        selectedItemEl.children[0].setAttribute("src", projects.find(item => item.project.name == icon) ? projects.find(item => item.project.name == icon).project.image : "assets/default.png");
         selectedItemEl.children[1].textContent = icon;
         selectedItemEl.children[2].textContent = ip;
     }
@@ -81,7 +82,7 @@ const setupLoginPage = () => {
                 });
                 img = document.createElement("img");
                 img.setAttribute("class", "each-autocomplete-item-icon");
-                img.setAttribute("src", projects.find(project => project.name == ipAddresses[i].icon) ? projects.find(project => project.name == ipAddresses[i].icon).image : "assets/default.png");
+                img.setAttribute("src", projects.find(item => item.project.name == ipAddresses[i].icon) ? projects.find(item => item.project.name == ipAddresses[i].icon).project.image : "assets/default.png");
                 div1 = document.createElement("div");
                 div1.textContent = ipAddresses[i].icon;
                 div2 = document.createElement("div");
@@ -108,7 +109,8 @@ const setupLoginPage = () => {
     });
 
     loginButtonEl.addEventListener("click", function () {
-        if (ipInputEl.value == "" || passwordInputEl.value == "") {
+        if (ipInputEl.value == "" || passwordInputEl.value == "" || !/^(\d{1,3}\.){3}\d{1,3}$/g.test(ipInputEl.value)) {
+            warningElText.textContent = "Please enter a valid IP address and password.";
             warningEl.setAttribute("style", "display: flex;");
             warningEl.classList.add("warning-animation");
             setTimeout(() => {
@@ -119,42 +121,38 @@ const setupLoginPage = () => {
         showLoadingAnimation();
         tauri.invoke("log_in", {
             ip: ipInputEl.value,
-            password: "node101bos", // passwordInputEl.value
+            password: "node101bos",
+            // password: passwordInputEl.value
         }).then((res) => {
-            if (res[0]) {
-                warningEl.setAttribute("style", "display: none;");
-                const found = projects.reduce((acc, project) => {
-                    if (project.wizard_key !== null) {
-                        acc.push(project.wizard_key);
-                    }
-                    return acc;
-                }, []).find(item => item === res[1]);
-
-                currentIp = ipAddresses.find(item => item.ip === ipInputEl.value);
-                if (currentIp) {
-                    currentIp.icon = res[1] ? projects.find(item => item.wizard_key === found).name : "Empty Server";
-                } else if (checkboxInputEl.checked) {
-                    ipAddresses.push({ ip: ipInputEl.value, icon: res[1] ? projects.find(item => item.wizard_key === found).name : "Empty Server" });
-                    currentIp = ipAddresses.find(item => item.ip === ipInputEl.value);
+            console.log("res", res);
+            warningEl.setAttribute("style", "display: none;");
+            currentIp = ipAddresses.find(item => item.ip == ipInputEl.value);
+            const project_name = res ? projects.find(item => item.project.wizard_key === res).project.name : "Empty Server";
+            if (currentIp) {
+                if (currentIp.icon !== project_name) {
+                    currentIp.icon = project_name;
+                    currentIp.validator_addr = "";
                 }
-                localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                document.querySelector(".selected-item-modify").click();
-                ipInputEl.value = "";
-                passwordInputEl.value = "";
-                if (found) {
-                    loadNodePage();
-                } else {
-                    loadHomePage();
+            } else {
+                currentIp = { ip: ipInputEl.value, icon: project_name, validator_addr: "" };
+                if (checkboxInputEl.checked) {
+                    ipAddresses.push(currentIp);
                 }
             }
-            else {
-                warningEl.setAttribute("style", "display: flex;");
-                warningEl.classList.add("warning-animation");
-                setTimeout(() => {
-                    warningEl.classList.remove("warning-animation");
-                }, 500);
-                hideLoadingAnimation();
-            }
+            localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+            document.querySelector(".selected-item-modify").click();
+            ipInputEl.value = "";
+            passwordInputEl.value = "";
+            res ? loadNodePage(true) : loadHomePage();
+        }).catch((err) => {
+            console.log(err);
+            warningElText.textContent = err;
+            warningEl.setAttribute("style", "display: flex;");
+            warningEl.classList.add("warning-animation");
+            setTimeout(() => {
+                warningEl.classList.remove("warning-animation");
+            }, 500);
+            hideLoadingAnimation();
         });
     });
 

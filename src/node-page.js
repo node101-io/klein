@@ -44,30 +44,26 @@ tevent.listen('cpu_mem_sync', (event) => {
     }
 });
 
-const loadNodePage = async () => {
-    tauri.invoke("validator_list");
+const loadNodePage = async (start) => {
     updateHeader();
-
     document.querySelector(".all-header-wrapper").setAttribute("style", "display: flex;");
     document.querySelector(".all-login-wrapper").setAttribute("style", "display: none;");
     document.querySelector(".all-node-wrapper").setAttribute("style", "display: unset;");
     document.querySelector(".all-home-wrapper").setAttribute("style", "display: none;");
-
     document.querySelector(".sidebar-info-details-name").textContent = currentIp.icon;
-    document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? projects.find(item => item.name == currentIp.icon).image : "assets/default.png");
-    if (ipAddresses.find(item => item.ip == currentIp.ip).validator_addr) {
-        document.querySelector(".sidebar-info-details-copy").setAttribute("style", "display: flex;");
-        document.querySelector(".sidebar-info-details-copy-address").textContent = ipAddresses.find(item => item.ip == currentIp.ip).validator_addr;
-    } else {
-        document.querySelector(".sidebar-info-details-copy").setAttribute("style", "display: none;");
+    document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? projects.find(item => item.project.name == currentIp.icon).project.image : "assets/default.png");
+    document.querySelector(".sidebar-info-details-copy").setAttribute("style", currentIp.validator_addr ? "display: flex;" : "display: none;");
+    document.querySelector(".sidebar-info-details-copy-address").textContent = currentIp.validator_addr;
+
+    if (start) {
+        await tauri.invoke("password_keyring_check").then((res) => {
+            sessionStorage.setItem("keyring", `{ "required": ${res[0]}, "exists": ${res[1]} }`);
+        }).catch((err) => {
+            console.log(err);
+        });
+        await changePage("page-content/node-operations.html", nodeOperationSetup);
+        tauri.invoke("cpu_mem_sync");
     }
-
-    document.querySelector(".all-node-wrapper").setAttribute("style", "display: unset;");
-    await changePage("page-content/node-operations.html", nodeOperationSetup);
-    sessionStorage.setItem("keyring", `{ "required": ${await tauri.invoke("if_password_required")}, "exists": ${await tauri.invoke("if_keyring_exist")} }`);
-    tauri.invoke("cpu_mem_sync");
-
-    hideLoadingAnimation();
 }
 const changePage = async (page, callback) => {
     document.getElementById("content-of-page").innerHTML = await (await fetch(page)).text();
@@ -79,6 +75,8 @@ const createWallet = async (walletname) => {
     document.querySelectorAll(".each-input-field")[0].value = "";
     await tauri.invoke("create_wallet", { walletname: walletname }).then(async (mnemonic) => {
         dialog.message(JSON.parse(mnemonic).mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" });
+    }).catch((err) => {
+        console.log(err);
     });
     await showWallets();
 };
@@ -86,7 +84,7 @@ const showWallets = async () => {
     const walletList = document.getElementById("page-wallet-list");
     await tauri.invoke("show_wallets").then((list) => {
         list = list.length ? JSON.parse(list) : [];
-        walletList.innerHTML = list.length ? "" : `<div class="each-row">No wallets found.</div>`;
+        walletList.innerHTML = list.length == 1 || list.length == 0 ? "<div class='each-row'>No wallets found.</div>" : "";
         count = list.length;
         while (count > 0) {
             row = document.createElement("div");
@@ -94,6 +92,9 @@ const showWallets = async () => {
 
             repeat = count == 1 ? 1 : 2;
             for (let i = 0; i < repeat; i++) {
+                if (list[count - i - 1].name == "forkeyringpurpose") {
+                    continue;
+                }
                 halfrow = document.createElement("div");
                 halfrow.setAttribute("class", "each-row-half");
 
@@ -119,14 +120,18 @@ const showWallets = async () => {
                 outputfield = document.createElement("div");
                 outputfield.setAttribute("class", "each-output-field");
                 outputfield.textContent = list[count - i - 1].address.substring(0, 4) + "..." + list[count - i - 1].address.substring(list[count - i - 1].address.length - 4);
-                outputfield.setAttribute("title", list[count - i - 1].address);
+                outputfield.setAttribute("data", list[count - i - 1].address);
 
                 outputfieldiconcopy = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 outputfieldiconcopy.setAttribute("class", "each-output-field-icon-copy");
                 outputfieldiconcopy.setAttribute("viewBox", "0 0 17 16");
                 outputfieldiconcopy.addEventListener("click", function () {
-                    clipboard.writeText(this.previousSibling.previousSibling.title);
-                    dialog.message("Copied to clipboard.", { title: "Success", type: "info" });
+                    clipboard.writeText(this.previousSibling.previousSibling.getAttribute("data"));
+                    saveforlater = this.previousSibling.previousSibling.textContent;
+                    this.previousSibling.previousSibling.textContent = "Copied!";
+                    setTimeout(() => {
+                        this.previousSibling.previousSibling.textContent = saveforlater;
+                    }, 1000);
                 });
 
                 path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -138,11 +143,11 @@ const showWallets = async () => {
                 outputfieldicondelete.addEventListener("click", async function () {
                     if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Wallet", type: "warning" })) {
                         showLoadingAnimation();
-                        if (this.previousSibling.previousSibling.getAttribute("title") == document.querySelector(".sidebar-info-details-copy-address").textContent) {
+                        if (this.previousSibling.previousSibling.previousSibling.getAttribute("data") == document.querySelector(".sidebar-info-details-copy-address").textContent) {
                             document.querySelector(".sidebar-info-details-copy-address").textContent = "";
                             document.querySelector(".sidebar-info-details-copy").setAttribute("style", "display: none;");
                         }
-                        await tauri.invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent });
+                        await tauri.invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent }).catch((err) => { console.log(err) });
                         await showWallets();
                         hideLoadingAnimation();
                     }
@@ -164,15 +169,9 @@ const showWallets = async () => {
             walletList.appendChild(row);
             count = count - 2;
         }
+    }).catch((err) => {
+        console.log(err);
     });
-};
-const endInstallation = async () => {
-    document.querySelectorAll(".each-progress-bar-status-icon")[0].setAttribute("style", "display: unset;")
-    document.querySelector(".progress-bar").setAttribute("value", "100");
-    document.querySelector(".progress-bar-text-right").textContent = "100%";
-    document.querySelector(".progress-bar-text-left").textContent = "Installation done!";
-    sessionStorage.setItem("keyring", `{ "required": ${await tauri.invoke("if_password_required")}, "exists": ${await tauri.invoke("if_keyring_exist")} }`);
-    tauri.invoke("cpu_mem_sync");
 };
 const handleKeyringExistance = async (page_to_load, setup_func) => {
     if (JSON.parse(sessionStorage.getItem("keyring")).required) {
@@ -197,8 +196,9 @@ const showErrorMessage = (message) => {
 }
 
 const installationSetup = async () => {
+    const progressBarIcons = document.querySelectorAll(".each-progress-bar-status-icon");
     for (let i = 0; i < 100; i++) {
-        if (document.querySelectorAll(".each-progress-bar-status-icon") && document.querySelectorAll(".each-progress-bar-status-icon")[0].getAttribute("style") == "display: unset;") {
+        if (progressBarIcons && (progressBarIcons[0].getAttribute("style") == "display: unset;" || progressBarIcons[1].getAttribute("style") == "display: unset;")) {
             break;
         }
         document.querySelector(".progress-bar").setAttribute("value", i);
@@ -207,46 +207,49 @@ const installationSetup = async () => {
     }
 };
 const nodeOperationSetup = async () => {
+    document.querySelectorAll(".each-page-manage-node-button")[3].disabled = true;
     const client = await http.getClient();
-    const repoUrl = projects.find((project) => project.name === currentIp.icon).social_media_accounts.github;
+    const repoUrl = projects.find(item => item.project.name === currentIp.icon).project.social_media_accounts.github;
     latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
         type: 'Json'
     })).data.name;
-    document.querySelectorAll(".each-page-manage-node-button")[3].disabled = true;
     document.querySelectorAll(".each-page-manage-node-button")[0].addEventListener("click", async () => {
-        tauri.invoke("start_stop_restart_node", { action: "start" });
+        await tauri.invoke("start_stop_restart_node", { action: "start" }).catch((err) => { console.log(err) });
     });
     document.querySelectorAll(".each-page-manage-node-button")[1].addEventListener("click", async () => {
-        tauri.invoke("start_stop_restart_node", { action: "stop" });
+        await tauri.invoke("start_stop_restart_node", { action: "stop" }).catch((err) => { console.log(err) });
     });
     document.querySelectorAll(".each-page-manage-node-button")[2].addEventListener("click", async () => {
-        tauri.invoke("start_stop_restart_node", { action: "restart" });
+        await tauri.invoke("start_stop_restart_node", { action: "restart" }).catch((err) => { console.log(err) });
     });
     document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
-        tauri.invoke("update_node", { latest_version: latest_tag });
+        await tauri.invoke("update_node", { latest_version: latest_tag }).catch((err) => { console.log(err) });
     });
     document.querySelector(".delete-node-button").addEventListener("click", async () => {
         if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
             showLoadingAnimation();
-            tauri.invoke("delete_node").then(() => {
-                tauri.invoke("cpu_mem_sync_stop");
-                currentIp.icon = "";
-                localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses.map((ip) => {
-                    return ip.ip === currentIp.ip ? { ...ip, icon: "Empty Server" } : ip;
-                })));
-                setTimeout(() => {
-                    dialog.message("Node deleted successfully.", { title: "Success", type: "info" });
+            await tauri.invoke("delete_node").then(async () => {
+                currentIp.icon = "Empty Server";
+                currentIp.validator_addr = "";
+                localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+                await tauri.invoke("cpu_mem_sync_stop").then(() => {
                     loadHomePage();
-                }, 1000);
+                }).catch((err) => {
+                    console.log(err);
+                    dialog.message(err, { title: "Error", type: "error" });
+                });
+            }).catch((err) => {
+                console.log(err);
+                dialog.message(err, { title: "Error", type: "error" });
             });
         }
     });
-    window.scrollTo(0, 400);
+    hideLoadingAnimation();
+    window.scrollTo(0, 0);
 };
 const validatorListSetup = async () => {
     showLoadingAnimation();
     await tauri.invoke("validator_list").then((res) => {
-        console.log(res);
         res = res ? JSON.parse(res) : [];
         const contentOfPage = document.getElementById("content-of-page");
         for (let i = 0; i < res.length; i++) {
@@ -291,15 +294,18 @@ const validatorListSetup = async () => {
             valdiv.appendChild(valdivider);
             contentOfPage.appendChild(valdiv);
         }
+    }).catch((err) => {
+        console.log(err);
+        dialog.message(err, { title: "Error", type: "error" });
     });
     hideLoadingAnimation();
     window.scrollTo(0, 400);
 };
 const createValidatorSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
-        if (syncStatusChartPopupText.innerText.includes("Synced")) {
+        if (syncStatusChartPopupText.innerText.includes("Node is synced!")) {
             showLoadingAnimation();
-            tauri.invoke("create_validator", {
+            await tauri.invoke("create_validator", {
                 // amount: document.querySelectorAll(".each-input-field")[0].value,
                 // walletName: document.querySelectorAll(".each-input-field")[1].value,
                 // monikerName: document.querySelectorAll(".each-input-field")[2].value,
@@ -320,21 +326,21 @@ const createValidatorSetup = () => {
                 details: "detailstest",
                 projectName: currentIp.icon
             }).then((res) => {
-                if (res[0]) {
-                    if (JSON.parse(res[1]).raw_log.length == 2) {
-                        dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
-                        ipAddresses = ipAddresses.map((item) => {
-                            return item.ip === currentIp.ip ? { ...item, validator_addr: res[1].validator_addr } : item;
-                        });
-                        localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                    } else {
-                        showErrorMessage(JSON.parse(res[1]).raw_log);
-                    }
+                res = JSON.parse(res);
+                if (res.raw_log.length == 2) {
+                    dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+                    ipAddresses = ipAddresses.map((item) => {
+                        return item.ip === currentIp.ip ? { ...item, validator_addr: res[1].validator_addr } : item;
+                    });
+                    localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
                 } else {
-                    showErrorMessage("An error occurred!");
+                    showErrorMessage(res.raw_log);
                 }
-                hideLoadingAnimation();
+            }).catch((err) => {
+                console.log(err);
+                showErrorMessage(err);
             });
+            hideLoadingAnimation();
         } else {
             showErrorMessage("Please wait for the node to sync!");
         }
@@ -343,9 +349,9 @@ const createValidatorSetup = () => {
 };
 const editValidatorSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
-        if (syncStatusChartPopupText.innerText.includes("Synced")) {
+        if (syncStatusChartPopupText.innerText.includes("Node is synced!")) {
             showLoadingAnimation();
-            tauri.invoke("edit_validator", {
+            await tauri.invoke("edit_validator", {
                 amount: document.querySelectorAll(".each-input-field")[0].value,
                 walletName: document.querySelectorAll(".each-input-field")[1].value,
                 website: document.querySelectorAll(".each-input-field")[2].value,
@@ -354,18 +360,17 @@ const editValidatorSetup = () => {
                 keybaseId: document.querySelectorAll(".each-input-field")[5].value,
                 details: document.querySelectorAll(".each-input-field")[6].value,
             }).then((res) => {
-                if (res) {
-                    if (JSON.parse(res[1]).raw_log.length == 2) {
-                        dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
-                    } else {
-                        showErrorMessage(JSON.parse(res[1]).raw_log);
-                    }
+                res = JSON.parse(res);
+                if (res.raw_log.length == 2) {
+                    dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+                } else {
+                    showErrorMessage(res.raw_log);
                 }
-                else {
-                    showErrorMessage("An error occurred!");
-                }
-                hideLoadingAnimation();
+            }).catch((err) => {
+                console.log(err);
+                showErrorMessage(err);
             });
+            hideLoadingAnimation();
         } else {
             showErrorMessage("Please wait for the node to sync!");
         }
@@ -375,21 +380,21 @@ const editValidatorSetup = () => {
 const withdrawRewardsSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
-        tauri.invoke("withdraw_rewards", {
+        await tauri.invoke("withdraw_rewards", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             fees: document.querySelectorAll(".each-input-field")[1].value,
         }).then((res) => {
-            if (res) {
-                if (JSON.parse(res[1]).raw_log.length == 2) {
-                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
-                } else {
-                    showErrorMessage(JSON.parse(res[1]).raw_log);
-                }
+            res = JSON.parse(res);
+            if (res.raw_log.length == 2) {
+                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
             } else {
-                showErrorMessage("An error occurred!");
+                showErrorMessage(res.raw_log);
             }
-            hideLoadingAnimation();
+        }).catch((err) => {
+            console.log(err);
+            showErrorMessage(err);
         });
+        hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
 };
@@ -397,112 +402,93 @@ const delegateSetup = (valoper) => {
     document.querySelectorAll(".each-input-field")[1].value = valoper;
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
-        tauri.invoke("delegate", {
+        await tauri.invoke("delegate_token", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             validatorValoper: document.querySelectorAll(".each-input-field")[1].value,
             amount: document.querySelectorAll(".each-input-field")[2].value,
         }).then((res) => {
-            if (res) {
-                if (JSON.parse(res[1]).raw_log.length == 2) {
-                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
-                } else {
-                    showErrorMessage(JSON.parse(res[1]).raw_log);
-                }
+            res = JSON.parse(res);
+            if (res.raw_log.length == 2) {
+                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
             } else {
-                showErrorMessage("An error occurred!");
+                showErrorMessage(res.raw_log);
             }
-            hideLoadingAnimation();
+        }).catch((err) => {
+            console.log(err);
+            showErrorMessage(err);
         });
+        hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
 };
 const redelegateSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
-        tauri.invoke("redelegate", {
+        await tauri.invoke("redelegate_token", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             destinationValidator: document.querySelectorAll(".each-input-field")[1].value,
             firstValidator: document.querySelectorAll(".each-input-field")[2].value,
             fees: document.querySelectorAll(".each-input-field")[3].value,
             amount: document.querySelectorAll(".each-input-field")[4].value,
         }).then((res) => {
-            if (res) {
-                if (JSON.parse(res[1]).raw_log.length == 2) {
-                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
-                } else {
-                    showErrorMessage(JSON.parse(res[1]).raw_log);
-                }
+            res = JSON.parse(res);
+            if (res.raw_log.length == 2) {
+                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
             } else {
-                showErrorMessage("An error occurred!");
+                showErrorMessage(res.raw_log);
             }
-            hideLoadingAnimation();
+        }).catch((err) => {
+            console.log(err);
+            showErrorMessage(err);
         });
+        hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
 };
 const voteSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
-        tauri.invoke("vote", {
+        await tauri.invoke("vote", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             proposalNumber: document.querySelectorAll(".each-input-field")[1].value,
             selectedOption: document.querySelector(".each-input-radio-option:checked").nextElementSibling.textContent.toLowerCase(),
         }).then((res) => {
-            if (res) {
-                if (JSON.parse(res[1]).raw_log.length == 2) {
-                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
-                } else {
-                    showErrorMessage(JSON.parse(res[1]).raw_log);
-                }
+            res = JSON.parse(res);
+            if (res.raw_log.length == 2) {
+                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
             } else {
-                showErrorMessage("An error occurred!");
+                showErrorMessage(res.raw_log);
             }
-            hideLoadingAnimation();
+        }).catch((err) => {
+            console.log(err);
+            showErrorMessage(err);
         });
+        hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
 };
 const unjailSetup = () => {
-    document.querySelector(".each-button").addEventListener("click", async () => {
-        showLoadingAnimation();
-        tauri.invoke("unjail", {
-            walletName: document.querySelectorAll(".each-input-field")[0].value,
-            fees: document.querySelectorAll(".each-input-field")[1].value,
-        }).then((res) => {
-            if (res) {
-                if (JSON.parse(res[1]).raw_log.length == 2) {
-                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
-                } else {
-                    showErrorMessage(JSON.parse(res[1]).raw_log);
-                }
-            } else {
-                showErrorMessage("An error occurred!");
-            }
-            hideLoadingAnimation();
-        });
-    });
-    window.scrollTo(0, 400);
 };
 const sendTokenSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
-        tauri.invoke("send_token", {
+        await tauri.invoke("send_token", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             receiverAddress: document.querySelectorAll(".each-input-field")[1].value,
             amount: document.querySelectorAll(".each-input-field")[2].value,
             fees: document.querySelectorAll(".each-input-field")[3].value
         }).then((res) => {
-            if (res) {
-                if (JSON.parse(res[1]).raw_log.length == 2) {
-                    dialog.message("Tx Hash: \n" + JSON.parse(res[1]).txhash, { title: "Success", type: "info" });
-                } else {
-                    showErrorMessage(JSON.parse(res[1]).raw_log);
-                }
+            res = JSON.parse(res);
+            if (res.raw_log.length == 2) {
+                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
             } else {
-                showErrorMessage("An error occurred!");
+                showErrorMessage(res.raw_log);
             }
-            hideLoadingAnimation();
+        }).catch((err) => {
+            console.log(err);
+            showErrorMessage(err);
         });
+        hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
 };
@@ -516,10 +502,18 @@ const createKeyringSetup = (page_html, page_setup) => {
         }
         else {
             showLoadingAnimation();
-            await tauri.invoke("create_keyring", { passphrase: document.querySelector(".each-input-field").value });
-            sessionStorage.setItem("keyring", '{"required": true, "exists": true}');
-            await changePage("page-content/keyring-auth.html", () => keyringAuthSetup(page_html, page_setup));
+            await tauri.invoke("create_keyring", { passphrase: document.querySelector(".each-input-field").value }).then(async () => {
+                sessionStorage.setItem("keyring", '{"required": true, "exists": true}');
+                await changePage("page-content/keyring-auth.html", () => keyringAuthSetup(page_html, page_setup));
+            }).catch((err) => {
+                console.log(err);
+            });
             hideLoadingAnimation();
+        }
+    });
+    document.querySelectorAll(".each-input-field")[1].addEventListener("keydown", async (e) => {
+        if (e.key == "Enter") {
+            document.querySelector(".each-button").click();
         }
     });
     window.scrollTo(0, 400);
@@ -528,21 +522,29 @@ const keyringAuthSetup = (page_html, page_setup) => {
     document.querySelector(".each-input-helper-text").addEventListener("click", async () => {
         if (await dialog.ask("This action will delete all the wallets. Are you sure you want to continue?", { title: "Reset Keyring", type: "warning" })) {
             showLoadingAnimation();
-            await tauri.invoke("delete_keyring");
-            sessionStorage.setItem("keyring", '{"required": true, "exists": false}');
-            await changePage("page-content/create-keyring.html", () => createKeyringSetup(page_html, page_setup));
+            await tauri.invoke("delete_keyring").then(async () => {
+                sessionStorage.setItem("keyring", '{"required": true, "exists": false}');
+                await changePage("page-content/create-keyring.html", () => createKeyringSetup(page_html, page_setup));
+            }).catch((err) => {
+                console.log(err);
+            });
             hideLoadingAnimation();
         }
     });
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
-        if (await tauri.invoke("check_keyring_passphrase", { passw: document.querySelectorAll(".each-input-field")[0].value })) {
+        await tauri.invoke("check_keyring_passphrase", { passw: document.querySelectorAll(".each-input-field")[0].value }).then(async () => {
             await changePage(page_html, page_setup);
-        }
-        else {
-            showErrorMessage("Incorrect passphrase!");
-        }
+        }).catch((err) => {
+            console.log(err);
+            showErrorMessage(err);
+        });
         hideLoadingAnimation();
+    });
+    document.querySelector(".each-input-field").addEventListener("keydown", async (e) => {
+        if (e.key == "Enter") {
+            document.querySelector(".each-button").click();
+        }
     });
     window.scrollTo(0, 400);
 };
@@ -562,9 +564,9 @@ const walletsSetup = async () => {
     document.querySelectorAll(".each-button")[0].addEventListener("click", async function () {
         showLoadingAnimation();
         const walletname = document.querySelectorAll(".each-input-field")[0].value;
-        if (await tauri.invoke("if_wallet_exists", { walletname: walletname })) {
+        if (await tauri.invoke("if_wallet_exists", { walletname: walletname }).catch((err) => { console.log(err); })) {
             if (await dialog.ask("This action will override the existing wallet. Are you sure?", { title: "Override Wallet", type: "warning" })) {
-                await tauri.invoke("delete_wallet", { walletname: walletname });
+                await tauri.invoke("delete_wallet", { walletname: walletname }).catch((err) => { console.log(err); });
                 await createWallet(walletname);
             }
         }
@@ -577,13 +579,13 @@ const walletsSetup = async () => {
         showLoadingAnimation();
         const walletname = document.querySelectorAll(".each-input-field")[1];
         const mnemonic = Array.from(document.querySelectorAll(".each-mnemonic-input-field")).map(input => input.value).join(" ");
-        if (await tauri.invoke("if_wallet_exists", { walletname: walletname.value })) {
+        if (await tauri.invoke("if_wallet_exists", { walletname: walletname.value }).catch((err) => { console.log(err); })) {
             if (await dialog.ask("This action will override the existing wallet. Are you sure?", { title: "Override Wallet", type: "warning" })) {
-                await tauri.invoke("delete_wallet", { walletname: walletname.value });
-                await tauri.invoke("recover_wallet", { walletname: walletname.value, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required });
+                await tauri.invoke("delete_wallet", { walletname: walletname.value }).catch((err) => { console.log(err); });
+                await tauri.invoke("recover_wallet", { walletname: walletname.value, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required }).catch((err) => { console.log(err); });
             }
         } else {
-            await tauri.invoke("recover_wallet", { walletname: walletname.value, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required });
+            await tauri.invoke("recover_wallet", { walletname: walletname.value, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required }).catch((err) => { console.log(err); });
         }
         await showWallets();
         walletname.value = "";
@@ -652,18 +654,23 @@ const setupNodePage = () => {
     memStatusChartPercent = document.querySelectorAll(".each-page-chart-percentage")[2];
     validatorAddress.addEventListener("click", function () {
         clipboard.writeText(validatorAddressText.innerText);
-        dialog.message("Copied to clipboard.", { title: "Success", type: "info" });
+        saveforlater = validatorAddressText.innerText;
+        validatorAddressText.innerText = "Copied!";
+        setTimeout(() => {
+            validatorAddressText.innerText = saveforlater;
+        }, 1000);
     });
 
     nodeOperationsButton.addEventListener("click", async function () {
         await changePage("page-content/node-operations.html", nodeOperationSetup);
     });
-    homePageButton.addEventListener("click", function () {
+    homePageButton.addEventListener("click", async function () {
         showLoadingAnimation();
-        tauri.invoke("cpu_mem_sync_stop").then(() => {
-            setTimeout(() => {
-                loadHomePage();
-            }, 1000);
+        await tauri.invoke("cpu_mem_sync_stop").then(() => {
+            loadHomePage();
+        }).catch((err) => {
+            console.log(err);
+            dialog.message(err, { title: "Error", type: "error" });
         });
     });
     validatorOperationsButton.addEventListener("click", function () {
@@ -706,49 +713,43 @@ const setupNodePage = () => {
     walletsButton.addEventListener("click", async function () {
         await handleKeyringExistance("page-content/wallets.html", walletsSetup);
     });
-    nodeInformationButton.addEventListener("click", function () {
+    nodeInformationButton.addEventListener("click", async function () {
         showLoadingAnimation();
-        tauri.invoke("node_info").then(async (obj) => {
-            if (!obj) {
-                dialog.message("Node is not running.", { title: "Error", type: "error" });
-                hideLoadingAnimation();
-            }
-            else {
-                await changePage("page-content/node-information.html");
-                let fields = document.querySelectorAll(".each-output-field");
-                obj = JSON.parse(obj);
-                const data = [
-                    obj.NodeInfo.protocol_version.p2p,
-                    obj.NodeInfo.protocol_version.block,
-                    obj.NodeInfo.protocol_version.app,
-                    obj.NodeInfo.id,
-                    obj.NodeInfo.listen_addr,
-                    obj.NodeInfo.network,
-                    obj.NodeInfo.version,
-                    obj.NodeInfo.channels,
-                    obj.NodeInfo.moniker,
-                    obj.NodeInfo.other.tx_index,
-                    obj.NodeInfo.other.rpc_address,
-                    obj.SyncInfo.latest_block_hash,
-                    obj.SyncInfo.latest_app_hash,
-                    obj.SyncInfo.latest_block_height,
-                    obj.SyncInfo.latest_block_time,
-                    obj.SyncInfo.earliest_block_hash,
-                    obj.SyncInfo.earliest_app_hash,
-                    obj.SyncInfo.earliest_block_height,
-                    obj.SyncInfo.earliest_block_time,
-                    obj.SyncInfo.catching_up,
-                    obj.ValidatorInfo.Address,
-                    obj.ValidatorInfo.PubKey.type,
-                    obj.ValidatorInfo.PubKey.value,
-                    obj.ValidatorInfo.VotingPower,
-                ];
-                for (let i = 0; i < data.length; i++) {
-                    fields[i].textContent = data[i];
-                }
-                hideLoadingAnimation();
-                window.scrollTo(0, 400);
-            }
+        await tauri.invoke("node_info").then(async (obj) => {
+            console.log(obj);
+            await changePage("page-content/node-information.html");
+            const fields = document.querySelectorAll(".each-output-field");
+            obj = JSON.parse(obj);
+            fields[0].textContent = obj.NodeInfo.protocol_version.p2p;
+            fields[1].textContent = obj.NodeInfo.protocol_version.block;
+            fields[2].textContent = obj.NodeInfo.protocol_version.app;
+            fields[3].textContent = obj.NodeInfo.id;
+            fields[4].textContent = obj.NodeInfo.listen_addr;
+            fields[5].textContent = obj.NodeInfo.network;
+            fields[6].textContent = obj.NodeInfo.version;
+            fields[7].textContent = obj.NodeInfo.channels;
+            fields[9].textContent = obj.NodeInfo.moniker;
+            fields[10].textContent = obj.NodeInfo.other.tx_index;
+            fields[11].textContent = obj.NodeInfo.other.rpc_address;
+            fields[12].textContent = obj.SyncInfo.latest_block_hash;
+            fields[13].textContent = obj.SyncInfo.latest_app_hash;
+            fields[14].textContent = obj.SyncInfo.latest_block_height;
+            fields[15].textContent = obj.SyncInfo.latest_block_time;
+            fields[16].textContent = obj.SyncInfo.earliest_block_hash;
+            fields[17].textContent = obj.SyncInfo.earliest_app_hash;
+            fields[18].textContent = obj.SyncInfo.earliest_block_height;
+            fields[19].textContent = obj.SyncInfo.earliest_block_time;
+            fields[20].textContent = obj.SyncInfo.catching_up;
+            fields[21].textContent = obj.ValidatorInfo.Address;
+            fields[22].textContent = obj.ValidatorInfo.PubKey.type;
+            fields[23].textContent = obj.ValidatorInfo.PubKey.value;
+            fields[24].textContent = obj.ValidatorInfo.VotingPower;
+            hideLoadingAnimation();
+            window.scrollTo(0, 400);
+        }).catch((err) => {
+            console.log(err);
+            dialog.message(err, { title: "Error", type: "error" });
+            hideLoadingAnimation();
         });
     });
 };
