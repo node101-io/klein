@@ -131,7 +131,7 @@ const setupHeader = function () {
                 tauri.invoke("log_in", {
                     ip: ip,
                     password: passw,
-                }).then((res) => {
+                }).then(async (res) => {
                     console.log("res", res);
                     currentIp = ipAddresses.find(item => item.ip == ip);
                     const project_name = res ? projects.find(item => item.project.wizard_key === res).project.name : "Empty Server";
@@ -142,7 +142,7 @@ const setupHeader = function () {
                     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
                     switchIpPromptInput.value = "";
                     switchIpPromptClose.click();
-                    res ? loadNodePage(true) : loadHomePage();
+                    res ? await loadNodePage(true) : await loadHomePage();
                     hideLoadingAnimation();
                 }).catch((err) => {
                     console.log(err);

@@ -80,7 +80,7 @@ const showTestnetProjects = async () => {
         installButton.classList.add("each-project-button", "install-button");
         textDiv = document.createElement("div");
         textDiv.textContent = "Install Node";
-        installButtonSVG = document.createElementNS('http://www.w3.org/2000/svg', "svg");
+        installButtonSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         installButtonSVG.classList.add("each-project-button-svg");
         installButtonSVG.style.width = "14px";
         installButtonSVG.style.height = "14px";
@@ -104,7 +104,7 @@ const showTestnetProjects = async () => {
                     }).catch((e) => {
                         console.log(e);
                     });
-                    tauri.invoke("cpu_mem_sync");
+                    tauri.invoke("cpu_mem_sync", { exception: "celestia-bridge" });
                     document.querySelector(".progress-bar-text-right").textContent = "100%";
                     document.querySelector(".progress-bar").setAttribute("value", "100");
                     document.querySelectorAll(".each-progress-bar-status-icon")[0].style.display = "unset"

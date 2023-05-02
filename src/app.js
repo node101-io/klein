@@ -5,7 +5,7 @@ setTimeout(async () => {
 }, 2000);
 
 // for development purposes
-localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Band","validator_addr":""},{"ip":"213.136.73.17","icon":"Nibiru","validator_addr":"nibi1y2kza3dstaqhk87p9yel5xyksa8atddmz6n63m"}]');
+// localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Celestia Light","validator_addr":"celestia1t7za0qsazkqw4fy9rsk3p5fnt0hkk3ulwd692a"},{"ip":"213.136.73.17","icon":"Nibiru","validator_addr":"nibi1y2kza3dstaqhk87p9yel5xyksa8atddmz6n63m"}]');
 localStorage.setItem("notifications", '[{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":true,"text":"Example notif!"},{"unread":true,"text":"Example notif!"}]');
 tauri.invoke("cpu_mem_sync_stop");
 // end of development purposes
@@ -33,6 +33,14 @@ const fetchProjects = async () => {
   }
   console.log(projects);
 }
+
+// window.addEventListener('contextmenu', (e) => {
+//   e.preventDefault();
+//   const pasteButton = document.getElementById("paste-button");
+//   pasteButton.style.left = e.pageX + "px";
+//   pasteButton.style.top = e.pageY + "px";
+//   pasteButton.style.display = "flex";
+// });
 
 window.addEventListener("DOMContentLoaded", async () => {
   setupLoginPage();

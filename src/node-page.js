@@ -1,10 +1,16 @@
-tevent.listen('cpu_mem_sync', (event) => {
-    console.log(event.payload);
+tevent.listen("cpu_mem_sync", (event) => {
+    try {
+        response = JSON.parse(event.payload);
+        console.log(response);
+    } catch (e) {
+        console.log("error parsing: ", event.payload);
+        return;
+    }
 
-    syncStatusChart.options.barColor = event.payload.catchup == "true" ? "#0F62FE" : event.payload.catchup == "false" ? "#43BE66" : "#FF2632";
-    syncStatusChartPercent.textContent = event.payload.catchup == "true" || event.payload.catchup == "false" ? event.payload.height : "!";
-    syncStatusChartPopupText.innerText = event.payload.catchup == "true" ? "Syncing...\n\nCurrent Block: " + event.payload.height : event.payload.catchup == "false" ? "Node is synced!" : "Can't get sync status!";
-    if (event.payload.catchup == "true") {
+    syncStatusChart.options.barColor = response.catchup == "true" ? "#0F62FE" : response.catchup == "false" ? "#43BE66" : "#FF2632";
+    syncStatusChartPercent.textContent = response.catchup == "true" || response.catchup == "false" ? response.height : "!";
+    syncStatusChartPopupText.innerText = response.catchup == "true" ? "Syncing...\n\nCurrent Block: " + response.height : response.catchup == "false" ? "Node is synced!" : "Can't get sync status!";
+    if (response.catchup == "true") {
         setTimeout(() => {
             syncStatusChart.update(100);
             setTimeout(() => {
@@ -15,54 +21,62 @@ tevent.listen('cpu_mem_sync', (event) => {
         syncStatusChart.update(100);
     }
 
-    if (event.payload.cpu < 100) {
-        cpuStatusChart.update(Math.floor(event.payload.cpu));
-        cpuStatusChartPercent.textContent = Math.floor(event.payload.cpu) + "%";
+    if (response.cpu < 100) {
+        cpuStatusChart.update(Math.floor(response.cpu));
+        cpuStatusChartPercent.textContent = Math.floor(response.cpu) + "%";
     }
-    memStatusChart.update(Math.floor(event.payload.mem));
-    memStatusChartPercent.textContent = Math.floor(event.payload.mem) + "%";
+    memStatusChart.update(Math.floor(response.mem));
+    memStatusChartPercent.textContent = Math.floor(response.mem) + "%";
 
     const eachSidebarTag = document.querySelectorAll(".each-sidebar-tag");
-    if (event.payload.status == "active") {
+    if (response.status == "active") {
         eachSidebarTag[0].classList.remove("sidebar-inactive-tag");
         eachSidebarTag[0].classList.add("sidebar-active-tag");
         eachSidebarTag[0].textContent = "Active";
-    } else if (event.payload.status == "") {
+    } else if (response.status == "") {
         eachSidebarTag[0].textContent = "Loading...";
     } else {
         eachSidebarTag[0].classList.add("sidebar-inactive-tag");
         eachSidebarTag[0].classList.remove("sidebar-active-tag");
-        eachSidebarTag[0].textContent = event.payload.status.charAt(0).toUpperCase() + event.payload.status.slice(1);
+        eachSidebarTag[0].textContent = response.status.charAt(0).toUpperCase() + response.status.slice(1);
     }
-    if (event.payload.version) {
-        version_new = event.payload.version.charAt(0).toLowerCase() == "v" ? event.payload.version : "v" + event.payload.version
+    if (response.version) {
+        version_new = response.version.charAt(0).toLowerCase() == "v" ? response.version : "v" + response.version
         if (document.querySelector(".each-page-manage-node-button")) {
             document.querySelectorAll(".each-page-manage-node-button")[3].disabled = (version_new == latest_tag);
         }
         eachSidebarTag[1].textContent = version_new;
         eachSidebarTag[1].classList.add("version-tag");
     }
+    document.body.classList.remove("waiting");
 });
 
 const loadNodePage = async (start) => {
     updateHeader();
+    updateSidebar();
     document.querySelector(".all-header-wrapper").setAttribute("style", "display: flex;");
     document.querySelector(".all-login-wrapper").setAttribute("style", "display: none;");
     document.querySelector(".all-node-wrapper").setAttribute("style", "display: unset;");
     document.querySelector(".all-home-wrapper").setAttribute("style", "display: none;");
-    document.querySelector(".sidebar-info-details-name").textContent = currentIp.icon;
-    document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? projects.find(item => item.project.name == currentIp.icon).project.image : "assets/default.png");
-    document.querySelector(".sidebar-info-details-copy").setAttribute("style", currentIp.validator_addr ? "display: flex;" : "display: none;");
-    document.querySelector(".sidebar-info-details-copy-address").textContent = currentIp.validator_addr;
+
+    exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
+    buttons_to_hide = ["node-information-button", "validator-list-button", "create-validator-button", "edit-validator-button", "withdraw-rewards-button", "delegate-token-button", "redelegate-token-button", "vote-button", "unjail-button", "send-token-button"];
+    for (button of buttons_to_hide) {
+        document.getElementById(button).style.display = currentIp.icon == "Celestia Light" ? "none" : "flex";
+    }
 
     if (start) {
-        await tauri.invoke("password_keyring_check").then((res) => {
-            sessionStorage.setItem("keyring", `{ "required": ${res[0]}, "exists": ${res[1]} }`);
-        }).catch((err) => {
-            console.log(err);
-        });
-        await changePage("page-content/node-operations.html", nodeOperationSetup);
-        tauri.invoke("cpu_mem_sync");
+        if (exception == "celestia-lightd") {
+            sessionStorage.setItem("keyring", `{ "required": false, "exists": false }`);
+        } else {
+            await tauri.invoke("password_keyring_check").then((res) => {
+                sessionStorage.setItem("keyring", `{ "required": ${res[0]}, "exists": ${res[1]} }`);
+            }).catch((err) => {
+                console.log(err);
+            });
+        }
+        await changePage("page-content/node-operations.html", nodeOperationsSetup);
+        tauri.invoke("cpu_mem_sync", { exception: exception });
     }
 }
 const changePage = async (page, callback) => {
@@ -71,20 +85,61 @@ const changePage = async (page, callback) => {
         await callback();
     }
 };
+const updateSidebar = async () => {
+    document.querySelector(".sidebar-info-details-name").textContent = currentIp.icon;
+    document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? projects.find(item => item.project.name == currentIp.icon).project.image : "assets/default.png");
+    document.querySelector(".sidebar-info-details-copy").setAttribute("style", currentIp.validator_addr ? "display: flex;" : "display: none;");
+    document.querySelector(".sidebar-info-details-copy-address").textContent = currentIp.validator_addr;
+};
+const ifWalletExists = async (walletname) => {
+    const wallets = document.querySelectorAll(".each-output-group");
+    for (let i = 0; i < wallets.length; i++) {
+        if (wallets[i].previousSibling.textContent == walletname) {
+            return true;
+        }
+    }
+    return false;
+};
 const createWallet = async (walletname) => {
-    document.querySelectorAll(".each-input-field")[0].value = "";
-    await tauri.invoke("create_wallet", { walletname: walletname }).then(async (mnemonic) => {
-        dialog.message(JSON.parse(mnemonic).mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" });
-    }).catch((err) => {
-        console.log(err);
-    });
-    await showWallets();
+    const wallet_exists = await ifWalletExists(walletname);
+    const proceed = !wallet_exists || await dialog.ask("This action will override the existing wallet. Are you sure?", { title: "Override Wallet", type: "warning" });
+    if (proceed) {
+        showLoadingAnimation();
+        if (wallet_exists) {
+            await tauri.invoke("delete_wallet", { walletname, exception }).catch((err) => { console.log(err) });
+        }
+        await tauri.invoke("create_wallet", { walletname, exception })
+            .then((mnemonic) => dialog.message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" }))
+            .catch((err) => { console.log(err) });
+        await showWallets();
+        document.querySelector(".each-input-field").value = "";
+        hideLoadingAnimation();
+    }
+};
+const recoverWallet = async (walletname) => {
+    const wallet_exists = await ifWalletExists(walletname);
+    const proceed = !wallet_exists || await dialog.ask("This action will override the existing wallet. Are you sure?", { title: "Override Wallet", type: "warning" });
+    if (proceed) {
+        showLoadingAnimation();
+        const mnemonic = Array.from(document.querySelectorAll(".each-mnemonic-input-field")).map(input => input.value).join(" ");
+        if (wallet_exists) {
+            await tauri.invoke("delete_wallet", { walletname: walletname, exception: exception }).catch((err) => { console.log(err) });
+        }
+        await tauri.invoke("recover_wallet", { walletname: walletname, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required, exception: exception })
+            .then((mnemonic) => { console.log(mnemonic); dialog.message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" }) })
+            .catch((err) => { console.log(err) });
+        await showWallets();
+        document.querySelectorAll(".each-input-field")[1].value = "";
+        document.querySelectorAll(".each-mnemonic-input-field").forEach(input => input.value = "");
+        hideLoadingAnimation();
+    }
 };
 const showWallets = async () => {
     const walletList = document.getElementById("page-wallet-list");
-    await tauri.invoke("show_wallets").then((list) => {
+    await tauri.invoke("show_wallets", { exception: exception }).then((list) => {
+        appendlater = null;
         list = list.length ? JSON.parse(list) : [];
-        walletList.innerHTML = list.length == 1 || list.length == 0 ? "<div class='each-row'>No wallets found.</div>" : "";
+        walletList.innerHTML = list.length == 0 || (list.length == 1 && list[0].name == "forkeyringpurpose") ? "<div class='each-row'>No wallets found.</div>" : "";
         count = list.length;
         while (count > 0) {
             row = document.createElement("div");
@@ -93,7 +148,7 @@ const showWallets = async () => {
             repeat = count == 1 ? 1 : 2;
             for (let i = 0; i < repeat; i++) {
                 if (list[count - i - 1].name == "forkeyringpurpose") {
-                    continue;
+                    count--;
                 }
                 halfrow = document.createElement("div");
                 halfrow.setAttribute("class", "each-row-half");
@@ -102,6 +157,7 @@ const showWallets = async () => {
                 label.setAttribute("class", "each-input-label");
 
                 balancetext = "";
+                console.log(list[count - i - 1]);
                 if (list[count - i - 1].balance.balances.length) {
                     for (let m = 0; m < list[count - i - 1].balance.balances.length; m++) {
                         balancetext += parseInt((list[count - i - 1].balance.balances[m].amount / 1000000) * 100) / 100 + " " + list[count - i - 1].balance.balances[m].denom.slice(1) + "\n";
@@ -110,6 +166,38 @@ const showWallets = async () => {
                     balancetext = "No tokens found.";
                 }
                 label.textContent = list[count - i - 1].name;
+
+                // if (exception == "celestia-lightd" || exception == "celestia-bridge") {
+                labelicon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                labelicon.setAttribute("class", "each-input-label-icon");
+                labelicon.setAttribute("viewBox", "0 540 512 512");
+                labelicon.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+                labeliconpath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                labeliconpath.setAttribute("d", "m 254.68748,594.11338 c -6.05679,0.26486 -12.01753,2.41912 -16.84422,6.08763 -4.82669,3.6685 -8.49798,8.83503 -10.37453,14.59987 l -33.78125,104 c -0.58664,1.80274 -2.09119,3.85463 -3.625,4.96875 -1.53374,1.11407 -3.97894,1.93705 -5.875,1.9375 l -109.343748,0 c -6.276311,0.01 -12.53359,2.05072 -17.608356,5.74381 -5.074765,3.69309 -8.941267,9.01942 -10.880568,14.98862 -1.939301,5.96919 -1.941559,12.55096 -0.0064,18.52149 1.935204,5.97052 5.79805,11.29951 10.87028,14.99608 l 88.437502,64.25 c 1.53524,1.11502 3.03898,3.19532 3.625,5 0.58601,1.80469 0.5873,4.38323 0,6.1875 -1e-5,0.0104 -1e-5,0.0208 0,0.0312 l -33.78121,103.9688 c -1.93395,5.97351 -1.92866,12.55805 0.0149,18.52845 1.94353,5.9704 5.81543,11.2963 10.89523,14.9866 5.0798,3.6904 11.34168,5.7264 17.62045,5.7293 6.27877,0 12.54252,-2.0274 17.6257,-5.7131 l 88.46875,-64.28125 c 1.53402,-1.11353 3.97943,-1.90625 5.875,-1.90625 1.89557,0 4.34098,0.79272 5.875,1.90625 l 88.46875,64.28125 c 5.08318,3.6857 11.34693,5.716 17.6257,5.7131 6.27877,0 12.54065,-2.0389 17.62045,-5.7293 5.0798,-3.6903 8.9517,-9.0162 10.89523,-14.9866 1.94354,-5.9704 1.94882,-12.55494 0.0149,-18.52845 L 362.71873,855.42588 c 1e-5,-0.0104 1e-5,-0.0208 0,-0.0312 -0.58723,-1.80392 -0.586,-4.38287 0,-6.1875 0.58602,-1.80468 2.08976,-3.88498 3.625,-5 l 88.4375,-64.25 c 5.07223,-3.69657 8.93508,-9.02556 10.87028,-14.99608 1.9352,-5.97053 1.93294,-12.5523 -0.006,-18.52149 -1.9393,-5.9692 -5.8058,-11.29553 -10.88056,-14.98862 -5.07477,-3.69309 -11.33205,-5.7342 -17.60836,-5.74381 l -109.3125,0 c -1.89577,-4.4e-4 -4.34116,-0.82336 -5.875,-1.9375 -1.5338,-1.11412 -3.03836,-3.16601 -3.625,-4.96875 l -33.8125,-104 c -2.01198,-6.18102 -6.09457,-11.66812 -11.4368,-15.37133 -5.34223,-3.70321 -11.91295,-5.60093 -18.40695,-5.31622 z");
+
+                if (currentIp.validator_addr == list[count - i - 1].address) {
+                    labelicon.style.fill = "var(--main-color)";
+                    labelicon.addEventListener("click", () => {
+                        dialog.message("This is your main wallet.", { title: "Main Wallet", type: "info" });
+                    });
+                    appendlater = halfrow;
+                    labelicon.appendChild(labeliconpath);
+                    label.appendChild(labelicon);
+                } else if (exception == "celestia-lightd" || exception == "celestia-bridge") {
+                    labelicon.addEventListener("click", async function () {
+                        if (await dialog.ask("Do you want to set this wallet as your main wallet?", { title: "Set Main Wallet", type: "info" })) {
+                            showLoadingAnimation();
+                            await tauri.invoke("set_main_wallet", { walletname: this.parentNode.textContent, exception: exception }).catch((err) => { console.log(err) });
+                            currentIp.validator_addr = this.closest(".each-input-label").nextElementSibling.children[0].getAttribute("data");
+                            localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+                            updateSidebar();
+                            await showWallets();
+                            hideLoadingAnimation();
+                        }
+                    });
+                    labelicon.appendChild(labeliconpath);
+                    label.appendChild(labelicon);
+                }
 
                 outputgroup = document.createElement("div");
                 outputgroup.setAttribute("class", "each-output-group");
@@ -147,7 +235,7 @@ const showWallets = async () => {
                             document.querySelector(".sidebar-info-details-copy-address").textContent = "";
                             document.querySelector(".sidebar-info-details-copy").setAttribute("style", "display: none;");
                         }
-                        await tauri.invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent }).catch((err) => { console.log(err) });
+                        await tauri.invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent, exception: exception }).catch((err) => { console.log(err) });
                         await showWallets();
                         hideLoadingAnimation();
                     }
@@ -168,6 +256,11 @@ const showWallets = async () => {
             }
             walletList.appendChild(row);
             count = count - 2;
+        }
+
+        if (appendlater) {
+            appendlater.parentNode.insertBefore(document.querySelector(".each-row-half"), appendlater);
+            document.querySelector(".each-row-half").parentNode.prepend(appendlater);
         }
     }).catch((err) => {
         console.log(err);
@@ -196,6 +289,18 @@ const showErrorMessage = (message) => {
 }
 
 const installationSetup = async () => {
+    const client = await http.getClient();
+    const videos = await client.get(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UCEpdXdwnxNSrPwaufwPRXfA&playlistId=PL5c21nTlaW9Pu58608pF0HM9e9_T-hZIK&q=${currentIp.icon}%20101&key=AIzaSyBaDVbulw7WhvCjYYeiALWZimU2mr0d-8o&maxResults=3`, {
+        type: 'Json'
+    });
+    for (let i = 0; i < videos.data.items.length; i++) {
+        if (videos.data.items[i].id.kind == "youtube#video") {
+            video_id = videos.data.items[i].id.videoId;
+        }
+    }
+    console.log(video_id);
+    document.querySelector(".page-video").src = `https://www.youtube.com/embed/${video_id}?color=white&rel=0&widget_referrer=https://www.node101.io/wizard`;
+
     const progressBarIcons = document.querySelectorAll(".each-progress-bar-status-icon");
     for (let i = 0; i < 100; i++) {
         if (progressBarIcons && (progressBarIcons[0].getAttribute("style") == "display: unset;" || progressBarIcons[1].getAttribute("style") == "display: unset;")) {
@@ -205,21 +310,26 @@ const installationSetup = async () => {
         document.querySelector(".progress-bar-text-right").textContent = `${i}%`;
         await new Promise(r => setTimeout(r, i * i / 0.015));
     }
+    window.scrollTo(0, 0);
 };
-const nodeOperationSetup = async () => {
+const nodeOperationsSetup = async () => {
     document.querySelectorAll(".each-page-manage-node-button")[3].disabled = true;
     const client = await http.getClient();
     const repoUrl = projects.find(item => item.project.name === currentIp.icon).project.social_media_accounts.github;
+    console.log(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`);
     latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
         type: 'Json'
-    })).data.name;
+    })).data.tag_name;
     document.querySelectorAll(".each-page-manage-node-button")[0].addEventListener("click", async () => {
+        document.body.classList.add("waiting");
         await tauri.invoke("start_stop_restart_node", { action: "start" }).catch((err) => { console.log(err) });
     });
     document.querySelectorAll(".each-page-manage-node-button")[1].addEventListener("click", async () => {
+        document.body.classList.add("waiting");
         await tauri.invoke("start_stop_restart_node", { action: "stop" }).catch((err) => { console.log(err) });
     });
     document.querySelectorAll(".each-page-manage-node-button")[2].addEventListener("click", async () => {
+        document.body.classList.add("waiting");
         await tauri.invoke("start_stop_restart_node", { action: "restart" }).catch((err) => { console.log(err) });
     });
     document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
@@ -511,7 +621,7 @@ const createKeyringSetup = (page_html, page_setup) => {
             hideLoadingAnimation();
         }
     });
-    document.querySelectorAll(".each-input-field")[1].addEventListener("keydown", async (e) => {
+    document.querySelectorAll(".each-input-field")[1].addEventListener("keydown", (e) => {
         if (e.key == "Enter") {
             document.querySelector(".each-button").click();
         }
@@ -533,7 +643,7 @@ const keyringAuthSetup = (page_html, page_setup) => {
     });
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
-        await tauri.invoke("check_keyring_passphrase", { passw: document.querySelectorAll(".each-input-field")[0].value }).then(async () => {
+        await tauri.invoke("check_keyring_passphrase", { passw: document.querySelectorAll(".each-input-field")[0].value, exception: exception }).then(async () => {
             await changePage(page_html, page_setup);
         }).catch((err) => {
             console.log(err);
@@ -541,7 +651,7 @@ const keyringAuthSetup = (page_html, page_setup) => {
         });
         hideLoadingAnimation();
     });
-    document.querySelector(".each-input-field").addEventListener("keydown", async (e) => {
+    document.querySelector(".each-input-field").addEventListener("keydown", (e) => {
         if (e.key == "Enter") {
             document.querySelector(".each-button").click();
         }
@@ -562,38 +672,23 @@ const walletsSetup = async () => {
         }, 100);
     });
     document.querySelectorAll(".each-button")[0].addEventListener("click", async function () {
-        showLoadingAnimation();
-        const walletname = document.querySelectorAll(".each-input-field")[0].value;
-        if (await tauri.invoke("if_wallet_exists", { walletname: walletname }).catch((err) => { console.log(err); })) {
-            if (await dialog.ask("This action will override the existing wallet. Are you sure?", { title: "Override Wallet", type: "warning" })) {
-                await tauri.invoke("delete_wallet", { walletname: walletname }).catch((err) => { console.log(err); });
-                await createWallet(walletname);
-            }
+        await createWallet(document.querySelectorAll(".each-input-field")[0].value);
+    });
+    document.querySelectorAll(".each-input-field")[0].addEventListener("keydown", (e) => {
+        if (e.key == "Enter") {
+            document.querySelectorAll(".each-button")[0].click();
         }
-        else {
-            await createWallet(walletname);
-        }
-        hideLoadingAnimation();
     });
     document.querySelectorAll(".each-button")[1].addEventListener("click", async function () {
-        showLoadingAnimation();
-        const walletname = document.querySelectorAll(".each-input-field")[1];
-        const mnemonic = Array.from(document.querySelectorAll(".each-mnemonic-input-field")).map(input => input.value).join(" ");
-        if (await tauri.invoke("if_wallet_exists", { walletname: walletname.value }).catch((err) => { console.log(err); })) {
-            if (await dialog.ask("This action will override the existing wallet. Are you sure?", { title: "Override Wallet", type: "warning" })) {
-                await tauri.invoke("delete_wallet", { walletname: walletname.value }).catch((err) => { console.log(err); });
-                await tauri.invoke("recover_wallet", { walletname: walletname.value, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required }).catch((err) => { console.log(err); });
-            }
-        } else {
-            await tauri.invoke("recover_wallet", { walletname: walletname.value, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required }).catch((err) => { console.log(err); });
-        }
-        await showWallets();
-        walletname.value = "";
-        document.querySelectorAll(".each-mnemonic-input-field").forEach(element => {
-            element.value = "";
-        });
-        hideLoadingAnimation();
+        await recoverWallet(document.querySelectorAll(".each-input-field")[1].value);
     });
+    for (let i = 1; i < 24; i++) {
+        document.querySelectorAll(".each-mnemonic-input-field")[i].addEventListener("keydown", (e) => {
+            if (e.key == "Backspace" && document.querySelectorAll(".each-mnemonic-input-field")[i].value.length == 0) {
+                document.querySelectorAll(".each-mnemonic-input-field")[i - 1].focus();
+            }
+        });
+    }
     hideLoadingAnimation();
     window.scrollTo(0, 400);
 };
@@ -662,7 +757,7 @@ const setupNodePage = () => {
     });
 
     nodeOperationsButton.addEventListener("click", async function () {
-        await changePage("page-content/node-operations.html", nodeOperationSetup);
+        await changePage("page-content/node-operations.html", nodeOperationsSetup);
     });
     homePageButton.addEventListener("click", async function () {
         showLoadingAnimation();
