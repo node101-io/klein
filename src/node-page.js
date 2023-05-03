@@ -290,16 +290,17 @@ const showErrorMessage = (message) => {
 
 const installationSetup = async () => {
     const client = await http.getClient();
-    const videos = await client.get(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UCEpdXdwnxNSrPwaufwPRXfA&playlistId=PL5c21nTlaW9Pu58608pF0HM9e9_T-hZIK&q=${currentIp.icon}%20101&key=AIzaSyBaDVbulw7WhvCjYYeiALWZimU2mr0d-8o&maxResults=3`, {
+    const videos = await client.get(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=PL5c21nTlaW9Pu58608pF0HM9e9_T-hZIK&key=AIzaSyBaDVbulw7WhvCjYYeiALWZimU2mr0d-8o`, {
         type: 'Json'
     });
+    let video_id = "";
     for (let i = 0; i < videos.data.items.length; i++) {
-        if (videos.data.items[i].id.kind == "youtube#video") {
-            video_id = videos.data.items[i].id.videoId;
+        if (videos.data.items[i].snippet.title.includes(currentIp.icon.split(" ")[0])) {
+            video_id = videos.data.items[i].snippet.resourceId.videoId;
+            break;
         }
     }
-    console.log(video_id);
-    document.querySelector(".page-video").src = `https://www.youtube.com/embed/${video_id}?color=white&rel=0&widget_referrer=https://www.node101.io/wizard`;
+    document.querySelector(".page-video").src = `https://www.youtube.com/embed/${video_id ? video_id : "VnWTTcixqds"}?color=white&rel=0&widget_referrer=https://www.node101.io/wizard`;
 
     const progressBarIcons = document.querySelectorAll(".each-progress-bar-status-icon");
     for (let i = 0; i < 100; i++) {
@@ -338,16 +339,12 @@ const nodeOperationsSetup = async () => {
     document.querySelector(".delete-node-button").addEventListener("click", async () => {
         if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
             showLoadingAnimation();
-            await tauri.invoke("delete_node").then(async () => {
+            await tauri.invoke("cpu_mem_sync_stop").catch((err) => { dialog.message(err, { title: "Error", type: "error" }) });
+            await tauri.invoke("delete_node", { exception: exception }).then(async () => {
                 currentIp.icon = "Empty Server";
                 currentIp.validator_addr = "";
                 localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                await tauri.invoke("cpu_mem_sync_stop").then(() => {
-                    loadHomePage();
-                }).catch((err) => {
-                    console.log(err);
-                    dialog.message(err, { title: "Error", type: "error" });
-                });
+                loadHomePage();
             }).catch((err) => {
                 console.log(err);
                 dialog.message(err, { title: "Error", type: "error" });
