@@ -5,8 +5,8 @@ setTimeout(async () => {
 }, 2000);
 
 // for development purposes
-// localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Celestia Light","validator_addr":"celestia1t7za0qsazkqw4fy9rsk3p5fnt0hkk3ulwd692a"},{"ip":"213.136.73.17","icon":"Nibiru","validator_addr":"nibi1y2kza3dstaqhk87p9yel5xyksa8atddmz6n63m"}]');
-localStorage.setItem("notifications", '[{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":false,"text":"Example notif!"},{"unread":true,"text":"Example notif!"},{"unread":true,"text":"Example notif!"}]');
+// localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Celestia Light","validator_addr":"celestia1087ym92534gj8jlwjqaa98mh6hqfgyzgmlwdct"},{"ip":"213.136.73.17","icon":"Nibiru","validator_addr":"nibi1y2kza3dstaqhk87p9yel5xyksa8atddmz6n63m"}]');
+localStorage.setItem("notifications", '[{"unread":false,"text":"Example notification!"},{"unread":false,"text":"Example notification!"},{"unread":false,"text":"Example notification!"},{"unread":false,"text":"Example notification!"},{"unread":false,"text":"Example notification!"},{"unread":false,"text":"Example notification!"},{"unread":false,"text":"Example notification!"},{"unread":false,"text":"Example notification!"},{"unread":true,"text":"Example notification!"},{"unread":true,"text":"Example notification!"}]');
 tauri.invoke("cpu_mem_sync_stop");
 // end of development purposes
 

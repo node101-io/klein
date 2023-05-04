@@ -52,8 +52,26 @@ tevent.listen("cpu_mem_sync", (event) => {
 });
 
 const loadNodePage = async (start) => {
+    const eachSidebarTag = document.querySelectorAll(".each-sidebar-tag");
+    eachSidebarTag[0].setAttribute("class", "each-sidebar-tag sidebar-active-tag");
+    eachSidebarTag[0].textContent = "Loading...";
+    eachSidebarTag[1].setAttribute("class", "each-sidebar-tag version-tag");
+    eachSidebarTag[1].textContent = "Loading...";
+
     updateHeader();
     updateSidebar();
+
+    syncStatusChart.update(0);
+    syncStatusChart.update(0);
+    cpuStatusChart.update(0);
+    cpuStatusChart.update(0);
+    memStatusChart.update(0);
+    memStatusChart.update(0);
+
+    syncStatusChartPercent.textContent = "";
+    cpuStatusChartPercent.textContent = "";
+    memStatusChartPercent.textContent = "";
+
     document.querySelector(".all-header-wrapper").setAttribute("style", "display: flex;");
     document.querySelector(".all-login-wrapper").setAttribute("style", "display: none;");
     document.querySelector(".all-node-wrapper").setAttribute("style", "display: unset;");
@@ -66,15 +84,11 @@ const loadNodePage = async (start) => {
     }
 
     if (start) {
-        if (exception == "celestia-lightd") {
-            sessionStorage.setItem("keyring", `{ "required": false, "exists": false }`);
-        } else {
-            await tauri.invoke("password_keyring_check").then((res) => {
-                sessionStorage.setItem("keyring", `{ "required": ${res[0]}, "exists": ${res[1]} }`);
-            }).catch((err) => {
-                console.log(err);
-            });
-        }
+        await tauri.invoke("password_keyring_check", { exception: exception }).then((res) => {
+            sessionStorage.setItem("keyring", `{ "required": ${res[0]}, "exists": ${res[1]} }`);
+        }).catch((err) => {
+            console.log(err);
+        });
         await changePage("page-content/node-operations.html", nodeOperationsSetup);
         tauri.invoke("cpu_mem_sync", { exception: exception });
     }
@@ -126,7 +140,7 @@ const recoverWallet = async (walletname) => {
             await tauri.invoke("delete_wallet", { walletname: walletname, exception: exception }).catch((err) => { console.log(err) });
         }
         await tauri.invoke("recover_wallet", { walletname: walletname, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required, exception: exception })
-            .then((mnemonic) => { console.log(mnemonic); dialog.message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" }) })
+            .then((res) => { dialog.message("", { title: "Your wallet has been recovered successfully.", type: "info" }) })
             .catch((err) => { console.log(err) });
         await showWallets();
         document.querySelectorAll(".each-input-field")[1].value = "";

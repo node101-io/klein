@@ -175,7 +175,7 @@ fn delete_node(exception: String) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
         "celestia-lightd" | "celestia-bridge" => format!(
-            r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo rm -rf /etc/systemd/system/$EXECUTE* $(which celestia) $(which celestia-appd) $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
+            r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo rm -rf .cache .config .celestia-app .celestia-light-blockspacerace-0 /etc/systemd/system/$EXECUTE* $(which celestia) $(which celestia-appd) $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
         ),
         _ => format!(
             r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo rm -rf /etc/systemd/system/$EXECUTE* $(which $EXECUTE) $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
@@ -190,7 +190,10 @@ fn delete_node(exception: String) -> Result<(), String> {
 
 // KEYRING FUNCTIONS
 #[tauri::command(async)]
-fn password_keyring_check() -> Result<(bool, bool), String> {
+fn password_keyring_check(exception: String) -> Result<(bool, bool), String> {
+    if exception == "celestia-lightd" || exception == "celestia-bridge" {
+        return Ok((false, false));
+    }
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
     let mut channel = my_boxed_session
@@ -391,7 +394,7 @@ fn recover_wallet(
     let command = match exception.as_str() {
         "celestia-lightd" | "celestia-bridge" => {
             format!(
-                r#"echo -e '{}\n{}' | bash -c -l 'celestia-node/cel-key add {} --recover --node.type light --p2p.network blockspacerace --output json | awk "NR > 1" | jq -r .mnemonic'"#,
+                r#"echo -e '{}\n{}' | bash -c -l 'celestia-node/cel-key add {} --recover --node.type light --p2p.network blockspacerace --output json | awk "NR > 1"'"#,
                 mnemo,
                 if passwordneed {
                     my_boxed_session.walletpassword.to_string() + "\n"
@@ -414,6 +417,7 @@ fn recover_wallet(
     };
     channel.exec(&command).map_err(|e| e.to_string())?;
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
+    println!("{}", s);
     channel.close().map_err(|e| e.to_string())?;
     Ok(())
 }

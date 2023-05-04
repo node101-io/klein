@@ -40,7 +40,7 @@ const showTestnetProjects = async () => {
         detailsTagsSpan2 = document.createElement("span");
         detailsTagsSpan2.classList.add("each-project-detail-tag", "active-tag");
         detailsTagsSpan2.textContent = "Active";
-        detailsTags.appendChild(detailsTagsSpan1);
+        // detailsTags.appendChild(detailsTagsSpan1);
         detailsTags.appendChild(detailsTagsSpan2);
         rating = document.createElement("div");
         rating.classList.add("project-rating");
@@ -93,22 +93,35 @@ const showTestnetProjects = async () => {
         installButton.addEventListener("click", async function () {
             if (await dialog.confirm("Node is going to be installed, please confirm.", projects[i].project.name)) {
                 currentIp.icon = projects[i].project.name;
+                exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
                 localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
 
                 await loadNodePage();
                 changePage("page-content/installation.html", installationSetup);
 
                 await tauri.invoke("install_node", { network: sessionStorage.getItem("current_tab"), identifier: projects[i].project.identifier }).then(async () => {
-                    await tauri.invoke("password_keyring_check").then((r) => {
+                    await tauri.invoke("password_keyring_check", { exception: exception }).then((r) => {
                         sessionStorage.setItem("keyring", `{ "required": ${r[0]}, "exists": ${r[1]} }`);
                     }).catch((e) => {
                         console.log(e);
                     });
-                    tauri.invoke("cpu_mem_sync", { exception: "celestia-bridge" });
+                    tauri.invoke("cpu_mem_sync", { exception: exception });
                     document.querySelector(".progress-bar-text-right").textContent = "100%";
                     document.querySelector(".progress-bar").setAttribute("value", "100");
                     document.querySelectorAll(".each-progress-bar-status-icon")[0].style.display = "unset"
                     document.querySelector(".progress-bar-text-left").textContent = "Installation done!";
+
+                    if (exception) {
+                        await tauri.invoke("show_wallets", { exception: exception }).then(async (list) => {
+                            console.log(list);
+                            list = list.length ? JSON.parse(list) : [];
+                            currentIp.validator_addr = list[0].address;
+                            localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+                            await updateSidebar();
+                        }).catch((err) => {
+                            console.log(err);
+                        });
+                    }
                 }).catch((err) => {
                     console.log(err);
                     document.querySelectorAll(".each-progress-bar-status-icon")[1].style.display = "unset"

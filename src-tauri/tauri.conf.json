@@ -29,7 +29,8 @@
         "scope": [
           "https://admin.node101.io/api/*",
           "https://api.github.com/*",
-          "https://www.googleapis.com/youtube/v3/*"
+          "https://www.googleapis.com/*",
+          "https://www.youtube.com/*"
         ]
       }
     },
