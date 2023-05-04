@@ -86,7 +86,7 @@ body.waiting * {
   -moz-background-clip: text;
   -moz-text-fill-color: transparent;
   background-clip: text; */
-  /* color: rgba(100, 150, 255, 1); */
+  color: rgba(100, 150, 255, 1);
   font-size: 32px;
   cursor: default;
 }
