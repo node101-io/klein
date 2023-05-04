@@ -80,12 +80,13 @@ body.waiting * {
 }
 
 .login-page-motto {
-  background: linear-gradient(111deg, var(--main-color) -140%, rgba(148, 185, 255, 1) 83%);
+  /* background: linear-gradient(111deg, var(--main-color) -140%, rgba(148, 185, 255, 1) 83%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   -moz-background-clip: text;
   -moz-text-fill-color: transparent;
-  background-clip: text;
+  background-clip: text; */
+  color: rgba(100, 150, 255, 1);
   font-size: 32px;
   cursor: default;
 }
