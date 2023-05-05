@@ -34,13 +34,10 @@ const fetchProjects = async () => {
   console.log(projects);
 }
 
-// window.addEventListener('contextmenu', (e) => {
-//   e.preventDefault();
-//   const pasteButton = document.getElementById("paste-button");
-//   pasteButton.style.left = e.pageX + "px";
-//   pasteButton.style.top = e.pageY + "px";
-//   pasteButton.style.display = "flex";
-// });
+window.addEventListener('contextmenu', (e) => {
+  if (e.target.tagName === 'INPUT' && e.target.type == "text") return;
+  e.preventDefault();
+});
 
 window.addEventListener("DOMContentLoaded", async () => {
   setupLoginPage();
