@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use serde_json::{self, Value};
 use ssh2::{DisconnectCode, Session};
 use std::{
     io::{prelude::Read, Write},
@@ -290,38 +289,6 @@ fn create_wallet(walletname: String, exception: String) -> Result<String, String
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
     channel.close().map_err(|e| e.to_string())?;
     Ok(s)
-}
-
-#[tauri::command(async)]
-fn if_wallet_exists(walletname: String, exception: String) -> Result<bool, String> {
-    let my_boxed_session =
-        unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
-    let mut channel = my_boxed_session
-        .open_session
-        .channel_session()
-        .map_err(|e| e.to_string())?;
-    let command = match exception.as_str() {
-        "celestia-lightd" | "celestia-bridge" => format!(
-            r#"echo -e {} | bash -c -l 'celestia-node/cel-key list --node.type light --p2p.network blockspacerace --output json | awk "NR > 1"'"#,
-            my_boxed_session.walletpassword
-        ),
-        _ => format!(
-            "echo -e {} | bash -c -l '$EXECUTE keys list --output json'",
-            my_boxed_session.walletpassword
-        ),
-    };
-    channel.exec(&command).map_err(|e| e.to_string())?;
-    let mut s = String::new();
-    channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
-    let v: Value = serde_json::from_str(&s).map_err(|e| e.to_string())?;
-    let mut is_exist = false;
-    for i in v.as_array().unwrap() {
-        if i["name"].to_string() == format!("\"{}\"", walletname) {
-            is_exist = true;
-        }
-    }
-    channel.close().map_err(|e| e.to_string())?;
-    Ok(is_exist)
 }
 
 #[tauri::command(async)]
@@ -770,7 +737,6 @@ fn main() {
             vote,
             edit_validator,
             withdraw_rewards,
-            if_wallet_exists,
             password_keyring_check,
             create_keyring,
             delete_keyring,

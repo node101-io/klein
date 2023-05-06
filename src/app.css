@@ -182,13 +182,21 @@ body.waiting * {
 
 .each-autocomplete-item-ip {
   margin-left: auto;
-  margin-right: 120px;
+  margin-right: 80px;
+}
+
+.each-autocomplete-item-close {
+  margin-right: 8px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
 }
 
 .selected-item-modify {
   border-bottom: 2px solid var(--border-color);
   display: none;
   background-color: var(--third-color);
+  padding-right: 32px;
 }
 
 .selected-item-modify:hover {

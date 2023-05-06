@@ -88,9 +88,24 @@ const setupLoginPage = () => {
                 div2 = document.createElement("div");
                 div2.setAttribute("class", "each-autocomplete-item-ip");
                 div2.textContent = ipAddresses[i].ip;
+                removebutton = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                removebutton.setAttribute("class", "each-autocomplete-item-close");
+                removebutton.setAttribute("viewBox", "0 0 24 24");
+                removebutton.setAttribute("stroke", "var(--fourth-color)");
+                removebutton.setAttribute("stroke-width", "2");
+                removebutton.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    this.parentElement.remove();
+                    ipAddresses.splice(ipAddresses.findIndex(item => item.ip == this.parentElement.children[2].textContent), 1);
+                    localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+                });
+                path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", "M6 18L18 6M6 6l12 12");
+                removebutton.appendChild(path);
                 div.appendChild(img);
                 div.appendChild(div1);
                 div.appendChild(div2);
+                div.appendChild(removebutton);
                 autocompleteListEl.appendChild(div);
             }
         }
@@ -124,7 +139,6 @@ const setupLoginPage = () => {
             password: "node101bos",
             // password: passwordInputEl.value
         }).then((res) => {
-            console.log("res", res);
             warningEl.setAttribute("style", "display: none;");
             currentIp = ipAddresses.find(item => item.ip == ipInputEl.value);
             const project_name = res ? projects.find(item => item.project.wizard_key === res).project.name : "Empty Server";
@@ -137,6 +151,7 @@ const setupLoginPage = () => {
                 currentIp = { ip: ipInputEl.value, icon: project_name, validator_addr: "" };
                 if (checkboxInputEl.checked) {
                     ipAddresses.push(currentIp);
+                    checkboxInputEl.checked = false;
                 }
             }
             localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));

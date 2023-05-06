@@ -34,10 +34,10 @@ const fetchProjects = async () => {
   console.log(projects);
 }
 
-window.addEventListener('contextmenu', (e) => {
-  if (e.target.tagName === 'INPUT' && e.target.type == "text") return;
-  e.preventDefault();
-});
+// window.addEventListener('contextmenu', (e) => {
+//   if (e.target.tagName === 'INPUT' && e.target.type == "text") return;
+//   e.preventDefault();
+// });
 
 window.addEventListener("DOMContentLoaded", async () => {
   setupLoginPage();
