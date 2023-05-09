@@ -75,6 +75,7 @@
     },
     "updater": {
       "active": true,
+      "dialog": false,
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEIzOUQzOEQxNDkyQkUwRgpSV1FQdnBJVWpkTTVDNGZ0dExiSkxrUmtaK0V4cXF2aVB0cmRyMlp4aFFwajk4Nk5nQW8zY2NGRAo",
       "endpoints": [
         "https://admin.node101.io/api/wizard"

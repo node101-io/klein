@@ -1,5 +1,11 @@
-const { tauri, dialog, clipboard, http, event: tevent } = window.__TAURI__;
+const { tauri, dialog, clipboard, http, event: tevent, updater } = window.__TAURI__;
 
+setTimeout(async () => {
+  const update = await updater.checkUpdate();
+  if (update.shouldUpdate) {
+    await updater.installUpdate();
+  }
+}, 1000);
 
 // for development purposes
 // localStorage.setItem("ipaddresses", '[{"ip":"144.91.93.154","icon":"Celestia Light","validator_addr":"celestia1087ym92534gj8jlwjqaa98mh6hqfgyzgmlwdct"},{"ip":"213.136.73.17","icon":"Nibiru","validator_addr":"nibi1y2kza3dstaqhk87p9yel5xyksa8atddmz6n63m"}]');
