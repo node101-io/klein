@@ -32,6 +32,9 @@
           "https://www.googleapis.com/*",
           "https://www.youtube.com/*"
         ]
+      },
+      "process": {
+        "relaunch": true
       }
     },
     "bundle": {

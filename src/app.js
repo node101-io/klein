@@ -1,9 +1,12 @@
-const { tauri, dialog, clipboard, http, event: tevent, updater } = window.__TAURI__;
+const { tauri, dialog, clipboard, http, event: tevent, updater, process } = window.__TAURI__;
 
 setTimeout(async () => {
   const update = await updater.checkUpdate();
   if (update.shouldUpdate) {
-    await updater.installUpdate();
+    if (await dialog.confirm("Update available")) {
+      await updater.installUpdate();
+      await process.relaunch();
+    }
   }
 }, 1000);
 
@@ -36,10 +39,10 @@ const fetchProjects = async () => {
   }
 }
 
-// window.addEventListener("contextmenu", (e) => {
-//   if (e.target.tagName === "INPUT" && e.target.type == "text") return;
-//   e.preventDefault();
-// });
+window.addEventListener("contextmenu", (e) => {
+  if (e.target.tagName === "INPUT" && e.target.type == "text") return;
+  e.preventDefault();
+});
 
 window.addEventListener("DOMContentLoaded", async () => {
   setupLoginPage();
