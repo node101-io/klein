@@ -1,10 +1,10 @@
 [package]
 name = "wizard"
 version = "0.1.0"
-description = "node101"
-authors = ["you"]
+description = "A wizard to install and manage nodes on your remote server.."
+authors = ["node101"]
 license = ""
-repository = ""
+repository = "https://github.com/node101-io/node-wizard"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

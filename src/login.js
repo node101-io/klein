@@ -136,8 +136,7 @@ const setupLoginPage = () => {
         showLoadingAnimation();
         tauri.invoke("log_in", {
             ip: ipInputEl.value,
-            password: "node101bos",
-            // password: passwordInputEl.value
+            password: passwordInputEl.value
         }).then((res) => {
             warningEl.setAttribute("style", "display: none;");
             currentIp = ipAddresses.find(item => item.ip == ipInputEl.value);
