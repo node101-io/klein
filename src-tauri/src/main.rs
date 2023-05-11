@@ -696,7 +696,6 @@ fn withdraw_rewards(valoper_address: String, wallet_name: String) -> Result<Stri
         .open_session
         .channel_session()
         .map_err(|e| e.to_string())?;
-    // $EXECUTE tx distribution withdraw-rewards $VALOPER_ADDRESS --from=$WALLET_NAME --commission --chain-id=$CHAIN_ID
     channel.exec(&format!(
         "yes '{password}' | bash -c -l '$EXECUTE tx distribution withdraw-rewards {valoper_address} --from={wallet_name} --commission --chain-id=$CHAIN_ID'",
         password = my_boxed_session.walletpassword,
