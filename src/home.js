@@ -79,7 +79,7 @@ const showTestnetProjects = async () => {
         installButton = document.createElement("button");
         installButton.classList.add("each-project-button", "install-button");
         textDiv = document.createElement("div");
-        textDiv.textContent = "Install Node";
+        textDiv.textContent = "Install";
         installButtonSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         installButtonSVG.classList.add("each-project-button-svg");
         installButtonSVG.style.width = "14px";
@@ -159,7 +159,7 @@ const showTestnetProjects = async () => {
         document.querySelector(".install-button").addEventListener("click", function () {
             loadNodePage(true);
         });
-        document.querySelector(".install-button").firstChild.textContent = "Manage Node";
+        document.querySelector(".install-button").firstChild.textContent = "Manage";
         document.querySelector(".install-button").firstChild.nextSibling.style.transform = "rotate(-90deg)";
         // document.querySelector(".install-button").firstChild.nextSibling.setAttribute("style", "transform: rotate(-90deg);");
         for (let i = 1; i < document.querySelectorAll(".install-button").length; i++) {
@@ -176,15 +176,15 @@ const setupHomePage = () => {
 
     testnetTabButton.addEventListener("click", () => {
         sessionStorage.setItem("current_tab", "testnet");
-        testnetTabButton.classList.add("each-nodes-page-tab", "active-tab");
-        mainnetTabButton.classList.add("each-nodes-page-tab");
+        testnetTabButton.classList.add("active-tab");
+        mainnetTabButton.classList.remove("active-tab");
         mainnetTabContent.style.display = "none";
         testnetTabContent.style.display = "flex";
     });
     mainnetTabButton.addEventListener("click", () => {
         sessionStorage.setItem("current_tab", "mainnet");
-        testnetTabButton.classList.add("each-nodes-page-tab");
-        mainnetTabButton.classList.add("each-nodes-page-tab", "active-tab");
+        testnetTabButton.classList.remove("active-tab");
+        mainnetTabButton.classList.add("active-tab");
         testnetTabContent.style.display = "none";
         mainnetTabContent.style.display = "flex";
     });

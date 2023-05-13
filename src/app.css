@@ -14,7 +14,7 @@
   --text-color: rgba(255, 255, 255, 1);
   --second-text-color: rgba(244, 244, 244, 1);
   --divider-color: rgba(217, 217, 217, 1);
-  --sidebar-width: 400px;
+  --sidebar-width: 350px;
   animation: increase-var 2s forwards;
 }
 
@@ -43,17 +43,15 @@ body.waiting * {
 
 .prevent-select {
   -webkit-user-select: none;
-  /* Safari */
   -ms-user-select: none;
-  /* IE 10 and IE 11 */
   user-select: none;
-  /* Standard syntax */
+  zoom: 1;
 }
 
 /* LOGIN PAGE */
 .all-login-header-wrapper {
-  margin-left: 10vw;
-  margin-top: 10vh;
+  margin-left: 8vw;
+  margin-top: 8vh;
 }
 
 .all-login-content-wrapper {
@@ -66,10 +64,10 @@ body.waiting * {
 .login-page-wrapper {
   width: 100vw;
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: space-between;
   padding-right: 15vw;
-  padding-left: 10vw;
+  padding-left: 8vw;
 }
 
 .login-page-left-wrapper {
@@ -94,7 +92,7 @@ body.waiting * {
 .login-page-heading {
   color: var(--text-color);
   font-size: 32px;
-  padding-bottom: 50px;
+  padding-bottom: 30px;
   cursor: default;
 }
 
@@ -209,10 +207,10 @@ body.waiting * {
   color: var(--text-color);
   border: 0px;
   width: 208px;
-  height: 48px;
+  height: 44px;
   padding-left: 16px;
   padding-right: 16px;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
@@ -252,7 +250,7 @@ body.waiting * {
 .login-page-checkbox-label {
   align-items: center;
   margin-top: 0px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   cursor: pointer;
 }
 
@@ -295,8 +293,8 @@ body.waiting * {
 
 .all-footer-wrapper {
   margin-top: auto;
-  margin-left: 10vw;
-  margin-bottom: 10vh;
+  margin-left: 8vw;
+  margin-bottom: 8vh;
 }
 
 .each-footer-anchor {
@@ -311,24 +309,28 @@ body.waiting * {
   cursor: pointer;
 }
 
+.all-node-wrapper {
+  display: flex;
+  position: relative;
+}
+
 /* SIDEBAR */
 .all-sidebar-wrapper {
   display: flex;
   position: absolute;
   background: var(--background-color);
   left: 0px;
-  top: 92px;
+  top: 0px;
   flex-direction: column;
   width: var(--sidebar-width);
-  height: auto;
-  min-height: calc(100vh - 92px);
+  min-height: 100%;
   border-right: 1px solid;
   border-image: linear-gradient(180deg, rgba(58, 58, 58, 0.12) 0%, rgba(167, 167, 167, 0.6) 32%, rgba(64, 64, 64, 0.12) 94%);
   border-image-slice: 1;
-  padding-top: 90px;
+  padding-top: 60px;
   padding-bottom: 60px;
-  padding-left: 60px;
-  padding-right: 60px;
+  padding-left: 50px;
+  padding-right: 40px;
   overflow: hidden;
 }
 
@@ -448,12 +450,12 @@ body.waiting * {
   align-items: center;
   margin-bottom: 10px;
   background: #313131;
-  width: 279px;
+  width: 260px;
   height: 44px;
   color: var(--divider-color);
   border-left: 3px solid rgba(255, 255, 255, 1);
   font-size: 18px;
-  padding-left: 40px;
+  padding-left: 30px;
   cursor: pointer;
 }
 
@@ -464,8 +466,8 @@ body.waiting * {
 .each-dropdown-button-arrow {
   margin-right: 12px;
   margin-left: auto;
-  width: 21px;
-  height: 14px;
+  width: 30px;
+  height: 18px;
   fill: rgba(90, 104, 114, 1);
 }
 
@@ -493,7 +495,7 @@ body.waiting * {
 .each-sidebar-anchor {
   text-decoration: none;
   align-items: center;
-  margin-right: 16px;
+  margin-right: 14px;
 }
 
 .each-sidebar-anchor:hover {
@@ -501,18 +503,83 @@ body.waiting * {
 }
 
 .each-sidebar-anchor-icon {
-  width: 24px;
-  fill: rgba(243, 243, 243, 1);
+  width: 18px;
+  fill: var(--fourth-color);
   cursor: pointer;
 }
 
 .all-page-wrapper {
-  position: absolute;
+  position: relative;
   left: var(--sidebar-width);
   min-height: calc(100vh - 92px);
   width: calc(99vw - var(--sidebar-width));
   background-color: var(--background-color);
-  padding: 80px 100px;
+  padding: 80px 70px;
+}
+
+@media (max-width: 1140px) {
+  .all-page-wrapper {
+    left: 60px;
+    width: calc(99vw - 60px);
+    padding: 80px 45px;
+  }
+
+  .all-sidebar-wrapper {
+    padding: 50px 20px;
+    padding-right: 0px;
+    background-color: var(--second-color);
+    width: 60px;
+    height: 100%;
+  }
+
+  .sidebar-info {
+    display: none;
+  }
+
+  .sidebar-tags {
+    display: none;
+  }
+
+  .each-sidebar-button {
+    position: fixed;
+    left: 20px;
+  }
+
+  .each-sidebar-button:nth-child(1) {
+    top: 140px;
+  }
+
+  .each-sidebar-button:nth-child(2) {
+    top: 200px;
+  }
+
+  .each-sidebar-button:nth-child(3) {
+    top: 260px;
+  }
+
+  .each-sidebar-button-name {
+    display: none;
+  }
+
+  .sidebar-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+  }
+
+  .each-dropdown-button {
+    display: none;
+  }
+
+  .each-dropdown-subbutton {
+    display: none;
+  }
+
+  .sidebar-anchors {
+    display: none;
+  }
 }
 
 .all-page-content {
@@ -618,6 +685,12 @@ body.waiting * {
   margin-right: 40px;
 }
 
+@media (max-width: 930px) {
+  .each-node-page-project {
+    width: calc(45vw - 60px);
+  }
+}
+
 .project-header {
   display: flex;
   margin-bottom: 18px;
@@ -633,12 +706,18 @@ body.waiting * {
   display: flex;
   flex-direction: column;
   height: 100px;
-  justify-content: space-between;
+  gap: 10px;
 }
 
 .project-details-heading {
   font-size: 26px;
   color: var(--logo-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
 }
 
 .project-details-tags {
@@ -674,6 +753,7 @@ body.waiting * {
 .project-rating {
   display: flex;
   align-items: center;
+  min-height: 22px;
 }
 
 .project-rating span {
@@ -705,6 +785,12 @@ body.waiting * {
   color: var(--logo-color);
 }
 
+@media (max-width: 1060px) {
+  .project-rating-heading {
+    display: none;
+  }
+}
+
 .project-description {
   margin-top: 20px;
   color: var(--logo-color);
@@ -715,6 +801,7 @@ body.waiting * {
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
+  min-height: 45px;
 }
 
 .project-buttons {
@@ -1030,7 +1117,7 @@ progress {
   outline: none;
   border: none;
   background-color: var(--third-color);
-  width: 320px;
+  width: 310px;
   height: 44px;
   padding-left: 16px;
   padding-right: 16px;

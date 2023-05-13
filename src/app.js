@@ -7,7 +7,7 @@ const fetchProjects = async () => {
   const client = await http.getClient();
   const authenticate = await client.post("https://admin.node101.io/api/authenticate", {
     type: "Json",
-    payload: { key: "b8737b4ca31571d769506c4373f5c476e0a022bf58d5e0595c0e37eabb881ad150b8c447f58d5f80f6ffe5ced6f21fe0502c12cf32ab33c6f0787aea5ccff153" },
+    payload: { key: API_TOKEN },
   });
 
   projects.length = 0;
@@ -31,6 +31,24 @@ const handleRighClick = (e) => {
 window.addEventListener("contextmenu", handleRighClick);
 
 window.addEventListener("DOMContentLoaded", async () => {
+  document.body.style.zoom = 1;
+  window.addEventListener("keydown", (e) => {
+    if (e.ctrlKey) {
+      if (e.key == "-") {
+        e.preventDefault();
+        document.body.style.zoom = parseFloat(document.body.style.zoom) - 0.1;
+      }
+      else if (e.key == "4") {
+        e.preventDefault();
+        document.body.style.zoom = parseFloat(document.body.style.zoom) + 0.1;
+      }
+      else if (e.key == "0") {
+        e.preventDefault();
+        document.body.style.zoom = 1;
+      }
+    }
+  });
+
   setupLoginPage();
   setupNodePage();
   setupHomePage();

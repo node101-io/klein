@@ -9,7 +9,7 @@ use std::{
     net::TcpStream,
     time::Duration,
 };
-use tauri::{LogicalSize, Manager, Window};
+use tauri::{LogicalSize, Manager, Size, Window};
 
 struct SessionManager {
     open_session: Session,
@@ -84,9 +84,13 @@ fn log_in_again(ip: String, password: String) -> Result<(), String> {
 
 // CPU, MEM, SYNC, VERSION FUNCTIONS
 #[tauri::command(async)]
-fn cpu_mem_sync(window: Window, exception: String) {
-    let my_boxed_session = unsafe { GLOBAL_STRUCT.as_mut() }.unwrap();
-    let mut channel = my_boxed_session.open_session.channel_session().unwrap();
+fn cpu_mem_sync(window: Window, exception: String) -> Result<(), String> {
+    let my_boxed_session =
+        unsafe { GLOBAL_STRUCT.as_mut() }.ok_or("There is no active session. Timed out.")?;
+    let mut channel = my_boxed_session
+        .open_session
+        .channel_session()
+        .map_err(|e| e.to_string())?;
     let (status_command, height_command, catchup_command, version_command) = match exception.as_str() {
         "celestia-lightd" | "celestia-bridge" => (
             format!("$(systemctl is-active {exception}.service 2>/dev/null)"),
@@ -107,19 +111,21 @@ fn cpu_mem_sync(window: Window, exception: String) {
             echo -n "{{ \"cpu\": \"$(top -b -n1 | awk '\''/Cpu\(s\)/{{print 100-$8}}'\'' 2>/dev/null)\", \"mem\": \"$(top -b -n1 | awk '\''/MiB Mem/{{print ($4-$6)/$4*100}}'\'' 2>/dev/null)\", \"status\": \"{status_command}\", \"height\": \"{height_command}\", \"catchup\": \"{catchup_command}\", \"version\": \"{version_command}\" }}";
             sleep 1; echo ""; sleep 1; echo ""; sleep 1; echo ""; sleep 1; echo ""; sleep 1; done'"#
         ))
-        .unwrap();
+        .map_err(|e| e.to_string())?;
 
     my_boxed_session.stop_cpu_mem_sync = false;
     loop {
         if my_boxed_session.stop_cpu_mem_sync {
-            channel.close().unwrap();
-            return;
+            channel.close().map_err(|e| e.to_string())?;
+            return Ok(());
         }
         let mut buf = [0u8; 1024];
-        let len = channel.read(&mut buf).unwrap();
-        let s = std::str::from_utf8(&buf[0..len]).unwrap();
+        let len = channel.read(&mut buf).map_err(|e| e.to_string())?;
+        let s = std::str::from_utf8(&buf[0..len]).map_err(|e| e.to_string())?;
         if s != "\n" {
-            let _ = window.emit("cpu_mem_sync", s.to_string()).unwrap();
+            let _ = window
+                .emit("cpu_mem_sync", s.to_string())
+                .map_err(|e| e.to_string())?;
         }
     }
 }
@@ -711,7 +717,10 @@ fn main() {
         .setup(|app| {
             app.get_window("main")
                 .unwrap()
-                .set_min_size(Some(LogicalSize::new(1280, 720)))
+                .set_min_size(Some(Size::Logical(LogicalSize {
+                    width: 800.0,
+                    height: 600.0,
+                })))
                 .unwrap();
             app.get_window("main").unwrap().center().unwrap();
             Ok(())

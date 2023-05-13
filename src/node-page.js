@@ -74,13 +74,13 @@ const loadNodePage = async (start) => {
 
     document.querySelector(".all-header-wrapper").setAttribute("style", "display: flex;");
     document.querySelector(".all-login-wrapper").setAttribute("style", "display: none;");
-    document.querySelector(".all-node-wrapper").setAttribute("style", "display: unset;");
+    document.querySelector(".all-node-wrapper").setAttribute("style", "display: flex;");
     document.querySelector(".all-home-wrapper").setAttribute("style", "display: none;");
 
     exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
     buttons_to_hide = ["node-information-button", "validator-list-button", "create-validator-button", "edit-validator-button", "withdraw-rewards-button", "delegate-token-button", "redelegate-token-button", "vote-button", "unjail-button", "send-token-button"];
     for (button of buttons_to_hide) {
-        document.getElementById(button).style.display = currentIp.icon == "Celestia Light" ? "none" : "flex";
+        document.getElementById(button).style.display = currentIp.icon == "Celestia Light" ? "none" : "";
     }
 
     if (start) {
@@ -181,7 +181,6 @@ const showWallets = async () => {
                 }
                 label.textContent = list[count - i - 1].name;
 
-                // if (exception == "celestia-lightd" || exception == "celestia-bridge") {
                 labelicon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 labelicon.setAttribute("class", "each-input-label-icon");
                 labelicon.setAttribute("viewBox", "0 540 512 512");
@@ -304,7 +303,7 @@ const showErrorMessage = (message) => {
 
 const installationSetup = async () => {
     const client = await http.getClient();
-    const videos = await client.get(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=PL5c21nTlaW9Pu58608pF0HM9e9_T-hZIK&key=AIzaSyBaDVbulw7WhvCjYYeiALWZimU2mr0d-8o`, {
+    const videos = await client.get("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=PL5c21nTlaW9Pu58608pF0HM9e9_T-hZIK&key=" + GOOGLE_API, {
         type: 'Json'
     });
     let video_id = "";
@@ -427,24 +426,15 @@ const createValidatorSetup = () => {
         if (syncStatusChartPopupText.innerText.includes("Node is synced!")) {
             showLoadingAnimation();
             await tauri.invoke("create_validator", {
-                // amount: document.querySelectorAll(".each-input-field")[0].value,
-                // walletName: document.querySelectorAll(".each-input-field")[1].value,
-                // monikerName: document.querySelectorAll(".each-input-field")[2].value,
-                // fees: document.querySelectorAll(".each-input-field")[3].value,
-                // website: document.querySelectorAll(".each-input-field")[4].value,
-                // keybaseId: document.querySelectorAll(".each-input-field")[5].value,
-                // contact: document.querySelectorAll(".each-input-field")[6].value,
-                // comRate: document.querySelectorAll(".each-input-field")[7].value,
-                // details: document.querySelectorAll(".each-input-field")[8].value,
-                website: "node101.io",
-                amount: "20",
-                walletName: "valitest",
-                comRate: "0.05",
-                monikerName: "node101",
-                keybaseId: "",
-                contact: "hello@node101.io",
-                fees: "500",
-                details: "detailstest",
+                amount: document.querySelectorAll(".each-input-field")[0].value,
+                walletName: document.querySelectorAll(".each-input-field")[1].value,
+                monikerName: document.querySelectorAll(".each-input-field")[2].value,
+                fees: document.querySelectorAll(".each-input-field")[3].value,
+                website: document.querySelectorAll(".each-input-field")[4].value,
+                keybaseId: document.querySelectorAll(".each-input-field")[5].value,
+                contact: document.querySelectorAll(".each-input-field")[6].value,
+                comRate: document.querySelectorAll(".each-input-field")[7].value,
+                details: document.querySelectorAll(".each-input-field")[8].value,
                 projectName: currentIp.icon
             }).then((res) => {
                 res = JSON.parse(res);
@@ -781,12 +771,14 @@ const setupNodePage = () => {
     });
     validatorOperationsButton.addEventListener("click", function () {
         if (window.getComputedStyle(subButtonsDiv).getPropertyValue("display") == "none") {
-            subButtonsDiv.setAttribute("style", "display: block");
-            validatorOperationsArrow.setAttribute("style", "transform: rotate(-180deg); transition: 0.5s;");
+            subButtonsDiv.style.display = "block";
+            validatorOperationsArrow.style.transform = "rotate(-180deg)";
+            validatorOperationsArrow.style.transition = "0.5s";
         }
         else {
-            validatorOperationsArrow.setAttribute("style", "transform: rotate(0); transition: 0.5s;");
-            subButtonsDiv.setAttribute("style", "display: none");
+            validatorOperationsArrow.style.transform = "rotate(0)";
+            validatorOperationsArrow.style.transition = "0.5s";
+            subButtonsDiv.style.display = "none";
         }
     });
     validatorListButton.addEventListener("click", async function () {

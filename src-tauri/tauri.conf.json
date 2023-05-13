@@ -7,8 +7,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "Node Wizard",
-    "version": "0.1.2"
+    "productName": "Node Wizard"
   },
   "tauri": {
     "allowlist": {
@@ -85,10 +84,10 @@
       {
         "url": "app.html",
         "fullscreen": false,
-        "height": 720,
+        "height": 800,
         "resizable": true,
         "title": "Wizard",
-        "width": 1280
+        "width": 1340
       }
     ]
   }
