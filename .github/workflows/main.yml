@@ -47,7 +47,7 @@ jobs:
         
       - name: Set up config.js
         run: |
-          echo "GOOGLE_API = ${{ secrets.GOOGLE_API }}; API_TOKEN = ${{ secrets.API_TOKEN }}; " > ./src/config.js
+          echo "GOOGLE_API = '${{ secrets.GOOGLE_API }}'; API_TOKEN = '${{ secrets.API_TOKEN }}'; " > ./src/config.js
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
