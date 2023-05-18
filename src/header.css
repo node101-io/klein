@@ -7,17 +7,20 @@
   align-items: center;
 }
 
-.all-header-logo {
-  width: 128px;
+.all-header-logo-anchor {
   cursor: pointer;
-  fill: var(--logo-color);
   margin-right: auto;
+}
+
+.all-header-logo-svg {
+  width: 128px;
+  fill: var(--logo-color);
 }
 
 .header-node-icons {
   position: relative;
   display: flex;
-  margin-right: 50px;
+  /* margin-right: 50px; */
   cursor: pointer;
 }
 

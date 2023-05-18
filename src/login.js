@@ -1,5 +1,6 @@
 const loadLoginPage = async () => {
     await fetchProjects();
+    document.querySelector(".all-installation-wrapper").setAttribute("style", "display: none;");
     document.querySelector(".all-header-wrapper").setAttribute("style", "display: none;");
     document.querySelector(".all-login-wrapper").setAttribute("style", "display: unset;");
     document.querySelector(".all-node-wrapper").setAttribute("style", "display: none;");

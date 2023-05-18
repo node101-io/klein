@@ -14,6 +14,7 @@ use tauri::{LogicalSize, Manager, Size, Window};
 struct SessionManager {
     open_session: Session,
     stop_cpu_mem_sync: bool,
+    stop_installation: bool,
     walletpassword: String,
 }
 static mut GLOBAL_STRUCT: Option<SessionManager> = None;
@@ -33,6 +34,7 @@ fn log_in(ip: String, password: String) -> Result<String, String> {
         GLOBAL_STRUCT = Some(SessionManager {
             open_session: sess,
             stop_cpu_mem_sync: false,
+            stop_installation: false,
             walletpassword: String::new(),
         });
     }
@@ -92,7 +94,7 @@ fn cpu_mem_sync(window: Window, exception: String) -> Result<(), String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     let (status_command, height_command, catchup_command, version_command) = match exception.as_str() {
-        "celestia-lightd" | "celestia-bridge" => (
+        "celestia-lightd" => (
             format!("$(systemctl is-active {exception}.service 2>/dev/null)"),
             "$(curl -sX GET http://127.0.0.1:26659/head | jq -r .header.height 2>/dev/null)",
             "$(echo $(if [ $((10#$(curl -sX GET https://rpc-blockspacerace.pops.one/block | jq -r .result.block.header.height) > 10#$(curl -sX GET http://127.0.0.1:26659/head | jq -r .header.height))) -eq 1 ]; then echo true; else echo false; fi) 2>/dev/null)",
@@ -143,7 +145,7 @@ fn cpu_mem_sync_stop() -> Result<(), String> {
 #[tauri::command(async)]
 fn install_node(network: String, identifier: String) -> Result<(), String> {
     let my_boxed_session =
-        unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
+        unsafe { GLOBAL_STRUCT.as_mut() }.ok_or("There is no active session. Timed out.")?;
     let mut channel = my_boxed_session
         .open_session
         .channel_session()
@@ -152,7 +154,12 @@ fn install_node(network: String, identifier: String) -> Result<(), String> {
         "echo 'export MONIKER=node101' >> $HOME/.bash_profile; echo 'export WALLET_NAME=node101' >> $HOME/.bash_profile; \
         wget -O {identifier}.sh https://node101.io/{network}/{identifier}.sh && chmod +x {identifier}.sh && ./{identifier}.sh"
     )).map_err(|e| e.to_string())?;
+    my_boxed_session.stop_installation = false;
     loop {
+        if my_boxed_session.stop_installation {
+            channel.close().map_err(|e| e.to_string())?;
+            return Err("Installation cancelled.".to_string());
+        }
         let mut buf = [0u8; 1024];
         let len = channel.read(&mut buf).map_err(|e| e.to_string())?;
         if len == 0 {
@@ -171,6 +178,15 @@ fn install_node(network: String, identifier: String) -> Result<(), String> {
 }
 
 #[tauri::command(async)]
+fn stop_installation() -> Result<(), String> {
+    let my_boxed_session =
+        unsafe { GLOBAL_STRUCT.as_mut() }.ok_or("There is no active session. Timed out.")?;
+    my_boxed_session.stop_installation = true;
+    std::thread::sleep(std::time::Duration::from_secs(1));
+    Ok(())
+}
+
+#[tauri::command(async)]
 fn delete_node(exception: String) -> Result<(), String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
@@ -179,11 +195,11 @@ fn delete_node(exception: String) -> Result<(), String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-lightd" | "celestia-bridge" => format!(
-            r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo rm -rf .cache .config .celestia-app .celestia-light-blockspacerace-0 /etc/systemd/system/$EXECUTE* $(which celestia) $(which celestia-appd) $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
+        "celestia-lightd" => format!(
+            r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo rm -rf .cache .config .celestia-app .celestia-light-blockspacerace-0 /etc/systemd/system/$EXECUTE* $(which celestia) $(which celestia-appd) $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
         ),
         _ => format!(
-            r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo rm -rf /etc/systemd/system/$EXECUTE* $(which $EXECUTE) $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
+            r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo rm -rf /etc/systemd/system/$EXECUTE* $(which $EXECUTE) $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
         ),
     };
     channel.exec(&command).map_err(|e| e.to_string())?;
@@ -196,7 +212,7 @@ fn delete_node(exception: String) -> Result<(), String> {
 // KEYRING FUNCTIONS
 #[tauri::command(async)]
 fn password_keyring_check(exception: String) -> Result<(bool, bool), String> {
-    if exception == "celestia-lightd" || exception == "celestia-bridge" {
+    if exception == "celestia-lightd" {
         return Ok((false, false));
     }
     let my_boxed_session =
@@ -283,7 +299,7 @@ fn create_wallet(walletname: String, exception: String) -> Result<String, String
         .map_err(|e| e.to_string())?;
     let mut s = String::new();
     let command = match exception.as_str() {
-        "celestia-lightd" | "celestia-bridge" => format!(
+        "celestia-lightd" => format!(
             r#"bash -c -l 'celestia-node/cel-key add {walletname} --node.type light --p2p.network blockspacerace --output json 2>&1 | awk "NR > 1" | jq -r .mnemonic'"#
         ),
         _ => format!(
@@ -306,7 +322,7 @@ fn show_wallets(exception: String) -> Result<String, String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-lightd" | "celestia-bridge" => {
+        "celestia-lightd" => {
             format!(
                 r#"bash -c -l 'echo -n "["; first=true; celestia-node/cel-key list --node.type light --p2p.network blockspacerace --output json | awk "NR > 1" | jq -c ".[]" | while read -r line; do address=$(echo $line | jq -r ".address"); balances=$(curl -sX GET http://localhost:26659/balance/$address); if [ $first = true ]; then echo -n "{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}, \"denom\": \"$DENOM\"}}"; first=false; else echo -n ",{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}}}"; fi; done; echo "]"' | jq"#,
             )
@@ -332,7 +348,7 @@ fn delete_wallet(walletname: String, exception: String) -> Result<(), String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-lightd" | "celestia-bridge" => {
+        "celestia-lightd" => {
             format!(
                 r#"yes '{}' | bash -c -l 'celestia-node/cel-key delete {} --node.type light --p2p.network blockspacerace --output json -y | awk "NR > 1"'"#,
                 my_boxed_session.walletpassword, walletname
@@ -365,7 +381,7 @@ fn recover_wallet(
         .map_err(|e| e.to_string())?;
     let mut s = String::new();
     let command = match exception.as_str() {
-        "celestia-lightd" | "celestia-bridge" => {
+        "celestia-lightd" => {
             format!(
                 r#"echo -e '{}\n{}' | bash -c -l 'celestia-node/cel-key add {} --recover --node.type light --p2p.network blockspacerace --output json | awk "NR > 1"'"#,
                 mnemo,
@@ -404,7 +420,7 @@ fn set_main_wallet(walletname: String, exception: String) -> Result<(), String> 
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-lightd" | "celestia-bridge" => {
+        "celestia-lightd" => {
             format!(
                 r#"yes '{}' | bash -c -l 'systemctl stop {}; celestia light init --keyring.accname {} --p2p.network blockspacerace; systemctl start {}'"#,
                 my_boxed_session.walletpassword, exception, walletname, exception
@@ -458,7 +474,7 @@ fn update_node(latest_version: String, exception: String) -> Result<(), String> 
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-lightd" | "celestia-bridge" => {
+        "celestia-lightd" => {
             format!(
                 "" // TODO
             )
@@ -619,7 +635,7 @@ fn create_validator(
     contact: String,
     fees: String,
     details: String,
-    project_name: String,
+    exception: String,
 ) -> Result<String, String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
@@ -646,10 +662,9 @@ fn create_validator(
                 --min-self-delegation=1 \
                 --details={details}'",
             password = my_boxed_session.walletpassword,
-            operation = if project_name == "Babylon" {
-                "checkpointing"
-            } else {
-                "staking"
+            operation = match exception.as_str() {
+                "babylon" => "checkpointing",
+                _ => "staking",
             }
         ))
         .map_err(|e| e.to_string())?;
@@ -754,6 +769,7 @@ fn main() {
             redelegate_token,
             validator_list,
             set_main_wallet,
+            stop_installation
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

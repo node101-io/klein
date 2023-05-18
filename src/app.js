@@ -1,4 +1,4 @@
-const { tauri, dialog, clipboard, http, event: tevent } = window.__TAURI__;
+const { tauri, dialog, clipboard, http, event: tevent, window: twindow } = window.__TAURI__;
 
 const projects = [];
 const ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
@@ -31,6 +31,15 @@ const handleRighClick = (e) => {
 window.addEventListener("contextmenu", handleRighClick);
 
 window.addEventListener("DOMContentLoaded", async () => {
+  prevent_close = false;
+  (async () => {
+    await twindow.appWindow.onCloseRequested(async (event) => {
+      if (prevent_close && !(await dialog.confirm("Installation will be cancelled. Are you sure you want to exit?"))) {
+        event.preventDefault();
+      }
+    });
+  })();
+
   document.body.style.zoom = 1;
   window.addEventListener("keydown", (e) => {
     if (e.ctrlKey) {

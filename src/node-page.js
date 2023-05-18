@@ -72,15 +72,23 @@ const loadNodePage = async (start) => {
     cpuStatusChartPercent.textContent = "";
     memStatusChartPercent.textContent = "";
 
+    document.querySelector(".all-installation-wrapper").setAttribute("style", "display: none;");
     document.querySelector(".all-header-wrapper").setAttribute("style", "display: flex;");
     document.querySelector(".all-login-wrapper").setAttribute("style", "display: none;");
     document.querySelector(".all-node-wrapper").setAttribute("style", "display: flex;");
     document.querySelector(".all-home-wrapper").setAttribute("style", "display: none;");
 
-    exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
+    if (currentIp.icon == "Celestia Light") {
+        exception = "celestia-lightd";
+    } else if (currentIp.icon == "Babylon") {
+        exception = "babylon";
+    } else {
+        exception = "";
+    }
     buttons_to_hide = ["node-information-button", "validator-list-button", "create-validator-button", "edit-validator-button", "withdraw-rewards-button", "delegate-token-button", "redelegate-token-button", "vote-button", "unjail-button", "send-token-button"];
     for (button of buttons_to_hide) {
         document.getElementById(button).style.display = currentIp.icon == "Celestia Light" ? "none" : "";
+        document.getElementById(button).nextElementSibling.style.display = currentIp.icon == "Celestia Light" ? "none" : "";
     }
 
     if (start) {
@@ -153,7 +161,11 @@ const showWallets = async () => {
     await tauri.invoke("show_wallets", { exception: exception }).then((list) => {
         appendlater = null;
         list = list.length ? JSON.parse(list) : [];
-        walletList.innerHTML = list.length == 0 || (list.length == 1 && list[0].name == "forkeyringpurpose") ? "<div class='each-row'>No wallets found.</div>" : "";
+        list = list.filter(function (item) {
+            return item.name !== "forkeyringpurpose";
+        });
+
+        walletList.innerHTML = list.length == 0 ? "<div class='each-row'>No wallets found.</div>" : "";
         count = list.length;
         while (count > 0) {
             row = document.createElement("div");
@@ -161,9 +173,6 @@ const showWallets = async () => {
 
             repeat = count == 1 ? 1 : 2;
             for (let i = 0; i < repeat; i++) {
-                if (list[count - i - 1].name == "forkeyringpurpose") {
-                    count--;
-                }
                 halfrow = document.createElement("div");
                 halfrow.setAttribute("class", "each-row-half");
 
@@ -299,37 +308,12 @@ const showErrorMessage = (message) => {
         warningEl.classList.remove("warning-animation");
     }, 500);
     warningElText.textContent = message;
-}
-
-const installationSetup = async () => {
-    const client = await http.getClient();
-    const videos = await client.get("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=PL5c21nTlaW9Pu58608pF0HM9e9_T-hZIK&key=" + GOOGLE_API, {
-        type: 'Json'
-    });
-    let video_id = "";
-    for (let i = 0; i < videos.data.items.length; i++) {
-        if (videos.data.items[i].snippet.title.includes(currentIp.icon.split(" ")[0])) {
-            video_id = videos.data.items[i].snippet.resourceId.videoId;
-            break;
-        }
-    }
-    document.querySelector(".page-video").src = `https://www.youtube.com/embed/${video_id ? video_id : "VnWTTcixqds"}?color=white&rel=0&widget_referrer=https://www.node101.io/wizard`;
-
-    const progressBarIcons = document.querySelectorAll(".each-progress-bar-status-icon");
-    for (let i = 0; i < 100; i++) {
-        if (progressBarIcons && (progressBarIcons[0].getAttribute("style") == "display: unset;" || progressBarIcons[1].getAttribute("style") == "display: unset;")) {
-            break;
-        }
-        document.querySelector(".progress-bar").setAttribute("value", i);
-        document.querySelector(".progress-bar-text-right").textContent = `${i}%`;
-        await new Promise(r => setTimeout(r, i * i / 0.015));
-    }
-    window.scrollTo(0, 0);
 };
+
 const nodeOperationsSetup = async () => {
     document.querySelectorAll(".each-page-manage-node-button")[3].disabled = true;
     const client = await http.getClient();
-    const repoUrl = projects.find(item => item.project.name === currentIp.icon).project.social_media_accounts.github;
+    const repoUrl = projects.find(item => item.project.name == currentIp.icon).project.social_media_accounts.github;
     console.log(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`);
     latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
         type: 'Json'
@@ -349,7 +333,7 @@ const nodeOperationsSetup = async () => {
     document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
         await tauri.invoke("update_node", { latest_version: latest_tag }).catch((err) => { console.log(err) });
     });
-    document.querySelector(".delete-node-button").addEventListener("click", async () => {
+    document.getElementById("delete-node-button").addEventListener("click", async () => {
         if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
             showLoadingAnimation();
             await tauri.invoke("cpu_mem_sync_stop").catch((err) => { dialog.message(err, { title: "Error", type: "error" }) });
@@ -435,15 +419,26 @@ const createValidatorSetup = () => {
                 contact: document.querySelectorAll(".each-input-field")[6].value,
                 comRate: document.querySelectorAll(".each-input-field")[7].value,
                 details: document.querySelectorAll(".each-input-field")[8].value,
-                projectName: currentIp.icon
-            }).then((res) => {
+                exception: exception
+            }).then(async (res) => {
                 res = JSON.parse(res);
+                console.log(res);
                 if (res.raw_log.length == 2) {
                     dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
-                    ipAddresses = ipAddresses.map((item) => {
-                        return item.ip === currentIp.ip ? { ...item, validator_addr: res[1].validator_addr } : item;
-                    });
+                    for (let i = 0; i < ipAddresses.length; i++) {
+                        if (ipAddresses[i].ip == currentIp.ip) {
+                            ipAddresses[i].validator_addr = await tauri.invoke("show_wallets", { exception: exception }).then((list) => {
+                                list = JSON.parse(list);
+                                return list.filter((item) => item.name == document.querySelectorAll(".each-input-field")[1].value)[0].address;
+                            }).catch((err) => {
+                                console.log(err);
+                                showErrorMessage(err);
+                            });
+                            break;
+                        }
+                    }
                     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+                    updateSidebar();
                 } else {
                     showErrorMessage(res.raw_log);
                 }
