@@ -1,6 +1,5 @@
 const loadHomePage = async () => {
     document.getElementById("testnet-tab-button").click();
-    sessionStorage.setItem("current_tab", "testnet");
     updateHeader();
     await showTestnetProjects();
     document.querySelector(".all-installation-wrapper").setAttribute("style", "display: none;");
@@ -27,7 +26,6 @@ const cancelInstallation = async () => {
 };
 const closeInstallation = async () => {
     await loadNodePage(true);
-    tauri.invoke("cpu_mem_sync", { exception: exception });
 };
 
 const showTestnetProjects = async () => {
@@ -40,7 +38,7 @@ const showTestnetProjects = async () => {
     const progressBarSuccessIcon = document.querySelectorAll(".each-progress-bar-status-icon")[0];
     const progressBarErrorIcon = document.querySelectorAll(".each-progress-bar-status-icon")[1];
     const testnetTabContent = document.getElementById('testnet-tab-content');
-    let gonnaPrepend = "";
+    let gonna_prepend = "";
     testnetTabContent.innerHTML = "";
 
     for (let i = 0; i < projects.length; i++) {
@@ -161,22 +159,12 @@ const showTestnetProjects = async () => {
                 })();
 
                 await tauri.invoke("install_node", { network: sessionStorage.getItem("current_tab"), identifier: projects[i].project.identifier }).then(async () => {
-                    await tauri.invoke("password_keyring_check", { exception: exception }).then((r) => {
-                        sessionStorage.setItem("keyring", `{ "required": ${r[0]}, "exists": ${r[1]} }`);
-                    }).catch((e) => {
-                        console.log(e);
-                    });
-                    progressBar.className = "progress-bar progress-bar-success";
-                    document.querySelector(".progress-bar-text-right").textContent = "100%";
-                    document.querySelector(".progress-bar").setAttribute("value", "100");
-                    progressBarSuccessIcon.style.display = "unset"
-                    progressBarTextLeft.textContent = "Installation done!";
-
-                    cancelInstallationButton.className = "each-button";
-                    cancelInstallationButtonName.style.color = "unset";
-                    cancelInstallationButtonName.textContent = "Dive In!";
-
-                    if (exception) {
+                    if (exception == "celestia-lightd") {
+                        await tauri.invoke("delete_wallet", { walletname: "my_celes_key", exception: exception }).catch((err) => { console.log(err); });
+                        await tauri.invoke("create_wallet", { walletname: "my_celes_key", exception: exception })
+                            .then((mnemonic) => dialog.message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" }))
+                            .catch((err) => { console.log(err) });
+                        await tauri.invoke("set_main_wallet", { walletname: "my_celes_key", exception: exception }).catch((err) => { console.log(err); });
                         await tauri.invoke("show_wallets", { exception: exception }).then(async (list) => {
                             console.log(list);
                             list = list.length ? JSON.parse(list) : [];
@@ -187,6 +175,17 @@ const showTestnetProjects = async () => {
                             console.log(err);
                         });
                     };
+
+                    document.querySelector(".progress-bar-text-right").textContent = "100%";
+                    document.querySelector(".progress-bar").setAttribute("value", "100");
+                    progressBarTextLeft.textContent = "Installation done!";
+                    progressBarSuccessIcon.style.display = "unset"
+                    progressBar.className = "progress-bar progress-bar-success";
+
+                    cancelInstallationButton.className = "each-button";
+                    cancelInstallationButtonName.style.color = "unset";
+                    cancelInstallationButtonName.textContent = "Dive In!";
+
                     cancelInstallationButton.removeEventListener("click", cancelInstallation);
                     cancelInstallationButton.addEventListener("click", closeInstallation);
                 }).catch((err) => {
@@ -218,11 +217,11 @@ const showTestnetProjects = async () => {
         row.appendChild(buttons);
         testnetTabContent.appendChild(row);
         if (projects[i].project.name == currentIp.icon) {
-            gonnaPrepend = row;
+            gonna_prepend = row;
         }
     }
-    if (gonnaPrepend) {
-        testnetTabContent.prepend(gonnaPrepend);
+    if (gonna_prepend) {
+        testnetTabContent.prepend(gonna_prepend);
         document.querySelector(".install-button").replaceWith(document.querySelector(".install-button").cloneNode(true));
         document.querySelector(".install-button").addEventListener("click", function () {
             loadNodePage(true);
