@@ -9,34 +9,84 @@ const loadHomePage = async () => {
     document.querySelector(".all-home-wrapper").style.display = "flex";
     hideLoadingAnimation();
 };
-
-const cancelInstallation = async () => {
-    showLoadingAnimation();
-    await tauri.invoke("stop_installation").catch((e) => console.log(e));
-    await tauri.invoke("delete_node", { exception: exception }).then(async () => {
-        currentIp.icon = "Empty Server";
-        currentIp.validator_addr = "";
-        localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-        loadHomePage();
-    }).catch((err) => {
-        console.log(err);
-        dialog.message(err, { title: "Error", type: "error" });
-        hideLoadingAnimation();
-    });
-};
-const closeInstallation = async () => {
-    await loadNodePage(true);
-};
-
-const showTestnetProjects = async () => {
+const installNode = async (project) => {
+    // const client = await http.getClient();
+    // const videos = await client.get("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=PL5c21nTlaW9Pu58608pF0HM9e9_T-hZIK&key=" + GOOGLE_API, {
+    //     type: "Json"
+    // });
+    // let video_id = "";
+    // for (let i = 0; i < videos.data.items.length; i++) {
+    //     if (videos.data.items[i].snippet.title.includes(currentIp.icon.split(" ")[0])) {
+    //         video_id = videos.data.items[i].snippet.resourceId.videoId;
+    //         break;
+    //     }
+    // }
+    // document.querySelector(".page-video").src = `https://www.youtube.com/embed/${video_id ? video_id : "VnWTTcixqds"}?color=white&rel=0&widget_referrer=https://www.node101.io/wizard`;
     const installationInfoIcon = document.querySelector(".installation-info-icon");
     const installationInfoTitle = document.querySelector(".installation-info-title");
     const progressBar = document.querySelector(".progress-bar");
-    const cancelInstallationButton = document.getElementById("cancel-installation-button");
-    const cancelInstallationButtonName = document.getElementById("cancel-installation-button-name");
+    const endInstallationButton = document.getElementById("end-installation-button");
     const progressBarTextLeft = document.querySelector(".progress-bar-text-left");
     const progressBarSuccessIcon = document.querySelectorAll(".each-progress-bar-status-icon")[0];
     const progressBarErrorIcon = document.querySelectorAll(".each-progress-bar-status-icon")[1];
+
+    prevent_close = true;
+    currentIp.icon = project.name;
+    localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+    exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
+
+    endInstallationButton.style.display = "none";
+    installationInfoIcon.src = project.image;
+    installationInfoTitle.textContent = project.name;
+    progressBar.className = "progress-bar progress-bar-loading";
+    progressBarTextLeft.textContent = "Installing...";
+    progressBarSuccessIcon.style.display = "none";
+    progressBarErrorIcon.style.display = "none";
+
+    document.querySelector(".all-home-wrapper").style.display = "none";
+    document.querySelector(".all-installation-wrapper").style.display = "flex";
+
+    (async () => {
+        for (let i = 0; i < 100; i++) {
+            if (!prevent_close) break;
+            document.querySelector(".progress-bar").setAttribute("value", i);
+            document.querySelector(".progress-bar-text-right").textContent = `${i}%`;
+            await new Promise(r => setTimeout(r, i * i / 0.015));
+        }
+    })();
+
+    await tauri.invoke("install_node", { network: sessionStorage.getItem("current_tab"), identifier: project.identifier }).then(async () => {
+        if (exception == "celestia-lightd") {
+            await tauri.invoke("delete_wallet", { walletname: "my_celes_key", exception: exception }).catch((err) => { console.log(err); });
+            await tauri.invoke("create_wallet", { walletname: "my_celes_key", exception: exception })
+                .then((mnemonic) => dialog.message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" }))
+                .catch((err) => { console.log(err) });
+            await tauri.invoke("set_main_wallet", { walletname: "my_celes_key", exception: exception }).catch((err) => { console.log(err); });
+            await tauri.invoke("show_wallets", { exception: exception }).then(async (list) => {
+                console.log(list);
+                list = list.length ? JSON.parse(list) : [];
+                currentIp.validator_addr = list[0].address;
+                localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+                await updateSidebar();
+            }).catch((err) => {
+                console.log(err);
+            });
+        };
+
+        endInstallationButton.style.display = "flex";
+        document.querySelector(".progress-bar-text-right").textContent = "100%";
+        document.querySelector(".progress-bar").setAttribute("value", "100");
+        progressBarTextLeft.textContent = "Installation done!";
+        progressBarSuccessIcon.style.display = "unset"
+        progressBar.className = "progress-bar progress-bar-success";
+    }).catch((err) => {
+        progressBar.className = "progress-bar progress-bar-error";
+        progressBarErrorIcon.style.display = "unset";
+        progressBarTextLeft.textContent = "Installation failed!";
+    });
+    prevent_close = false;
+};
+const showTestnetProjects = async () => {
     const testnetTabContent = document.getElementById('testnet-tab-content');
     let gonna_prepend = "";
     testnetTabContent.innerHTML = "";
@@ -75,7 +125,6 @@ const showTestnetProjects = async () => {
         ratingHeading.textContent = "Rating"
         rating.appendChild(ratingHeading);
         ratingScore = projects[i].project.rating;
-
         for (let j = 0; j < 5; j++) {
             ratingCircle = document.createElement("span");
             ratingCircle.classList.add("each-project-rating-value");
@@ -90,7 +139,6 @@ const showTestnetProjects = async () => {
             ratingCircle.appendChild(ratingCircleOn);
             rating.appendChild(ratingCircle);
         }
-
         details.appendChild(detailsHeading);
         details.appendChild(detailsTags);
         details.appendChild(rating);
@@ -117,84 +165,7 @@ const showTestnetProjects = async () => {
         installButton.appendChild(textDiv);
         installButton.appendChild(installButtonSVG)
         installButton.addEventListener("click", async function () {
-            if (await dialog.confirm("Node is going to be installed, please confirm.", projects[i].project.name)) {
-                // const client = await http.getClient();
-                // const videos = await client.get("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=PL5c21nTlaW9Pu58608pF0HM9e9_T-hZIK&key=" + GOOGLE_API, {
-                //     type: "Json"
-                // });
-                // let video_id = "";
-                // for (let i = 0; i < videos.data.items.length; i++) {
-                //     if (videos.data.items[i].snippet.title.includes(currentIp.icon.split(" ")[0])) {
-                //         video_id = videos.data.items[i].snippet.resourceId.videoId;
-                //         break;
-                //     }
-                // }
-                // document.querySelector(".page-video").src = `https://www.youtube.com/embed/${video_id ? video_id : "VnWTTcixqds"}?color=white&rel=0&widget_referrer=https://www.node101.io/wizard`;
-                prevent_close = true;
-                currentIp.icon = projects[i].project.name;
-                localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
-
-                installationInfoIcon.src = projects[i].project.image;
-                installationInfoTitle.textContent = projects[i].project.name;
-                progressBar.className = "progress-bar progress-bar-loading";
-                progressBarTextLeft.textContent = "Installing...";
-                progressBarSuccessIcon.style.display = "none";
-                progressBarErrorIcon.style.display = "none";
-
-                cancelInstallationButton.removeEventListener("click", closeInstallation);
-                cancelInstallationButton.addEventListener("click", cancelInstallation);
-                cancelInstallationButtonName.textContent = "Cancel";
-                cancelInstallationButtonName.style.color = "rgba(250, 77, 86, 1)";
-                document.querySelector(".all-home-wrapper").style.display = "none";
-                document.querySelector(".all-installation-wrapper").style.display = "flex";
-
-                (async () => {
-                    for (let i = 0; i < 100; i++) {
-                        if (!prevent_close) break;
-                        document.querySelector(".progress-bar").setAttribute("value", i);
-                        document.querySelector(".progress-bar-text-right").textContent = `${i}%`;
-                        await new Promise(r => setTimeout(r, i * i / 0.015));
-                    }
-                })();
-
-                await tauri.invoke("install_node", { network: sessionStorage.getItem("current_tab"), identifier: projects[i].project.identifier }).then(async () => {
-                    if (exception == "celestia-lightd") {
-                        await tauri.invoke("delete_wallet", { walletname: "my_celes_key", exception: exception }).catch((err) => { console.log(err); });
-                        await tauri.invoke("create_wallet", { walletname: "my_celes_key", exception: exception })
-                            .then((mnemonic) => dialog.message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" }))
-                            .catch((err) => { console.log(err) });
-                        await tauri.invoke("set_main_wallet", { walletname: "my_celes_key", exception: exception }).catch((err) => { console.log(err); });
-                        await tauri.invoke("show_wallets", { exception: exception }).then(async (list) => {
-                            console.log(list);
-                            list = list.length ? JSON.parse(list) : [];
-                            currentIp.validator_addr = list[0].address;
-                            localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                            await updateSidebar();
-                        }).catch((err) => {
-                            console.log(err);
-                        });
-                    };
-
-                    document.querySelector(".progress-bar-text-right").textContent = "100%";
-                    document.querySelector(".progress-bar").setAttribute("value", "100");
-                    progressBarTextLeft.textContent = "Installation done!";
-                    progressBarSuccessIcon.style.display = "unset"
-                    progressBar.className = "progress-bar progress-bar-success";
-
-                    cancelInstallationButton.className = "each-button";
-                    cancelInstallationButtonName.style.color = "unset";
-                    cancelInstallationButtonName.textContent = "Dive In!";
-
-                    cancelInstallationButton.removeEventListener("click", cancelInstallation);
-                    cancelInstallationButton.addEventListener("click", closeInstallation);
-                }).catch((err) => {
-                    progressBar.className = "progress-bar progress-bar-error";
-                    progressBarErrorIcon.style.display = "unset";
-                    progressBarTextLeft.textContent = "Installation failed!";
-                });
-                prevent_close = false;
-            };
+            if (await dialog.confirm("Node is going to be installed, please confirm.", projects[i].project.name)) installNode(projects[i].project);
         });
         discoverButton = document.createElement("a");
         discoverButton.classList.add("each-project-button", "discover-button");
@@ -216,9 +187,7 @@ const showTestnetProjects = async () => {
         buttons.appendChild(discoverButton);
         row.appendChild(buttons);
         testnetTabContent.appendChild(row);
-        if (projects[i].project.name == currentIp.icon) {
-            gonna_prepend = row;
-        }
+        if (projects[i].project.name == currentIp.icon) gonna_prepend = row;
     }
     if (gonna_prepend) {
         testnetTabContent.prepend(gonna_prepend);
@@ -239,6 +208,8 @@ const setupHomePage = () => {
     const mainnetTabButton = document.getElementById("mainnet-tab-button");
     const testnetTabContent = document.getElementById("testnet-tab-content");
     const mainnetTabContent = document.getElementById("mainnet-tab-content");
+    const endInstallationButton = document.getElementById("end-installation-button");
+
 
     testnetTabButton.addEventListener("click", () => {
         sessionStorage.setItem("current_tab", "testnet");
@@ -253,5 +224,8 @@ const setupHomePage = () => {
         mainnetTabButton.classList.add("active-tab");
         testnetTabContent.style.display = "none";
         mainnetTabContent.style.display = "flex";
+    });
+    endInstallationButton.addEventListener("click", async () => {
+        await loadNodePage(true);
     });
 };

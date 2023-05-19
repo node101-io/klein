@@ -6,7 +6,27 @@ const loadLoginPage = async () => {
     document.querySelector(".all-node-wrapper").setAttribute("style", "display: none;");
     document.querySelector(".all-home-wrapper").setAttribute("style", "display: none;");
     hideLoadingAnimation();
-}
+};
+const fetchProjects = async () => {
+    projects = [];
+    const client = await http.getClient();
+    const authenticate = await client.post("https://admin.node101.io/api/authenticate", {
+        type: "Json",
+        payload: { key: API_TOKEN },
+    });
+
+    projects.length = 0;
+    for (let count = 0; ; count++) {
+        projects_data = await client.get(`https://admin.node101.io/api/testnets?page=${count}`, {
+            type: "Json",
+            headers: {
+                "Cookie": authenticate.headers["set-cookie"]
+            }
+        })
+        if (!projects_data.data.testnets.length) break;
+        projects.push(...projects_data.data.testnets);
+    }
+};
 
 const setupLoginPage = () => {
     const ipInputEl = document.getElementById("ip-input");
@@ -29,7 +49,7 @@ const setupLoginPage = () => {
             focusedIndex = (focusedIndex + x.length - 2) % (x.length - 1) + 1;
             x[focusedIndex].classList.add("autocomplete-active");
         }
-    }
+    };
 
     const showSelectedItem = (ip, icon) => {
         ipInputEl.value = ip
@@ -38,7 +58,7 @@ const setupLoginPage = () => {
         selectedItemEl.children[0].setAttribute("src", projects.find(item => item.project.name == icon) ? projects.find(item => item.project.name == icon).project.image : "assets/default.png");
         selectedItemEl.children[1].textContent = icon;
         selectedItemEl.children[2].textContent = ip;
-    }
+    };
 
     new MutationObserver(() => {
         dropdownToggleEl.setAttribute("style", autocompleteListEl.innerHTML == "" ? "transform: rotate(0); transition: 0.5s;" : "transform: rotateX(-180deg); transition: 0.5s;");
@@ -108,8 +128,8 @@ const setupLoginPage = () => {
                 div.appendChild(div2);
                 div.appendChild(removebutton);
                 autocompleteListEl.appendChild(div);
-            }
-        }
+            };
+        };
     });
 
     selectedItemEl.addEventListener("click", function () {

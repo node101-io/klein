@@ -45,7 +45,7 @@ body.waiting * {
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  zoom: 1;
+  /* zoom: 1; */
 }
 
 /* LOGIN PAGE */
@@ -1058,10 +1058,6 @@ body.waiting * {
   border: 1px solid rgba(250, 77, 86, 1);
   background: transparent;
   cursor: pointer;
-}
-
-#cancel-installation-button {
-  align-self: flex-end;
 }
 
 .cancel-delete-button:hover {

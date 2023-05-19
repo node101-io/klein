@@ -180,7 +180,6 @@ const showWallets = async () => {
                 label.setAttribute("class", "each-input-label");
 
                 balancetext = "";
-                console.log(list[count - i - 1]);
                 if (list[count - i - 1].balance.balances.length) {
                     for (let m = 0; m < list[count - i - 1].balance.balances.length; m++) {
                         balancetext += parseInt((list[count - i - 1].balance.balances[m].amount / 1000000) * 100) / 100 + " " + list[count - i - 1].balance.balances[m].denom.slice(1) + "\n";
@@ -314,7 +313,6 @@ const nodeOperationsSetup = async () => {
     document.querySelectorAll(".each-page-manage-node-button")[3].disabled = true;
     const client = await http.getClient();
     const repoUrl = projects.find(item => item.project.name == currentIp.icon).project.social_media_accounts.github;
-    console.log(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`);
     latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
         type: 'Json'
     })).data.tag_name;
@@ -809,7 +807,6 @@ const setupNodePage = () => {
     nodeInformationButton.addEventListener("click", async function () {
         showLoadingAnimation();
         await tauri.invoke("node_info").then(async (obj) => {
-            console.log(obj);
             await changePage("page-content/node-information.html");
             const fields = document.querySelectorAll(".each-output-field");
             obj = JSON.parse(obj);
