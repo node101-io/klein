@@ -22,10 +22,10 @@ const fetchProjects = async () => {
             headers: {
                 "Cookie": authenticate.headers["set-cookie"]
             }
-        })
+        });
         if (!projects_data.data.testnets.length) break;
         projects.push(...projects_data.data.testnets);
-    }
+    };
 };
 
 const setupLoginPage = () => {
@@ -41,18 +41,20 @@ const setupLoginPage = () => {
     const warningEl = document.querySelector(".warning");
     const warningElText = document.querySelector(".warning-text");
 
+    ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
+
     const highlightItem = (x) => {
         if (x.length > 1) {
             for (var i = 0; i < x.length; i++) {
                 x[i].classList.remove("autocomplete-active");
-            }
+            };
             focusedIndex = (focusedIndex + x.length - 2) % (x.length - 1) + 1;
             x[focusedIndex].classList.add("autocomplete-active");
-        }
+        };
     };
 
     const showSelectedItem = (ip, icon) => {
-        ipInputEl.value = ip
+        ipInputEl.value = ip;
         ipInputEl.setAttribute("style", "display: none;");
         selectedItemEl.setAttribute("style", "display: flex;");
         selectedItemEl.children[0].setAttribute("src", projects.find(item => item.project.name == icon) ? projects.find(item => item.project.name == icon).project.image : "assets/default.png");
@@ -88,7 +90,7 @@ const setupLoginPage = () => {
         }
         else if (e.key == "Enter" && focusedIndex > -1) {
             x[focusedIndex].click();
-        }
+        };
     });
 
     ipInputEl.addEventListener("input", function () {
@@ -141,7 +143,7 @@ const setupLoginPage = () => {
     passwordInputEl.addEventListener("keydown", function (e) {
         if (e.key == "Enter") {
             loginButtonEl.click();
-        }
+        };
     });
 
     loginButtonEl.addEventListener("click", function () {
@@ -153,7 +155,7 @@ const setupLoginPage = () => {
                 warningEl.classList.remove("warning-animation");
             }, 500);
             return;
-        }
+        };
         showLoadingAnimation();
         tauri.invoke("log_in", {
             ip: ipInputEl.value,
@@ -166,14 +168,14 @@ const setupLoginPage = () => {
                 if (currentIp.icon !== project_name) {
                     currentIp.icon = project_name;
                     currentIp.validator_addr = "";
-                }
+                };
             } else {
                 currentIp = { ip: ipInputEl.value, icon: project_name, validator_addr: "" };
                 if (checkboxInputEl.checked) {
                     ipAddresses.push(currentIp);
                     checkboxInputEl.checked = false;
-                }
-            }
+                };
+            };
             localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
             document.querySelector(".selected-item-modify").click();
             ipInputEl.value = "";
@@ -192,11 +194,7 @@ const setupLoginPage = () => {
     });
 
     window.addEventListener("click", function (e) {
-        if (e.target == dropdownToggleEl && !autocompleteListEl.innerHTML) {
-            ipInputEl.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-        else {
-            autocompleteListEl.innerHTML = "";
-        }
+        if (e.target == dropdownToggleEl && !autocompleteListEl.innerHTML) ipInputEl.dispatchEvent(new Event("input", { bubbles: true }));
+        else autocompleteListEl.innerHTML = "";
     });
 };

@@ -52,7 +52,7 @@ const installNode = async (project) => {
             document.querySelector(".progress-bar").setAttribute("value", i);
             document.querySelector(".progress-bar-text-right").textContent = `${i}%`;
             await new Promise(r => setTimeout(r, i * i / 0.015));
-        }
+        };
     })();
 
     await tauri.invoke("install_node", { network: sessionStorage.getItem("current_tab"), identifier: project.identifier }).then(async () => {
@@ -135,10 +135,10 @@ const showTestnetProjects = async () => {
                 ratingScore = ratingScore - 1;
             } else {
                 ratingCircleOn.style.display = "none";
-            }
+            };
             ratingCircle.appendChild(ratingCircleOn);
             rating.appendChild(ratingCircle);
-        }
+        };
         details.appendChild(detailsHeading);
         details.appendChild(detailsTags);
         details.appendChild(rating);
@@ -188,7 +188,7 @@ const showTestnetProjects = async () => {
         row.appendChild(buttons);
         testnetTabContent.appendChild(row);
         if (projects[i].project.name == currentIp.icon) gonna_prepend = row;
-    }
+    };
     if (gonna_prepend) {
         testnetTabContent.prepend(gonna_prepend);
         document.querySelector(".install-button").replaceWith(document.querySelector(".install-button").cloneNode(true));
@@ -199,8 +199,8 @@ const showTestnetProjects = async () => {
         document.querySelector(".install-button").firstChild.nextSibling.style.transform = "rotate(-90deg)";
         for (let i = 1; i < document.querySelectorAll(".install-button").length; i++) {
             document.querySelectorAll(".install-button")[i].disabled = true;
-        }
-    }
+        };
+    };
 }
 
 const setupHomePage = () => {
@@ -209,7 +209,6 @@ const setupHomePage = () => {
     const testnetTabContent = document.getElementById("testnet-tab-content");
     const mainnetTabContent = document.getElementById("mainnet-tab-content");
     const endInstallationButton = document.getElementById("end-installation-button");
-
 
     testnetTabButton.addEventListener("click", () => {
         sessionStorage.setItem("current_tab", "testnet");

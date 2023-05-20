@@ -5,7 +5,7 @@ tevent.listen("cpu_mem_sync", (event) => {
     } catch (e) {
         console.log("error parsing: ", event.payload);
         return;
-    }
+    };
 
     syncStatusChart.options.barColor = response.catchup == "true" ? "#0F62FE" : response.catchup == "false" ? "#43BE66" : "#FF2632";
     syncStatusChartPercent.textContent = response.catchup == "true" || response.catchup == "false" ? response.height : "!";
@@ -19,12 +19,12 @@ tevent.listen("cpu_mem_sync", (event) => {
         }, 2300);
     } else {
         syncStatusChart.update(100);
-    }
+    };
 
     if (response.cpu < 100) {
         cpuStatusChart.update(Math.floor(response.cpu));
         cpuStatusChartPercent.textContent = Math.floor(response.cpu) + "%";
-    }
+    };
     memStatusChart.update(Math.floor(response.mem));
     memStatusChartPercent.textContent = Math.floor(response.mem) + "%";
 
@@ -39,15 +39,15 @@ tevent.listen("cpu_mem_sync", (event) => {
         eachSidebarTag[0].classList.add("sidebar-inactive-tag");
         eachSidebarTag[0].classList.remove("sidebar-active-tag");
         eachSidebarTag[0].textContent = response.status.charAt(0).toUpperCase() + response.status.slice(1);
-    }
+    };
     if (response.version) {
-        version_new = response.version.charAt(0).toLowerCase() == "v" ? response.version : "v" + response.version
+        version_new = response.version.charAt(0).toLowerCase() == "v" ? response.version : "v" + response.version;
         if (document.querySelector(".each-page-manage-node-button")) {
             document.querySelectorAll(".each-page-manage-node-button")[3].disabled = (version_new == latest_tag);
-        }
+        };
         eachSidebarTag[1].textContent = version_new;
         eachSidebarTag[1].classList.add("version-tag");
-    }
+    };
     document.body.classList.remove("waiting");
 });
 
@@ -84,12 +84,12 @@ const loadNodePage = async (start) => {
         exception = "babylon";
     } else {
         exception = "";
-    }
+    };
     buttons_to_hide = ["node-information-button", "validator-list-button", "create-validator-button", "edit-validator-button", "withdraw-rewards-button", "delegate-token-button", "redelegate-token-button", "vote-button", "unjail-button", "send-token-button"];
     for (button of buttons_to_hide) {
         document.getElementById(button).style.display = currentIp.icon == "Celestia Light" ? "none" : "";
         document.getElementById(button).nextElementSibling.style.display = currentIp.icon == "Celestia Light" ? "none" : "";
-    }
+    };
 
     if (start) {
         await tauri.invoke("password_keyring_check", { exception: exception }).then((res) => {
@@ -99,13 +99,13 @@ const loadNodePage = async (start) => {
         });
         await changePage("page-content/node-operations.html", nodeOperationsSetup);
         tauri.invoke("cpu_mem_sync", { exception: exception });
-    }
-}
+    };
+};
 const changePage = async (page, callback) => {
     document.getElementById("content-of-page").innerHTML = await (await fetch(page)).text();
     if (callback) {
         await callback();
-    }
+    };
 };
 const updateSidebar = async () => {
     document.querySelector(".sidebar-info-details-name").textContent = currentIp.icon;
@@ -118,8 +118,8 @@ const ifWalletExists = async (walletname) => {
     for (let i = 0; i < wallets.length; i++) {
         if (wallets[i].previousSibling.textContent == walletname) {
             return true;
-        }
-    }
+        };
+    };
     return false;
 };
 const createWallet = async (walletname) => {
@@ -129,14 +129,14 @@ const createWallet = async (walletname) => {
         showLoadingAnimation();
         if (wallet_exists) {
             await tauri.invoke("delete_wallet", { walletname, exception }).catch((err) => { console.log(err) });
-        }
+        };
         await tauri.invoke("create_wallet", { walletname, exception })
             .then((mnemonic) => dialog.message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" }))
             .catch((err) => { console.log(err) });
         await showWallets();
         document.querySelector(".each-input-field").value = "";
         hideLoadingAnimation();
-    }
+    };
 };
 const recoverWallet = async (walletname) => {
     const wallet_exists = await ifWalletExists(walletname);
@@ -146,7 +146,7 @@ const recoverWallet = async (walletname) => {
         const mnemonic = Array.from(document.querySelectorAll(".each-mnemonic-input-field")).map(input => input.value).join(" ");
         if (wallet_exists) {
             await tauri.invoke("delete_wallet", { walletname: walletname, exception: exception }).catch((err) => { console.log(err) });
-        }
+        };
         await tauri.invoke("recover_wallet", { walletname: walletname, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required, exception: exception })
             .then((res) => { dialog.message("", { title: "Your wallet has been recovered successfully.", type: "info" }) })
             .catch((err) => { console.log(err) });
@@ -154,7 +154,7 @@ const recoverWallet = async (walletname) => {
         document.querySelectorAll(".each-input-field")[1].value = "";
         document.querySelectorAll(".each-mnemonic-input-field").forEach(input => input.value = "");
         hideLoadingAnimation();
-    }
+    };
 };
 const showWallets = async () => {
     const walletList = document.getElementById("page-wallet-list");
@@ -186,7 +186,7 @@ const showWallets = async () => {
                     };
                 } else {
                     balancetext = "No tokens found.";
-                }
+                };
                 label.textContent = list[count - i - 1].name;
 
                 labelicon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -214,11 +214,11 @@ const showWallets = async () => {
                             updateSidebar();
                             await showWallets();
                             hideLoadingAnimation();
-                        }
+                        };
                     });
                     labelicon.appendChild(labeliconpath);
                     label.appendChild(labelicon);
-                }
+                };
 
                 outputgroup = document.createElement("div");
                 outputgroup.setAttribute("class", "each-output-group");
@@ -255,11 +255,11 @@ const showWallets = async () => {
                         if (this.previousSibling.previousSibling.previousSibling.getAttribute("data") == document.querySelector(".sidebar-info-details-copy-address").textContent) {
                             document.querySelector(".sidebar-info-details-copy-address").textContent = "";
                             document.querySelector(".sidebar-info-details-copy").setAttribute("style", "display: none;");
-                        }
+                        };
                         await tauri.invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent, exception: exception }).catch((err) => { console.log(err) });
                         await showWallets();
                         hideLoadingAnimation();
-                    }
+                    };
                 });
 
                 path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -274,15 +274,15 @@ const showWallets = async () => {
                 halfrow.appendChild(label);
                 halfrow.appendChild(outputgroup);
                 row.appendChild(halfrow);
-            }
+            };
             walletList.appendChild(row);
             count = count - 2;
-        }
+        };
 
         if (appendlater) {
             appendlater.parentNode.insertBefore(document.querySelector(".each-row-half"), appendlater);
             document.querySelector(".each-row-half").parentNode.prepend(appendlater);
-        }
+        };
     }).catch((err) => {
         console.log(err);
     });
@@ -293,10 +293,10 @@ const handleKeyringExistance = async (page_to_load, setup_func) => {
             await changePage("page-content/keyring-auth.html", () => keyringAuthSetup(page_to_load, setup_func));
         } else {
             await changePage("page-content/create-keyring.html", () => createKeyringSetup(page_to_load, setup_func));
-        }
+        };
     } else {
         await changePage(page_to_load, setup_func);
-    }
+    };
 };
 const showErrorMessage = (message) => {
     const warningEl = document.getElementById("inner-warning");
@@ -344,7 +344,7 @@ const nodeOperationsSetup = async () => {
                 console.log(err);
                 dialog.message(err, { title: "Error", type: "error" });
             });
-        }
+        };
     });
     hideLoadingAnimation();
     window.scrollTo(0, 0);
@@ -433,13 +433,13 @@ const createValidatorSetup = () => {
                                 showErrorMessage(err);
                             });
                             break;
-                        }
-                    }
+                        };
+                    };
                     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
                     updateSidebar();
                 } else {
                     showErrorMessage(res.raw_log);
-                }
+                };
             }).catch((err) => {
                 console.log(err);
                 showErrorMessage(err);
@@ -447,7 +447,7 @@ const createValidatorSetup = () => {
             hideLoadingAnimation();
         } else {
             showErrorMessage("Please wait for the node to sync!");
-        }
+        };
     });
     window.scrollTo(0, 400);
 };
@@ -469,7 +469,7 @@ const editValidatorSetup = () => {
                     dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
                 } else {
                     showErrorMessage(res.raw_log);
-                }
+                };
             }).catch((err) => {
                 console.log(err);
                 showErrorMessage(err);
@@ -477,7 +477,7 @@ const editValidatorSetup = () => {
             hideLoadingAnimation();
         } else {
             showErrorMessage("Please wait for the node to sync!");
-        }
+        };
     });
     window.scrollTo(0, 400);
 };
@@ -493,7 +493,7 @@ const withdrawRewardsSetup = () => {
                 dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
             } else {
                 showErrorMessage(res.raw_log);
-            }
+            };
         }).catch((err) => {
             console.log(err);
             showErrorMessage(err);
@@ -516,7 +516,7 @@ const delegateSetup = (valoper) => {
                 dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
             } else {
                 showErrorMessage(res.raw_log);
-            }
+            };
         }).catch((err) => {
             console.log(err);
             showErrorMessage(err);
@@ -540,7 +540,7 @@ const redelegateSetup = () => {
                 dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
             } else {
                 showErrorMessage(res.raw_log);
-            }
+            };
         }).catch((err) => {
             console.log(err);
             showErrorMessage(err);
@@ -562,7 +562,7 @@ const voteSetup = () => {
                 dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
             } else {
                 showErrorMessage(res.raw_log);
-            }
+            };
         }).catch((err) => {
             console.log(err);
             showErrorMessage(err);
@@ -587,7 +587,7 @@ const sendTokenSetup = () => {
                 dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
             } else {
                 showErrorMessage(res.raw_log);
-            }
+            };
         }).catch((err) => {
             console.log(err);
             showErrorMessage(err);
@@ -613,12 +613,12 @@ const createKeyringSetup = (page_html, page_setup) => {
                 console.log(err);
             });
             hideLoadingAnimation();
-        }
+        };
     });
     document.querySelectorAll(".each-input-field")[1].addEventListener("keydown", (e) => {
         if (e.key == "Enter") {
             document.querySelector(".each-button").click();
-        }
+        };
     });
     window.scrollTo(0, 400);
 };
@@ -633,7 +633,7 @@ const keyringAuthSetup = (page_html, page_setup) => {
                 console.log(err);
             });
             hideLoadingAnimation();
-        }
+        };
     });
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
@@ -648,7 +648,7 @@ const keyringAuthSetup = (page_html, page_setup) => {
     document.querySelector(".each-input-field").addEventListener("keydown", (e) => {
         if (e.key == "Enter") {
             document.querySelector(".each-button").click();
-        }
+        };
     });
     window.scrollTo(0, 400);
 };
@@ -662,7 +662,7 @@ const walletsSetup = async () => {
                 document.querySelectorAll(".each-mnemonic-input-field").forEach((element, index) => {
                     element.value = mnemo[index];
                 });
-            }
+            };
         }, 100);
     });
     document.querySelectorAll(".each-button")[0].addEventListener("click", async function () {
@@ -671,7 +671,7 @@ const walletsSetup = async () => {
     document.querySelectorAll(".each-input-field")[0].addEventListener("keydown", (e) => {
         if (e.key == "Enter") {
             document.querySelectorAll(".each-button")[0].click();
-        }
+        };
     });
     document.querySelectorAll(".each-button")[1].addEventListener("click", async function () {
         await recoverWallet(document.querySelectorAll(".each-input-field")[1].value);
@@ -680,9 +680,9 @@ const walletsSetup = async () => {
         document.querySelectorAll(".each-mnemonic-input-field")[i].addEventListener("keydown", (e) => {
             if (e.key == "Backspace" && document.querySelectorAll(".each-mnemonic-input-field")[i].value.length == 0) {
                 document.querySelectorAll(".each-mnemonic-input-field")[i - 1].focus();
-            }
+            };
         });
-    }
+    };
     hideLoadingAnimation();
     window.scrollTo(0, 400);
 };
@@ -772,7 +772,7 @@ const setupNodePage = () => {
             validatorOperationsArrow.style.transform = "rotate(0)";
             validatorOperationsArrow.style.transition = "0.5s";
             subButtonsDiv.style.display = "none";
-        }
+        };
     });
     validatorListButton.addEventListener("click", async function () {
         await changePage("page-content/validator-list.html", validatorListSetup);
@@ -810,30 +810,30 @@ const setupNodePage = () => {
             await changePage("page-content/node-information.html");
             const fields = document.querySelectorAll(".each-output-field");
             obj = JSON.parse(obj);
-            fields[0].textContent = obj.NodeInfo.protocol_version.p2p
-            fields[1].textContent = obj.NodeInfo.protocol_version.block
-            fields[2].textContent = obj.NodeInfo.protocol_version.app
-            fields[3].textContent = obj.NodeInfo.id
-            fields[4].textContent = obj.NodeInfo.listen_addr
-            fields[5].textContent = obj.NodeInfo.network
-            fields[6].textContent = obj.NodeInfo.version
-            fields[7].textContent = obj.NodeInfo.channels
-            fields[8].textContent = obj.NodeInfo.moniker
-            fields[9].textContent = obj.NodeInfo.other.tx_index
-            fields[10].textContent = obj.NodeInfo.other.rpc_address
-            fields[11].textContent = obj.SyncInfo.latest_block_hash
-            fields[12].textContent = obj.SyncInfo.latest_app_hash
-            fields[13].textContent = obj.SyncInfo.latest_block_height
-            fields[14].textContent = obj.SyncInfo.latest_block_time
-            fields[15].textContent = obj.SyncInfo.earliest_block_hash
-            fields[16].textContent = obj.SyncInfo.earliest_app_hash
-            fields[17].textContent = obj.SyncInfo.earliest_block_height
-            fields[18].textContent = obj.SyncInfo.earliest_block_time
-            fields[19].textContent = obj.SyncInfo.catching_up
-            fields[20].textContent = obj.ValidatorInfo.Address
-            fields[21].textContent = obj.ValidatorInfo.PubKey.type
-            fields[22].textContent = obj.ValidatorInfo.PubKey.value
-            fields[23].textContent = obj.ValidatorInfo.VotingPower
+            fields[0].textContent = obj.NodeInfo.protocol_version.p2p;
+            fields[1].textContent = obj.NodeInfo.protocol_version.block;
+            fields[2].textContent = obj.NodeInfo.protocol_version.app;
+            fields[3].textContent = obj.NodeInfo.id;
+            fields[4].textContent = obj.NodeInfo.listen_addr;
+            fields[5].textContent = obj.NodeInfo.network;
+            fields[6].textContent = obj.NodeInfo.version;
+            fields[7].textContent = obj.NodeInfo.channels;
+            fields[8].textContent = obj.NodeInfo.moniker;
+            fields[9].textContent = obj.NodeInfo.other.tx_index;
+            fields[10].textContent = obj.NodeInfo.other.rpc_address;
+            fields[11].textContent = obj.SyncInfo.latest_block_hash;
+            fields[12].textContent = obj.SyncInfo.latest_app_hash;
+            fields[13].textContent = obj.SyncInfo.latest_block_height;
+            fields[14].textContent = obj.SyncInfo.latest_block_time;
+            fields[15].textContent = obj.SyncInfo.earliest_block_hash;
+            fields[16].textContent = obj.SyncInfo.earliest_app_hash;
+            fields[17].textContent = obj.SyncInfo.earliest_block_height;
+            fields[18].textContent = obj.SyncInfo.earliest_block_time;
+            fields[19].textContent = obj.SyncInfo.catching_up;
+            fields[20].textContent = obj.ValidatorInfo.Address;
+            fields[21].textContent = obj.ValidatorInfo.PubKey.type;
+            fields[22].textContent = obj.ValidatorInfo.PubKey.value;
+            fields[23].textContent = obj.ValidatorInfo.VotingPower;
             hideLoadingAnimation();
             window.scrollTo(0, 400);
         }).catch((err) => {

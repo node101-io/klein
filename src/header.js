@@ -4,7 +4,7 @@ const updateHeader = function () {
     document.querySelector(".header-menu-ip-list-button-icon").src = imgSrc;
     document.querySelector(".header-menu-ip-list-button-details-ip").textContent = currentIp.ip;
     document.querySelector(".header-menu-ip-list-button-details-name").textContent = currentIp.icon;
-}
+};
 
 const setupHeader = function () {
     const headerMenu = document.querySelector(".header-menu");
@@ -28,7 +28,7 @@ const setupHeader = function () {
         }
         else {
             headerMenu.style.display = "block";
-        }
+        };
     });
 
     headerMenuIpButton.addEventListener('click', function () {
@@ -57,10 +57,10 @@ const setupHeader = function () {
                     document.querySelector(".switch-ip-prompt .each-input-label").textContent = ipAddresses[i].ip;
                     document.querySelector(".switch-ip-prompt").style.display = "flex";
                     switchIpPromptInput.focus();
-                }
+                };
             });
             submenuIpList.appendChild(ipListItem);
-        }
+        };
         if (submenuIpList.style.display == "block") {
             submenuIpList.style.display = "none";
             scrollbarBackground.style.display = "none";
@@ -69,41 +69,41 @@ const setupHeader = function () {
             submenuIpList.style.display = "block";
             scrollbarBackground.style.display = "block";
             scrollbarBackground.style.height = `${Math.min(ipAddresses.length, 3) * 60}px`;
-        }
+        };
     });
 
-    notificationsButton.addEventListener('click', function () {
-        submenuIpList.style.display = "none";
-        submenuNotifications.innerHTML = "";
-        const notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
-        for (let i = notifications.length - 1; 0 < i; i--) {
-            notificationItem = document.createElement("div");
-            notificationItem.classList.add("each-header-submenu-notifications-item");
-            notificationIcon = document.createElement("span");
-            notificationIcon.classList.add(`each-notification-icon${notifications[i].unread ? '' : '-seen'}`);
-            notificationContent = document.createElement("div");
-            notificationContent.classList.add("each-notification-content");
-            notificationContent.innerText = notifications[i].text;
-            notificationItem.appendChild(notificationIcon);
-            notificationItem.appendChild(notificationContent);
-            submenuNotifications.appendChild(notificationItem);
-        }
-        document.querySelector(".header-node-icon-notification").style.display = "none";
-        document.querySelector(".each-header-menu-item-notification").style.display = "none";
-        localStorage.setItem("notifications", JSON.stringify(notifications.map((notification) => {
-            notification.unread = false;
-            return notification;
-        })));
-        if (submenuNotifications.style.display == "block") {
-            submenuNotifications.style.display = "none";
-            scrollbarBackground.style.display = "none";
-        }
-        else {
-            submenuNotifications.style.display = "block";
-            scrollbarBackground.style.display = "block";
-            scrollbarBackground.style.height = `${Math.min(notifications.length, 6) * 36}px`;
-        }
-    });
+    // notificationsButton.addEventListener('click', function () {
+    //     submenuIpList.style.display = "none";
+    //     submenuNotifications.innerHTML = "";
+    //     const notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
+    //     for (let i = notifications.length - 1; 0 < i; i--) {
+    //         notificationItem = document.createElement("div");
+    //         notificationItem.classList.add("each-header-submenu-notifications-item");
+    //         notificationIcon = document.createElement("span");
+    //         notificationIcon.classList.add(`each-notification-icon${notifications[i].unread ? '' : '-seen'}`);
+    //         notificationContent = document.createElement("div");
+    //         notificationContent.classList.add("each-notification-content");
+    //         notificationContent.innerText = notifications[i].text;
+    //         notificationItem.appendChild(notificationIcon);
+    //         notificationItem.appendChild(notificationContent);
+    //         submenuNotifications.appendChild(notificationItem);
+    //     }
+    //     document.querySelector(".header-node-icon-notification").style.display = "none";
+    //     document.querySelector(".each-header-menu-item-notification").style.display = "none";
+    //     localStorage.setItem("notifications", JSON.stringify(notifications.map((notification) => {
+    //         notification.unread = false;
+    //         return notification;
+    //     })));
+    //     if (submenuNotifications.style.display == "block") {
+    //         submenuNotifications.style.display = "none";
+    //         scrollbarBackground.style.display = "none";
+    //     }
+    //     else {
+    //         submenuNotifications.style.display = "block";
+    //         scrollbarBackground.style.display = "block";
+    //         scrollbarBackground.style.height = `${Math.min(notifications.length, 6) * 36}px`;
+    //     }
+    // });
 
     logoutButton.addEventListener('click', function () {
         showLoadingAnimation();
@@ -138,7 +138,7 @@ const setupHeader = function () {
                     if (currentIp.icon !== project_name) {
                         currentIp.icon = project_name;
                         currentIp.validator_addr = "";
-                    }
+                    };
                     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
                     switchIpPromptInput.value = "";
                     switchIpPromptClose.click();
@@ -154,13 +154,13 @@ const setupHeader = function () {
                 dialog.message(err, { type: "error" });
                 hideLoadingAnimation();
             });
-        }
+        };
     });
 
     switchIpPromptInput.addEventListener('keydown', function (e) {
         if (e.key == "Enter") {
             switchIpPromptButton.click();
-        }
+        };
     });
 
     window.addEventListener("click", async (e) => {
@@ -169,6 +169,6 @@ const setupHeader = function () {
             submenuIpList.style.display = "none";
             submenuNotifications.style.display = "none";
             scrollbarBackground.style.display = "none";
-        }
+        };
     });
 };

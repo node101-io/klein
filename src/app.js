@@ -1,20 +1,19 @@
 const { tauri, dialog, clipboard, http, event: tevent, window: twindow } = window.__TAURI__;
 
-const ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
-
 const handleRighClick = (e) => {
   if (e.target.tagName === "INPUT" && e.target.type == "text") return;
   e.preventDefault();
-}
-window.addEventListener("contextmenu", handleRighClick);
+};
 
 window.addEventListener("DOMContentLoaded", async () => {
+  window.addEventListener("contextmenu", handleRighClick);
+
   prevent_close = false;
   (async () => {
     await twindow.appWindow.onCloseRequested(async (event) => {
       if (prevent_close && !(await dialog.confirm("Installation will be cancelled. Are you sure you want to exit?"))) {
         event.preventDefault();
-      }
+      };
     });
   })();
 
