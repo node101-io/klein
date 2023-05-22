@@ -1,7 +1,13 @@
 const updateHeader = function () {
-    imgSrc = (currentIp.icon == "Empty Server") ? "assets/default.png" : projects.find(item => item.project.name == currentIp.icon).project.image;
+    if (currentIp.icon == "Empty Server") {
+        imgSrc = "assets/default.png";
+        document.querySelector(".header-menu-ip-list-button-icon").style.display = "none";
+    } else {
+        imgSrc = projects.find(item => item.project.name == currentIp.icon).project.image;
+        document.querySelector(".header-menu-ip-list-button-icon").style.display = "unset";
+        document.querySelector(".header-menu-ip-list-button-icon").src = imgSrc;
+    };
     document.querySelector(".header-node-icon").src = imgSrc;
-    document.querySelector(".header-menu-ip-list-button-icon").src = imgSrc;
     document.querySelector(".header-menu-ip-list-button-details-ip").textContent = currentIp.ip;
     document.querySelector(".header-menu-ip-list-button-details-name").textContent = currentIp.icon;
 };
@@ -12,6 +18,7 @@ const setupHeader = function () {
     const submenuNotifications = document.querySelector(".header-submenu-notifications");
     const scrollbarBackground = document.querySelector(".header-menu-scroll-background");
     const headerMenuIpButton = document.querySelector(".header-menu-ip-list-button");
+    const headerMenuIpButtonArrow = document.querySelector(".header-menu-ip-list-button-arrow");
     const nodeIcons = document.querySelector(".header-node-icons");
     const notificationsButton = document.getElementById("notifications-button");
     const logoutButton = document.getElementById("logout-button");
@@ -27,6 +34,7 @@ const setupHeader = function () {
             scrollbarBackground.style.display = "none";
         }
         else {
+            headerMenuIpButtonArrow.style.display = (ipAddresses.length == 0 || (ipAddresses.length == 1 && ipAddresses[0].ip == currentIp.ip)) ? "none" : "unset";
             headerMenu.style.display = "block";
         };
     });
@@ -66,95 +74,66 @@ const setupHeader = function () {
             scrollbarBackground.style.display = "none";
         }
         else {
-            submenuIpList.style.display = "block";
-            scrollbarBackground.style.display = "block";
-            scrollbarBackground.style.height = `${Math.min(ipAddresses.length, 3) * 60}px`;
+            if (headerMenuIpButtonArrow.style.display == "unset") {
+                submenuIpList.style.display = "block";
+                scrollbarBackground.style.display = "block";
+                scrollbarBackground.style.height = `${Math.min(ipAddresses.length, 3) * 60}px`;
+            }
         };
     });
 
-    // notificationsButton.addEventListener('click', function () {
-    //     submenuIpList.style.display = "none";
-    //     submenuNotifications.innerHTML = "";
-    //     const notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
-    //     for (let i = notifications.length - 1; 0 < i; i--) {
-    //         notificationItem = document.createElement("div");
-    //         notificationItem.classList.add("each-header-submenu-notifications-item");
-    //         notificationIcon = document.createElement("span");
-    //         notificationIcon.classList.add(`each-notification-icon${notifications[i].unread ? '' : '-seen'}`);
-    //         notificationContent = document.createElement("div");
-    //         notificationContent.classList.add("each-notification-content");
-    //         notificationContent.innerText = notifications[i].text;
-    //         notificationItem.appendChild(notificationIcon);
-    //         notificationItem.appendChild(notificationContent);
-    //         submenuNotifications.appendChild(notificationItem);
-    //     }
-    //     document.querySelector(".header-node-icon-notification").style.display = "none";
-    //     document.querySelector(".each-header-menu-item-notification").style.display = "none";
-    //     localStorage.setItem("notifications", JSON.stringify(notifications.map((notification) => {
-    //         notification.unread = false;
-    //         return notification;
-    //     })));
-    //     if (submenuNotifications.style.display == "block") {
-    //         submenuNotifications.style.display = "none";
-    //         scrollbarBackground.style.display = "none";
-    //     }
-    //     else {
-    //         submenuNotifications.style.display = "block";
-    //         scrollbarBackground.style.display = "block";
-    //         scrollbarBackground.style.height = `${Math.min(notifications.length, 6) * 36}px`;
-    //     }
-    // });
+    notificationsButton.addEventListener('click', function () {
+        submenuIpList.style.display = "none";
+        submenuNotifications.innerHTML = "";
+        const notifications = localStorage.getItem("notifications") ? JSON.parse(localStorage.getItem("notifications")) : [];
+        for (let i = notifications.length - 1; 0 < i; i--) {
+            notificationItem = document.createElement("div");
+            notificationItem.classList.add("each-header-submenu-notifications-item");
+            notificationIcon = document.createElement("span");
+            notificationIcon.classList.add(`each-notification-icon${notifications[i].unread ? '' : '-seen'}`);
+            notificationContent = document.createElement("div");
+            notificationContent.classList.add("each-notification-content");
+            notificationContent.innerText = notifications[i].text;
+            notificationItem.appendChild(notificationIcon);
+            notificationItem.appendChild(notificationContent);
+            submenuNotifications.appendChild(notificationItem);
+        }
+        document.querySelector(".header-node-icon-notification").style.display = "none";
+        document.querySelector(".each-header-menu-item-notification").style.display = "none";
+        localStorage.setItem("notifications", JSON.stringify(notifications.map((notification) => {
+            notification.unread = false;
+            return notification;
+        })));
+        if (submenuNotifications.style.display == "block") {
+            submenuNotifications.style.display = "none";
+            scrollbarBackground.style.display = "none";
+        }
+        else {
+            submenuNotifications.style.display = "block";
+            scrollbarBackground.style.display = "block";
+            scrollbarBackground.style.height = `${Math.min(notifications.length, 6) * 36}px`;
+        };
+    });
 
-    logoutButton.addEventListener('click', function () {
-        showLoadingAnimation();
-        tauri.invoke("cpu_mem_sync_stop");
-        setTimeout(() => {
-            tauri.invoke("log_out");
+    logoutButton.addEventListener('click', async function () {
+        proceed = prevent_close ? await dialog.confirm("Installation will be cancelled. Are you sure you want to exit?") : true;
+        prevent_close = false;
+        if (proceed) {
+            showLoadingAnimation();
+            await tauri.invoke("cpu_mem_sync_stop").catch((err) => console.log(err));
+            await tauri.invoke("log_out").catch((err) => console.log(err));
             loadLoginPage();
-        }, 1000);
+        };
     });
 
     switchIpPromptClose.addEventListener('click', function () {
         document.querySelector(".switch-ip-prompt").style.display = "none";
+        hideLogInError(true);
         switchIpPromptInput.value = "";
     });
 
     switchIpPromptButton.addEventListener('click', async function () {
-        const ip = document.querySelector(".switch-ip-prompt .each-input-label").textContent;
-        const passw = switchIpPromptInput.value;
-        if (passw == "") {
-            switchIpPromptInput.focus();
-        } else {
-            showLoadingAnimation();
-            await tauri.invoke("log_in_again", { ip: ip, password: passw }).then(async () => {
-                await tauri.invoke("cpu_mem_sync_stop");
-                tauri.invoke("log_in", {
-                    ip: ip,
-                    password: passw,
-                }).then(async (res) => {
-                    console.log("res", res);
-                    currentIp = ipAddresses.find(item => item.ip == ip);
-                    const project_name = res ? projects.find(item => item.project.wizard_key === res).project.name : "Empty Server";
-                    if (currentIp.icon !== project_name) {
-                        currentIp.icon = project_name;
-                        currentIp.validator_addr = "";
-                    };
-                    localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                    switchIpPromptInput.value = "";
-                    switchIpPromptClose.click();
-                    res ? await loadNodePage(true) : await loadHomePage();
-                    hideLoadingAnimation();
-                }).catch((err) => {
-                    console.log(err);
-                    hideLoadingAnimation();
-                });
-            }).catch((err) => {
-                console.log(err);
-                switchIpPromptInput.value = "";
-                dialog.message(err, { type: "error" });
-                hideLoadingAnimation();
-            });
-        };
+        await logIn(document.querySelector(".switch-ip-prompt .each-input-label"), switchIpPromptInput, true);
     });
 
     switchIpPromptInput.addEventListener('keydown', function (e) {

@@ -3,6 +3,7 @@
     windows_subsystem = "windows"
 )]
 
+use nosleep::{NoSleep, NoSleepType};
 use ssh2::{DisconnectCode, Session};
 use std::{
     io::{prelude::Read, Write},
@@ -29,7 +30,7 @@ fn log_in(ip: String, password: String) -> Result<String, String> {
     sess.set_tcp_stream(tcp);
     sess.handshake().map_err(|e| e.to_string())?;
     sess.userauth_password("root", &password)
-        .map_err(|_e| "Authentication failed!".to_string())?;
+        .map_err(|_e: ssh2::Error| "Authentication failed!".to_string())?;
     unsafe {
         GLOBAL_STRUCT = Some(SessionManager {
             open_session: sess,
@@ -45,7 +46,7 @@ fn log_in(ip: String, password: String) -> Result<String, String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel
-        .exec("bash -c -l 'echo $EXECUTE'")
+        .exec(r#"bash -c -l 'echo { \"name\": \"$EXECUTE\", \"properly_installed\": \"$NODE_PROPERLY_INSTALLED\" }'"#)
         .map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -56,8 +57,8 @@ fn log_in(ip: String, password: String) -> Result<String, String> {
 #[tauri::command(async)]
 fn log_out() -> Result<(), String> {
     let my_boxed_session =
-        unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
-    (*my_boxed_session)
+        unsafe { GLOBAL_STRUCT.as_mut() }.ok_or("There is no active session. Timed out.")?;
+    my_boxed_session
         .open_session
         .disconnect(
             Some(DisconnectCode::AuthCancelledByUser),
@@ -111,7 +112,11 @@ fn cpu_mem_sync(window: Window, exception: String) -> Result<(), String> {
         .exec(&*format!(
             r#"bash -c -l 'while true; do
             echo -n "{{ \"cpu\": \"$(top -b -n1 | awk '\''/Cpu\(s\)/{{print 100-$8}}'\'' 2>/dev/null)\", \"mem\": \"$(top -b -n1 | awk '\''/MiB Mem/{{print ($4-$6)/$4*100}}'\'' 2>/dev/null)\", \"status\": \"{status_command}\", \"height\": \"{height_command}\", \"catchup\": \"{catchup_command}\", \"version\": \"{version_command}\" }}";
-            sleep 1; echo ""; sleep 1; echo ""; sleep 1; echo ""; sleep 1; echo ""; sleep 1; done'"#
+            sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo "";
+            sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo "";
+            sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo "";
+            sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo "";
+            sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; sleep 0.2; echo ""; done'"#
         ))
         .map_err(|e| e.to_string())?;
 
@@ -124,7 +129,7 @@ fn cpu_mem_sync(window: Window, exception: String) -> Result<(), String> {
         let mut buf = [0u8; 1024];
         let len = channel.read(&mut buf).map_err(|e| e.to_string())?;
         let s = std::str::from_utf8(&buf[0..len]).map_err(|e| e.to_string())?;
-        if s != "\n" {
+        if s.starts_with("{") {
             let _ = window
                 .emit("cpu_mem_sync", s.to_string())
                 .map_err(|e| e.to_string())?;
@@ -137,13 +142,18 @@ fn cpu_mem_sync_stop() -> Result<(), String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_mut() }.ok_or("There is no active session. Timed out.")?;
     my_boxed_session.stop_cpu_mem_sync = true;
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    std::thread::sleep(std::time::Duration::from_millis(200));
     Ok(())
 }
 
 // NODE FUNCTIONS
 #[tauri::command(async)]
-fn install_node(network: String, identifier: String) -> Result<(), String> {
+fn install_node(network: String, identifier: String, window: Window) -> Result<(), String> {
+    let mut nosleep = NoSleep::new().unwrap();
+    nosleep
+        .start(NoSleepType::PreventUserIdleDisplaySleep)
+        .unwrap();
+
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_mut() }.ok_or("There is no active session. Timed out.")?;
     let mut channel = my_boxed_session
@@ -168,8 +178,14 @@ fn install_node(network: String, identifier: String) -> Result<(), String> {
         }
         let s = std::str::from_utf8(&buf[0..len]).map_err(|e| e.to_string())?;
         println!("{}", s);
+        if s.contains("installation_progress") {
+            let _ = window
+                .emit("installation_progress", s.to_string())
+                .map_err(|e| e.to_string())?;
+        }
         if s.contains("SETUP IS FINISHED") {
             channel.close().map_err(|e| e.to_string())?;
+            nosleep.stop().unwrap();
             return Ok(());
         }
         std::io::stdout().flush().map_err(|e| e.to_string())?;
@@ -196,15 +212,16 @@ fn delete_node(exception: String) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
         "celestia-lightd" => format!(
-            r#"bash -c -l "sudo systemctl stop $EXECUTE; sleep 4; sudo systemctl disable $EXECUTE; sudo rm -rf .cache .config .celestia-app .celestia-light-blockspacerace-0 /etc/systemd/system/$EXECUTE* $(which celestia) $(which celestia-appd) $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
+            r#"bash -c -l "sudo systemctl stop $EXECUTE; sleep 5; sudo systemctl disable $EXECUTE; sudo rm -rf .cache .config .celestia-app .celestia-light-blockspacerace-0 /etc/systemd/system/$EXECUTE* $(which celestia) $(which celestia-appd) $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/MAIN_WALLET_NAME/d; /MAIN_WALLET_ADDRESS/d; /NODE_PROPERLY_INSTALLED/d; /EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset NODE_PROPERLY_INSTALLED EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
         ),
         _ => format!(
-            r#"bash -c -l "sudo systemctl stop $EXECUTE; sleep 4; sudo systemctl disable $EXECUTE; sudo rm -rf /etc/systemd/system/$EXECUTE* $(which $EXECUTE) $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
+            r#"bash -c -l "sudo systemctl stop $EXECUTE; sleep 5; sudo systemctl disable $EXECUTE; sudo rm -rf .cache .config /etc/systemd/system/$EXECUTE* $(which $EXECUTE) $HOME/$SYSTEM_FILE* $HOME/$EXECUTE* $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER*; sudo chmod 600 $SYSTEM_FOLDER; sudo rm -rf .nibid; sed -i '/MAIN_WALLET_NAME/d; /MAIN_WALLET_ADDRESS/d; /NODE_PROPERLY_INSTALLED/d; /EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset NODE_PROPERLY_INSTALLED EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
         ),
     };
     channel.exec(&command).map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
+    println!("{}", s);
     channel.close().map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -412,7 +429,7 @@ fn recover_wallet(
 }
 
 #[tauri::command(async)]
-fn set_main_wallet(walletname: String, exception: String) -> Result<(), String> {
+fn set_main_wallet(walletname: String, address: String, exception: String) -> Result<(), String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
     let mut channel = my_boxed_session
@@ -422,17 +439,41 @@ fn set_main_wallet(walletname: String, exception: String) -> Result<(), String> 
     let command = match exception.as_str() {
         "celestia-lightd" => {
             format!(
-                r#"yes '{}' | bash -c -l 'systemctl stop {}; celestia light init --keyring.accname {} --p2p.network blockspacerace; systemctl start {}'"#,
-                my_boxed_session.walletpassword, exception, walletname, exception
+                r#"yes '{}' | bash -c -l 'systemctl stop {}; celestia light init --keyring.accname {} --p2p.network blockspacerace; systemctl start {}'; echo 'export MAIN_WALLET_NAME={}' >> $HOME/.bash_profile; echo 'export MAIN_WALLET_ADDRESS={}' >> $HOME/.bash_profile; source $HOME/.bash_profile"#,
+                my_boxed_session.walletpassword,
+                exception,
+                walletname,
+                exception,
+                walletname,
+                address
             )
         }
         _ => format!(
-            "" // TODO
+            "echo 'export MAIN_WALLET_NAME={}' >> $HOME/.bash_profile; echo 'export MAIN_WALLET_ADDRESS={}' >> $HOME/.bash_profile; source $HOME/.bash_profile",
+            walletname, address
         ),
     };
     channel.exec(&command).map_err(|e| e.to_string())?;
     channel.close().map_err(|e| e.to_string())?;
     Ok(())
+}
+
+#[tauri::command(async)]
+fn get_main_wallet() -> Result<String, String> {
+    let my_boxed_session =
+        unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
+    let mut channel = my_boxed_session
+        .open_session
+        .channel_session()
+        .map_err(|e| e.to_string())?;
+    let command = format!(
+        r#"bash -c -l 'echo "{{ \"name\": \"$MAIN_WALLET_NAME\", \"address\": \"$MAIN_WALLET_ADDRESS\" }}"'"#
+    );
+    channel.exec(&command).map_err(|e| e.to_string())?;
+    let mut s = String::new();
+    channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
+    channel.close().map_err(|e| e.to_string())?;
+    Ok(s)
 }
 
 //
@@ -466,27 +507,22 @@ fn validator_list() -> Result<String, String> {
 }
 
 #[tauri::command(async)]
-fn update_node(latest_version: String, exception: String) -> Result<(), String> {
+fn update_node(latest_version: String) -> Result<(), String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
     let mut channel = my_boxed_session
         .open_session
         .channel_session()
         .map_err(|e| e.to_string())?;
-    let command = match exception.as_str() {
-        "celestia-lightd" => {
-            format!(
-                "" // TODO
-            )
-        }
-        _ => format!(
-            "bash -c -l 'systemctl stop $EXECUTE; \
-            git pull; \
-            git checkout {latest_version}; \
-            make install; \
-            systemctl restart $EXECUTE'"
-        ),
-    };
+    let command = format!(
+        "bash -c -l 'systemctl stop $EXECUTE;
+        cd celestia-node;
+        git fetch --tags;
+        git checkout {latest_version};
+        make build;
+        sudo make install;
+        systemctl restart $EXECUTE;'"
+    );
     channel.exec(&command).map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -769,6 +805,7 @@ fn main() {
             redelegate_token,
             validator_list,
             set_main_wallet,
+            get_main_wallet,
             stop_installation
         ])
         .run(tauri::generate_context!())

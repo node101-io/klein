@@ -27,6 +27,93 @@ const fetchProjects = async () => {
         projects.push(...projects_data.data.testnets);
     };
 };
+const logIn = async (ip, password, again) => {
+    const checkboxInputEl = document.getElementById("checkbox-input");
+    const switchIpPromptClose = document.querySelector(".switch-ip-prompt-close");
+
+    if ((again ? false : (ip.value == "")) || password.value == "" || (again ? false : !/^(\d{1,3}\.){3}\d{1,3}$/g.test(ip.value))) {
+        showLogInError("Please fill in all the fields correctly.", again);
+        password.focus();
+        return;
+    };
+    showLoadingAnimation();
+    await tauri.invoke("log_in", {
+        ip: (again ? ip.textContent : ip.value),
+        password: password.value
+    }).then(async (res) => {
+        res = JSON.parse(res);
+        await tauri.invoke("cpu_mem_sync_stop").catch((err) => { console.log(err) });
+        hideLogInError(again);
+        currentIp = ipAddresses.find(item => item.ip == (again ? ip.textContent : ip.value));
+        const project_name = res.name ? projects.find(item => item.project.wizard_key === res.name).project.name : "Empty Server";
+        if (currentIp) {
+            if (currentIp.icon !== project_name) {
+                currentIp.icon = project_name;
+                currentIp.validator_addr = await tauri.invoke("get_main_wallet").then((res) => {
+                    res = JSON.parse(res);
+                    return res.address;
+                }).catch((err) => { console.log(err); });
+            };
+        } else {
+            currentIp = {
+                ip: ip.value,
+                icon: project_name,
+                validator_addr: await tauri.invoke("get_main_wallet").then((res) => {
+                    res = JSON.parse(res);
+                    return res.address;
+                }).catch((err) => { console.log(err); })
+            };
+            if (checkboxInputEl.checked) {
+                ipAddresses.push(currentIp);
+                checkboxInputEl.checked = false;
+            };
+        };
+        localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+        if (again) {
+            switchIpPromptClose.click();
+        }
+        else {
+            document.querySelector(".selected-item-modify").click();
+            ip.value = "";
+        }
+        password.value = "";
+        res.name ? loadNodePage(true) : loadHomePage();
+        exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
+
+        if (res.name && !res.properly_installed) {
+            if (await dialog.ask("This node is not properly installed. Do you want to delete it?")) {
+                showLoadingAnimation();
+                await tauri.invoke("cpu_mem_sync_stop").catch((err) => { console.log(err) });
+                await tauri.invoke("delete_node", { exception: exception }).then(async () => {
+                    currentIp.icon = "Empty Server";
+                    currentIp.validator_addr = "";
+                    localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+                    loadHomePage();
+                }).catch((err) => {
+                    console.log(err);
+                });
+            };
+        };
+    }).catch((err) => {
+        showLogInError(err, again);
+        hideLoadingAnimation();
+    });
+};
+const showLogInError = (err, again) => {
+    const warningEl = document.getElementById((again ? "switch-ip-prompt" : "login-page") + "-warning");
+    const warningElText = document.getElementById((again ? "switch-ip-prompt" : "login-page") + "-warning-text");
+
+    warningElText.textContent = err;
+    warningEl.style.display = "flex";
+    warningEl.classList.add("warning-animation");
+    setTimeout(() => {
+        warningEl.classList.remove("warning-animation");
+    }, 500);
+};
+const hideLogInError = (again) => {
+    document.getElementById((again ? "switch-ip-prompt" : "login-page") + "-warning").style.display = "none";
+};
+
 
 const setupLoginPage = () => {
     const ipInputEl = document.getElementById("ip-input");
@@ -37,9 +124,6 @@ const setupLoginPage = () => {
     const visibilityToggleEl2 = document.querySelectorAll(".each-login-page-toggle")[2];
     const selectedItemEl = document.getElementById("selected-item");
     const loginButtonEl = document.querySelector(".login-page-login-button");
-    const checkboxInputEl = document.getElementById("checkbox-input");
-    const warningEl = document.querySelector(".warning");
-    const warningElText = document.querySelector(".warning-text");
 
     ipAddresses = localStorage.getItem("ipaddresses") ? JSON.parse(localStorage.getItem("ipaddresses")) : [];
 
@@ -146,51 +230,8 @@ const setupLoginPage = () => {
         };
     });
 
-    loginButtonEl.addEventListener("click", function () {
-        if (ipInputEl.value == "" || passwordInputEl.value == "" || !/^(\d{1,3}\.){3}\d{1,3}$/g.test(ipInputEl.value)) {
-            warningElText.textContent = "Please enter a valid IP address and password.";
-            warningEl.setAttribute("style", "display: flex;");
-            warningEl.classList.add("warning-animation");
-            setTimeout(() => {
-                warningEl.classList.remove("warning-animation");
-            }, 500);
-            return;
-        };
-        showLoadingAnimation();
-        tauri.invoke("log_in", {
-            ip: ipInputEl.value,
-            password: passwordInputEl.value
-        }).then((res) => {
-            warningEl.setAttribute("style", "display: none;");
-            currentIp = ipAddresses.find(item => item.ip == ipInputEl.value);
-            const project_name = res ? projects.find(item => item.project.wizard_key === res).project.name : "Empty Server";
-            if (currentIp) {
-                if (currentIp.icon !== project_name) {
-                    currentIp.icon = project_name;
-                    currentIp.validator_addr = "";
-                };
-            } else {
-                currentIp = { ip: ipInputEl.value, icon: project_name, validator_addr: "" };
-                if (checkboxInputEl.checked) {
-                    ipAddresses.push(currentIp);
-                    checkboxInputEl.checked = false;
-                };
-            };
-            localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-            document.querySelector(".selected-item-modify").click();
-            ipInputEl.value = "";
-            passwordInputEl.value = "";
-            res ? loadNodePage(true) : loadHomePage();
-        }).catch((err) => {
-            console.log(err);
-            warningElText.textContent = err;
-            warningEl.setAttribute("style", "display: flex;");
-            warningEl.classList.add("warning-animation");
-            setTimeout(() => {
-                warningEl.classList.remove("warning-animation");
-            }, 500);
-            hideLoadingAnimation();
-        });
+    loginButtonEl.addEventListener("click", async function () {
+        await logIn(ipInputEl, passwordInputEl, false);
     });
 
     window.addEventListener("click", function (e) {

@@ -30,12 +30,20 @@ tevent.listen("cpu_mem_sync", (event) => {
 
     const eachSidebarTag = document.querySelectorAll(".each-sidebar-tag");
     if (response.status == "active") {
+        if (node_action == "start" || node_action == "restart") {
+            node_action = "";
+            document.body.classList.remove("waiting");
+        };
         eachSidebarTag[0].classList.remove("sidebar-inactive-tag");
         eachSidebarTag[0].classList.add("sidebar-active-tag");
         eachSidebarTag[0].textContent = "Active";
     } else if (response.status == "") {
         eachSidebarTag[0].textContent = "Loading...";
     } else {
+        if (node_action == "stop") {
+            node_action = "";
+            document.body.classList.remove("waiting");
+        }
         eachSidebarTag[0].classList.add("sidebar-inactive-tag");
         eachSidebarTag[0].classList.remove("sidebar-active-tag");
         eachSidebarTag[0].textContent = response.status.charAt(0).toUpperCase() + response.status.slice(1);
@@ -48,7 +56,6 @@ tevent.listen("cpu_mem_sync", (event) => {
         eachSidebarTag[1].textContent = version_new;
         eachSidebarTag[1].classList.add("version-tag");
     };
-    document.body.classList.remove("waiting");
 });
 
 const loadNodePage = async (start) => {
@@ -208,10 +215,10 @@ const showWallets = async () => {
                     labelicon.addEventListener("click", async function () {
                         if (await dialog.ask("Do you want to set this wallet as your main wallet?", { title: "Set Main Wallet", type: "info" })) {
                             showLoadingAnimation();
-                            await tauri.invoke("set_main_wallet", { walletname: this.parentNode.textContent, exception: exception }).catch((err) => { console.log(err) });
                             currentIp.validator_addr = this.closest(".each-input-label").nextElementSibling.children[0].getAttribute("data");
+                            await tauri.invoke("set_main_wallet", { walletname: this.parentNode.textContent, address: currentIp.validator_addr, exception: exception }).catch((err) => { console.log(err) });
+                            await updateSidebar();
                             localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                            updateSidebar();
                             await showWallets();
                             hideLoadingAnimation();
                         };
@@ -308,33 +315,47 @@ const showErrorMessage = (message) => {
     }, 500);
     warningElText.textContent = message;
 };
-
-const nodeOperationsSetup = async () => {
-    document.querySelectorAll(".each-page-manage-node-button")[3].disabled = true;
+const hideErrorMessage = () => {
+    document.getElementById("inner-warning").setAttribute("style", "display: none;");
+};
+const getLatestTag = async () => {
     const client = await http.getClient();
     const repoUrl = projects.find(item => item.project.name == currentIp.icon).project.social_media_accounts.github;
     latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
         type: 'Json'
     })).data.tag_name;
-    document.querySelectorAll(".each-page-manage-node-button")[0].addEventListener("click", async () => {
+};
+
+const nodeOperationsSetup = async () => {
+    const startNodeButton = document.querySelectorAll(".each-page-manage-node-button")[0];
+    const stopNodeButton = document.querySelectorAll(".each-page-manage-node-button")[1];
+    const restartNodeButton = document.querySelectorAll(".each-page-manage-node-button")[2];
+    const updateNodeButton = document.querySelectorAll(".each-page-manage-node-button")[3];
+    const deleteNodeButton = document.getElementById("delete-node-button");
+
+    updateNodeButton.disabled = true;
+    startNodeButton.addEventListener("click", async () => {
+        node_action = "start";
         document.body.classList.add("waiting");
         await tauri.invoke("start_stop_restart_node", { action: "start" }).catch((err) => { console.log(err) });
     });
-    document.querySelectorAll(".each-page-manage-node-button")[1].addEventListener("click", async () => {
+    stopNodeButton.addEventListener("click", async () => {
+        node_action = "stop";
         document.body.classList.add("waiting");
         await tauri.invoke("start_stop_restart_node", { action: "stop" }).catch((err) => { console.log(err) });
     });
-    document.querySelectorAll(".each-page-manage-node-button")[2].addEventListener("click", async () => {
+    restartNodeButton.addEventListener("click", async () => {
+        node_action = "restart";
         document.body.classList.add("waiting");
         await tauri.invoke("start_stop_restart_node", { action: "restart" }).catch((err) => { console.log(err) });
     });
-    document.querySelectorAll(".each-page-manage-node-button")[3].addEventListener("click", async () => {
-        await tauri.invoke("update_node", { latest_version: latest_tag }).catch((err) => { console.log(err) });
+    updateNodeButton.addEventListener("click", async () => {
+        await tauri.invoke("update_node", { latestVersion: latest_tag }).catch((err) => { console.log(err) });
     });
-    document.getElementById("delete-node-button").addEventListener("click", async () => {
+    deleteNodeButton.addEventListener("click", async () => {
         if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
             showLoadingAnimation();
-            await tauri.invoke("cpu_mem_sync_stop").catch((err) => { dialog.message(err, { title: "Error", type: "error" }) });
+            await tauri.invoke("cpu_mem_sync_stop").catch((err) => { console.log(err) });
             await tauri.invoke("delete_node", { exception: exception }).then(async () => {
                 currentIp.icon = "Empty Server";
                 currentIp.validator_addr = "";
@@ -342,10 +363,10 @@ const nodeOperationsSetup = async () => {
                 loadHomePage();
             }).catch((err) => {
                 console.log(err);
-                dialog.message(err, { title: "Error", type: "error" });
             });
         };
     });
+    await getLatestTag();
     hideLoadingAnimation();
     window.scrollTo(0, 0);
 };
@@ -407,6 +428,7 @@ const createValidatorSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         if (syncStatusChartPopupText.innerText.includes("Node is synced!")) {
             showLoadingAnimation();
+            hideErrorMessage();
             await tauri.invoke("create_validator", {
                 amount: document.querySelectorAll(".each-input-field")[0].value,
                 walletName: document.querySelectorAll(".each-input-field")[1].value,
@@ -423,20 +445,19 @@ const createValidatorSetup = () => {
                 console.log(res);
                 if (res.raw_log.length == 2) {
                     dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
-                    for (let i = 0; i < ipAddresses.length; i++) {
-                        if (ipAddresses[i].ip == currentIp.ip) {
-                            ipAddresses[i].validator_addr = await tauri.invoke("show_wallets", { exception: exception }).then((list) => {
-                                list = JSON.parse(list);
-                                return list.filter((item) => item.name == document.querySelectorAll(".each-input-field")[1].value)[0].address;
-                            }).catch((err) => {
-                                console.log(err);
-                                showErrorMessage(err);
-                            });
-                            break;
-                        };
-                    };
+                    await tauri.invoke("show_wallets", { exception: exception }).then(async (list) => {
+                        list = JSON.parse(list);
+                        currentIp.validator_addr = list.filter((item) => item.name == document.querySelectorAll(".each-input-field")[1].value)[0].address;
+                    }).catch((err) => {
+                        console.log(err);
+                        showErrorMessage(err);
+                    });
+                    await tauri.invoke("set_main_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, address: currentIp.validator_addr, exception: exception }).catch((err) => {
+                        console.log(err);
+                        showErrorMessage(err);
+                    });
                     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                    updateSidebar();
+                    await updateSidebar();
                 } else {
                     showErrorMessage(res.raw_log);
                 };
@@ -455,6 +476,7 @@ const editValidatorSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         if (syncStatusChartPopupText.innerText.includes("Node is synced!")) {
             showLoadingAnimation();
+            hideErrorMessage();
             await tauri.invoke("edit_validator", {
                 amount: document.querySelectorAll(".each-input-field")[0].value,
                 walletName: document.querySelectorAll(".each-input-field")[1].value,
@@ -484,6 +506,7 @@ const editValidatorSetup = () => {
 const withdrawRewardsSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
+        hideErrorMessage();
         await tauri.invoke("withdraw_rewards", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             fees: document.querySelectorAll(".each-input-field")[1].value,
@@ -506,6 +529,7 @@ const delegateSetup = (valoper) => {
     document.querySelectorAll(".each-input-field")[1].value = valoper;
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
+        hideErrorMessage();
         await tauri.invoke("delegate_token", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             validatorValoper: document.querySelectorAll(".each-input-field")[1].value,
@@ -528,6 +552,7 @@ const delegateSetup = (valoper) => {
 const redelegateSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
+        hideErrorMessage();
         await tauri.invoke("redelegate_token", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             destinationValidator: document.querySelectorAll(".each-input-field")[1].value,
@@ -552,6 +577,7 @@ const redelegateSetup = () => {
 const voteSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
+        hideErrorMessage();
         await tauri.invoke("vote", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             proposalNumber: document.querySelectorAll(".each-input-field")[1].value,
@@ -572,10 +598,31 @@ const voteSetup = () => {
     window.scrollTo(0, 400);
 };
 const unjailSetup = () => {
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        hideErrorMessage();
+        await tauri.invoke("unjail", {
+            walletName: document.querySelectorAll(".each-input-field")[0].value,
+            fees: document.querySelectorAll(".each-input-field")[1].value,
+        }).then((res) => {
+            res = JSON.parse(res);
+            if (res.raw_log.length == 2) {
+                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+            } else {
+                showErrorMessage(res.raw_log);
+            };
+        }).catch((err) => {
+            console.log(err);
+            showErrorMessage(err);
+        });
+        hideLoadingAnimation();
+    });
+    window.scrollTo(0, 400);
 };
 const sendTokenSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         showLoadingAnimation();
+        hideErrorMessage();
         await tauri.invoke("send_token", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             receiverAddress: document.querySelectorAll(".each-input-field")[1].value,
@@ -686,6 +733,52 @@ const walletsSetup = async () => {
     hideLoadingAnimation();
     window.scrollTo(0, 400);
 };
+const nodeInformationSetup = async () => {
+    showLoadingAnimation();
+    await tauri.invoke("node_info").then(async (obj) => {
+        const fields = document.querySelectorAll(".each-output-field");
+        obj = JSON.parse(obj);
+        fields[0].textContent = obj.NodeInfo.protocol_version.p2p;
+        fields[1].textContent = obj.NodeInfo.protocol_version.block;
+        fields[2].textContent = obj.NodeInfo.protocol_version.app;
+        fields[3].textContent = obj.NodeInfo.id;
+        fields[4].textContent = obj.NodeInfo.listen_addr;
+        fields[5].textContent = obj.NodeInfo.network;
+        fields[6].textContent = obj.NodeInfo.version;
+        fields[7].textContent = obj.NodeInfo.channels;
+        fields[8].textContent = obj.NodeInfo.moniker;
+        fields[9].textContent = obj.NodeInfo.other.tx_index;
+        fields[10].textContent = obj.NodeInfo.other.rpc_address;
+        fields[11].textContent = obj.SyncInfo.latest_block_hash;
+        fields[12].textContent = obj.SyncInfo.latest_app_hash;
+        fields[13].textContent = obj.SyncInfo.latest_block_height;
+        fields[14].textContent = obj.SyncInfo.latest_block_time;
+        fields[15].textContent = obj.SyncInfo.earliest_block_hash;
+        fields[16].textContent = obj.SyncInfo.earliest_app_hash;
+        fields[17].textContent = obj.SyncInfo.earliest_block_height;
+        fields[18].textContent = obj.SyncInfo.earliest_block_time;
+        fields[19].textContent = obj.SyncInfo.catching_up;
+        fields[20].textContent = obj.ValidatorInfo.Address;
+        fields[21].textContent = obj.ValidatorInfo.PubKey.type;
+        fields[22].textContent = obj.ValidatorInfo.PubKey.value;
+        fields[23].textContent = obj.ValidatorInfo.VotingPower;
+    }).catch((err) => {
+        console.log(err);
+        dialog.message(err, { title: "Error", type: "error" });
+    });
+    document.querySelectorAll(".each-output-field-icon-copy").forEach((element) => {
+        element.addEventListener("click", () => {
+            clipboard.writeText(element.previousElementSibling.textContent);
+            saveforlater = element.previousElementSibling.textContent;
+            element.previousElementSibling.textContent = "Copied!";
+            setTimeout(() => {
+                element.previousElementSibling.textContent = saveforlater;
+            }, 1000);
+        });
+    });
+    hideLoadingAnimation();
+    window.scrollTo(0, 400);
+};
 
 const setupNodePage = () => {
     const validatorAddress = document.querySelector(".sidebar-info-details-copy");
@@ -706,6 +799,7 @@ const setupNodePage = () => {
     const redelegateTokenButton = document.getElementById("redelegate-token-button");
     const voteButton = document.getElementById("vote-button");
     const walletsButton = document.getElementById("wallets-button");
+    node_action = "";
 
     syncStatusChart = new EasyPieChart(document.querySelectorAll(".each-page-chart")[0], {
         size: 160,
@@ -755,12 +849,8 @@ const setupNodePage = () => {
     });
     homePageButton.addEventListener("click", async function () {
         showLoadingAnimation();
-        await tauri.invoke("cpu_mem_sync_stop").then(() => {
-            loadHomePage();
-        }).catch((err) => {
-            console.log(err);
-            dialog.message(err, { title: "Error", type: "error" });
-        });
+        await tauri.invoke("cpu_mem_sync_stop").catch((e) => { console.log(e) });
+        await loadHomePage();
     });
     validatorOperationsButton.addEventListener("click", function () {
         if (window.getComputedStyle(subButtonsDiv).getPropertyValue("display") == "none") {
@@ -805,41 +895,6 @@ const setupNodePage = () => {
         await handleKeyringExistance("page-content/wallets.html", walletsSetup);
     });
     nodeInformationButton.addEventListener("click", async function () {
-        showLoadingAnimation();
-        await tauri.invoke("node_info").then(async (obj) => {
-            await changePage("page-content/node-information.html");
-            const fields = document.querySelectorAll(".each-output-field");
-            obj = JSON.parse(obj);
-            fields[0].textContent = obj.NodeInfo.protocol_version.p2p;
-            fields[1].textContent = obj.NodeInfo.protocol_version.block;
-            fields[2].textContent = obj.NodeInfo.protocol_version.app;
-            fields[3].textContent = obj.NodeInfo.id;
-            fields[4].textContent = obj.NodeInfo.listen_addr;
-            fields[5].textContent = obj.NodeInfo.network;
-            fields[6].textContent = obj.NodeInfo.version;
-            fields[7].textContent = obj.NodeInfo.channels;
-            fields[8].textContent = obj.NodeInfo.moniker;
-            fields[9].textContent = obj.NodeInfo.other.tx_index;
-            fields[10].textContent = obj.NodeInfo.other.rpc_address;
-            fields[11].textContent = obj.SyncInfo.latest_block_hash;
-            fields[12].textContent = obj.SyncInfo.latest_app_hash;
-            fields[13].textContent = obj.SyncInfo.latest_block_height;
-            fields[14].textContent = obj.SyncInfo.latest_block_time;
-            fields[15].textContent = obj.SyncInfo.earliest_block_hash;
-            fields[16].textContent = obj.SyncInfo.earliest_app_hash;
-            fields[17].textContent = obj.SyncInfo.earliest_block_height;
-            fields[18].textContent = obj.SyncInfo.earliest_block_time;
-            fields[19].textContent = obj.SyncInfo.catching_up;
-            fields[20].textContent = obj.ValidatorInfo.Address;
-            fields[21].textContent = obj.ValidatorInfo.PubKey.type;
-            fields[22].textContent = obj.ValidatorInfo.PubKey.value;
-            fields[23].textContent = obj.ValidatorInfo.VotingPower;
-            hideLoadingAnimation();
-            window.scrollTo(0, 400);
-        }).catch((err) => {
-            console.log(err);
-            dialog.message(err, { title: "Error", type: "error" });
-            hideLoadingAnimation();
-        });
+        await changePage("page-content/node-information.html", nodeInformationSetup);
     });
 };

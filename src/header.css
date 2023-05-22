@@ -91,12 +91,13 @@
   height: 28px;
   fill: var(--main-color);
   margin-left: 12px;
-  margin-right: 12px;
+  /* margin-right: 12px; */
 }
 
 .header-menu-ip-list-button-icon {
   width: 36px;
   height: 36px;
+  margin-left: 12px;
   border-radius: 50%;
 }
 

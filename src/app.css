@@ -34,7 +34,7 @@ html {
   overflow-y: auto;
   background-color: var(--background-color);
   scroll-behavior: smooth;
-  overscroll-behavior-y: none;
+  overscroll-behavior: none;
 }
 
 body.waiting * {
@@ -45,7 +45,6 @@ body.waiting * {
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  /* zoom: 1; */
 }
 
 /* LOGIN PAGE */
@@ -55,16 +54,15 @@ body.waiting * {
 }
 
 .all-login-content-wrapper {
+  display: flex;
   height: calc(80vh - 60px);
   min-height: fit-content;
-  display: flex;
   align-items: center;
 }
 
 .login-page-wrapper {
   width: 100vw;
   display: flex;
-  flex-direction: row;
   align-items: center;
   padding-right: 15vw;
   padding-left: 8vw;
@@ -83,6 +81,8 @@ body.waiting * {
   -webkit-text-fill-color: transparent;
   -moz-background-clip: text;
   -moz-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  -moz-background-clip: text;
   background-clip: text; */
   color: rgba(100, 150, 255, 1);
   font-size: 32px;
@@ -175,7 +175,7 @@ body.waiting * {
   width: 25px;
   height: 25px;
   vertical-align: middle;
-  border-radius: 50%;
+  border-radius: 100%;
 }
 
 .each-autocomplete-item-ip {
@@ -1172,6 +1172,13 @@ body.waiting * {
   gap: 5px;
 }
 
+.each-input-label-optional {
+  font-size: 16px;
+  line-height: 23px;
+  font-style: italic;
+  color: rgba(149, 149, 149, 0.8);
+}
+
 .each-input-label-icon {
   width: 20px;
   height: 20px;
@@ -1318,7 +1325,7 @@ body.waiting * {
 .each-output-field-icon-copy {
   position: absolute;
   fill: rgba(179, 179, 179, 1);
-  right: 60px;
+  right: 12px;
   width: 24px;
   height: 24px;
   cursor: pointer;
@@ -1327,7 +1334,7 @@ body.waiting * {
 .each-output-field-icon-delete {
   position: absolute;
   fill: rgba(250, 77, 86, 1);
-  right: 20px;
+  right: 44px;
   width: 24px;
   height: 24px;
   cursor: pointer;
@@ -1433,6 +1440,7 @@ body.waiting * {
   width: fit-content;
   cursor: pointer;
   margin-top: 16px;
+  margin-bottom: 16px;
   margin-left: auto;
 }
 
