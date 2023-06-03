@@ -91,10 +91,11 @@ const installNode = async (project) => {
         progressBarTextLeft.textContent = "Installation done!";
         progressBarSuccessIcon.style.display = "unset"
         progressBar.className = "progress-bar progress-bar-success";
-    }).catch((err) => {
+    }).catch(async (err) => {
         progressBar.className = "progress-bar progress-bar-error";
         progressBarErrorIcon.style.display = "unset";
         progressBarTextLeft.textContent = "Installation failed!";
+        await handleTimeOut(err);
     });
     prevent_close = false;
 };
@@ -176,7 +177,11 @@ const showTestnetProjects = async () => {
         installButton.appendChild(textDiv);
         installButton.appendChild(installButtonSVG)
         installButton.addEventListener("click", async function () {
-            if (await dialog.confirm("Node is going to be installed, please confirm.", projects[i].project.name)) installNode(projects[i].project);
+            if (ONBOARD_USER) {
+                loadOnboardingLoginPage(projects[i].project);
+            } else {
+                if (await dialog.confirm("Node is going to be installed, please confirm.", projects[i].project.name)) installNode(projects[i].project);
+            };
         });
         discoverButton = document.createElement("a");
         discoverButton.classList.add("each-project-button", "discover-button");
@@ -198,7 +203,7 @@ const showTestnetProjects = async () => {
         buttons.appendChild(discoverButton);
         row.appendChild(buttons);
         testnetTabContent.appendChild(row);
-        if (projects[i].project.name == currentIp.icon) gonna_prepend = row;
+        if (!ONBOARD_USER && projects[i].project.name == currentIp.icon) gonna_prepend = row;
     };
     if (gonna_prepend) {
         testnetTabContent.prepend(gonna_prepend);

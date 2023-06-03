@@ -1,15 +1,20 @@
 const updateHeader = function () {
-    if (currentIp.icon == "Empty Server") {
-        imgSrc = "assets/default.png";
-        document.querySelector(".header-menu-ip-list-button-icon").style.display = "none";
+    if (!ONBOARD_USER) {
+        document.querySelector(".header-node-icons").style.display = "flex";
+        if (currentIp.icon == "Empty Server") {
+            imgSrc = "assets/default.png";
+            document.querySelector(".header-menu-ip-list-button-icon").style.display = "none";
+        } else {
+            imgSrc = projects.find(item => item.project.name == currentIp.icon).project.image;
+            document.querySelector(".header-menu-ip-list-button-icon").style.display = "unset";
+            document.querySelector(".header-menu-ip-list-button-icon").src = imgSrc;
+        };
+        document.querySelector(".header-node-icon").src = imgSrc;
+        document.querySelector(".header-menu-ip-list-button-details-ip").textContent = currentIp.ip;
+        document.querySelector(".header-menu-ip-list-button-details-name").textContent = currentIp.icon;
     } else {
-        imgSrc = projects.find(item => item.project.name == currentIp.icon).project.image;
-        document.querySelector(".header-menu-ip-list-button-icon").style.display = "unset";
-        document.querySelector(".header-menu-ip-list-button-icon").src = imgSrc;
+        document.querySelector(".header-node-icons").style.display = "none";
     };
-    document.querySelector(".header-node-icon").src = imgSrc;
-    document.querySelector(".header-menu-ip-list-button-details-ip").textContent = currentIp.ip;
-    document.querySelector(".header-menu-ip-list-button-details-name").textContent = currentIp.icon;
 };
 
 const setupHeader = function () {
@@ -120,7 +125,7 @@ const setupHeader = function () {
         prevent_close = false;
         if (proceed) {
             showLoadingAnimation();
-            await tauri.invoke("cpu_mem_sync_stop").catch((err) => console.log(err));
+            await tauri.invoke("cpu_mem_sync_stop").catch(async (err) => { await handleTimeOut(err); });
             await tauri.invoke("log_out").catch((err) => console.log(err));
             loadLoginPage();
         };

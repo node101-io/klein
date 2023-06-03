@@ -37,8 +37,14 @@ tevent.listen("cpu_mem_sync", (event) => {
         eachSidebarTag[0].classList.remove("sidebar-inactive-tag");
         eachSidebarTag[0].classList.add("sidebar-active-tag");
         eachSidebarTag[0].textContent = "Active";
+
+        startNodeButton.disabled = true;
+        stopNodeButton.disabled = false;
     } else if (response.status == "") {
         eachSidebarTag[0].textContent = "Loading...";
+
+        startNodeButton.disabled = false;
+        stopNodeButton.disabled = true;
     } else {
         if (node_action == "stop") {
             node_action = "";
@@ -47,6 +53,9 @@ tevent.listen("cpu_mem_sync", (event) => {
         eachSidebarTag[0].classList.add("sidebar-inactive-tag");
         eachSidebarTag[0].classList.remove("sidebar-active-tag");
         eachSidebarTag[0].textContent = response.status.charAt(0).toUpperCase() + response.status.slice(1);
+
+        startNodeButton.disabled = false;
+        stopNodeButton.disabled = true;
     };
     if (response.version) {
         version_new = response.version.charAt(0).toLowerCase() == "v" ? response.version : "v" + response.version;
@@ -105,7 +114,7 @@ const loadNodePage = async (start) => {
             console.log(err);
         });
         await changePage("page-content/node-operations.html", nodeOperationsSetup);
-        tauri.invoke("cpu_mem_sync", { exception: exception });
+        tauri.invoke("cpu_mem_sync", { exception: exception }).catch(async (err) => { await handleTimeOut(err); });
     };
 };
 const changePage = async (page, callback) => {
@@ -135,11 +144,11 @@ const createWallet = async (walletname) => {
     if (proceed) {
         showLoadingAnimation();
         if (wallet_exists) {
-            await tauri.invoke("delete_wallet", { walletname, exception }).catch((err) => { console.log(err) });
+            await tauri.invoke("delete_wallet", { walletname, exception }).catch(async (err) => { await handleTimeOut(err); });
         };
         await tauri.invoke("create_wallet", { walletname, exception })
             .then((mnemonic) => dialog.message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" }))
-            .catch((err) => { console.log(err) });
+            .catch(async (err) => { await handleTimeOut(err); });
         await showWallets();
         document.querySelector(".each-input-field").value = "";
         hideLoadingAnimation();
@@ -152,11 +161,11 @@ const recoverWallet = async (walletname) => {
         showLoadingAnimation();
         const mnemonic = Array.from(document.querySelectorAll(".each-mnemonic-input-field")).map(input => input.value).join(" ");
         if (wallet_exists) {
-            await tauri.invoke("delete_wallet", { walletname: walletname, exception: exception }).catch((err) => { console.log(err) });
+            await tauri.invoke("delete_wallet", { walletname: walletname, exception: exception }).catch(async (err) => { await handleTimeOut(err); });
         };
         await tauri.invoke("recover_wallet", { walletname: walletname, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required, exception: exception })
             .then((res) => { dialog.message("", { title: "Your wallet has been recovered successfully.", type: "info" }) })
-            .catch((err) => { console.log(err) });
+            .catch(async (err) => { await handleTimeOut(err); });
         await showWallets();
         document.querySelectorAll(".each-input-field")[1].value = "";
         document.querySelectorAll(".each-mnemonic-input-field").forEach(input => input.value = "");
@@ -216,7 +225,7 @@ const showWallets = async () => {
                         if (await dialog.ask("Do you want to set this wallet as your main wallet?", { title: "Set Main Wallet", type: "info" })) {
                             showLoadingAnimation();
                             currentIp.validator_addr = this.closest(".each-input-label").nextElementSibling.children[0].getAttribute("data");
-                            await tauri.invoke("set_main_wallet", { walletname: this.parentNode.textContent, address: currentIp.validator_addr, exception: exception }).catch((err) => { console.log(err) });
+                            await tauri.invoke("set_main_wallet", { walletname: this.parentNode.textContent, address: currentIp.validator_addr, exception: exception }).catch((err) => { console.log(err); });
                             await updateSidebar();
                             localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
                             await showWallets();
@@ -263,7 +272,7 @@ const showWallets = async () => {
                             document.querySelector(".sidebar-info-details-copy-address").textContent = "";
                             document.querySelector(".sidebar-info-details-copy").setAttribute("style", "display: none;");
                         };
-                        await tauri.invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent, exception: exception }).catch((err) => { console.log(err) });
+                        await tauri.invoke("delete_wallet", { walletname: this.parentNode.previousSibling.textContent, exception: exception }).catch((err) => { console.log(err); });
                         await showWallets();
                         hideLoadingAnimation();
                     };
@@ -290,9 +299,7 @@ const showWallets = async () => {
             appendlater.parentNode.insertBefore(document.querySelector(".each-row-half"), appendlater);
             document.querySelector(".each-row-half").parentNode.prepend(appendlater);
         };
-    }).catch((err) => {
-        console.log(err);
-    });
+    }).catch(async (err) => { await handleTimeOut(err); });
 };
 const handleKeyringExistance = async (page_to_load, setup_func) => {
     if (JSON.parse(sessionStorage.getItem("keyring")).required) {
@@ -325,45 +332,56 @@ const getLatestTag = async () => {
         type: 'Json'
     })).data.tag_name;
 };
+const deleteNode = async () => {
+    showLoadingAnimation();
+    await tauri.invoke("start_stop_restart_node", { action: "stop" }).catch(async (err) => { await handleTimeOut(err); });
+    await tauri.invoke("cpu_mem_sync_stop").catch((err) => { console.log(err); });
+    await tauri.invoke("delete_node", { exception: exception }).then(async () => {
+        currentIp.icon = "Empty Server";
+        currentIp.validator_addr = "";
+        localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+        loadHomePage();
+    }).catch((err) => {
+        console.log(err);
+    });
+};
+const handleTimeOut = async (err) => {
+    if (err == "There is no active session. Timed out.") {
+        dialog.message("There is no active session. Timed out.");
+        await loadLoginPage();
+        return function () { return; };
+    };
+};
 
 const nodeOperationsSetup = async () => {
-    const startNodeButton = document.querySelectorAll(".each-page-manage-node-button")[0];
-    const stopNodeButton = document.querySelectorAll(".each-page-manage-node-button")[1];
-    const restartNodeButton = document.querySelectorAll(".each-page-manage-node-button")[2];
-    const updateNodeButton = document.querySelectorAll(".each-page-manage-node-button")[3];
-    const deleteNodeButton = document.getElementById("delete-node-button");
+    startNodeButton = document.querySelectorAll(".each-page-manage-node-button")[0];
+    stopNodeButton = document.querySelectorAll(".each-page-manage-node-button")[1];
+    restartNodeButton = document.querySelectorAll(".each-page-manage-node-button")[2];
+    updateNodeButton = document.querySelectorAll(".each-page-manage-node-button")[3];
+    deleteNodeButton = document.getElementById("delete-node-button");
 
     updateNodeButton.disabled = true;
     startNodeButton.addEventListener("click", async () => {
         node_action = "start";
         document.body.classList.add("waiting");
-        await tauri.invoke("start_stop_restart_node", { action: "start" }).catch((err) => { console.log(err) });
+        await tauri.invoke("start_stop_restart_node", { action: "start" }).catch(async (err) => { await handleTimeOut(err); });
     });
     stopNodeButton.addEventListener("click", async () => {
         node_action = "stop";
         document.body.classList.add("waiting");
-        await tauri.invoke("start_stop_restart_node", { action: "stop" }).catch((err) => { console.log(err) });
+        await tauri.invoke("start_stop_restart_node", { action: "stop" }).catch(async (err) => { await handleTimeOut(err); });
     });
     restartNodeButton.addEventListener("click", async () => {
         node_action = "restart";
         document.body.classList.add("waiting");
-        await tauri.invoke("start_stop_restart_node", { action: "restart" }).catch((err) => { console.log(err) });
+        await tauri.invoke("start_stop_restart_node", { action: "restart" }).catch(async (err) => { await handleTimeOut(err); });
     });
     updateNodeButton.addEventListener("click", async () => {
-        await tauri.invoke("update_node", { latestVersion: latest_tag }).catch((err) => { console.log(err) });
+        await tauri.invoke("update_node", { latestVersion: latest_tag }).catch(async (err) => { await handleTimeOut(err); });
     });
     deleteNodeButton.addEventListener("click", async () => {
         if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
-            showLoadingAnimation();
-            await tauri.invoke("cpu_mem_sync_stop").catch((err) => { console.log(err) });
-            await tauri.invoke("delete_node", { exception: exception }).then(async () => {
-                currentIp.icon = "Empty Server";
-                currentIp.validator_addr = "";
-                localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                loadHomePage();
-            }).catch((err) => {
-                console.log(err);
-            });
+            await deleteNode();
         };
     });
     await getLatestTag();
@@ -417,10 +435,7 @@ const validatorListSetup = async () => {
             valdiv.appendChild(valdivider);
             contentOfPage.appendChild(valdiv);
         }
-    }).catch((err) => {
-        console.log(err);
-        dialog.message(err, { title: "Error", type: "error" });
-    });
+    }).catch(async (err) => { await handleTimeOut(err); });
     hideLoadingAnimation();
     window.scrollTo(0, 400);
 };
@@ -461,10 +476,7 @@ const createValidatorSetup = () => {
                 } else {
                     showErrorMessage(res.raw_log);
                 };
-            }).catch((err) => {
-                console.log(err);
-                showErrorMessage(err);
-            });
+            }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
             hideLoadingAnimation();
         } else {
             showErrorMessage("Please wait for the node to sync!");
@@ -492,10 +504,7 @@ const editValidatorSetup = () => {
                 } else {
                     showErrorMessage(res.raw_log);
                 };
-            }).catch((err) => {
-                console.log(err);
-                showErrorMessage(err);
-            });
+            }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
             hideLoadingAnimation();
         } else {
             showErrorMessage("Please wait for the node to sync!");
@@ -517,10 +526,7 @@ const withdrawRewardsSetup = () => {
             } else {
                 showErrorMessage(res.raw_log);
             };
-        }).catch((err) => {
-            console.log(err);
-            showErrorMessage(err);
-        });
+        }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
         hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
@@ -541,10 +547,7 @@ const delegateSetup = (valoper) => {
             } else {
                 showErrorMessage(res.raw_log);
             };
-        }).catch((err) => {
-            console.log(err);
-            showErrorMessage(err);
-        });
+        }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
         hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
@@ -566,10 +569,7 @@ const redelegateSetup = () => {
             } else {
                 showErrorMessage(res.raw_log);
             };
-        }).catch((err) => {
-            console.log(err);
-            showErrorMessage(err);
-        });
+        }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
         hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
@@ -589,10 +589,7 @@ const voteSetup = () => {
             } else {
                 showErrorMessage(res.raw_log);
             };
-        }).catch((err) => {
-            console.log(err);
-            showErrorMessage(err);
-        });
+        }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
         hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
@@ -611,10 +608,7 @@ const unjailSetup = () => {
             } else {
                 showErrorMessage(res.raw_log);
             };
-        }).catch((err) => {
-            console.log(err);
-            showErrorMessage(err);
-        });
+        }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
         hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
@@ -635,10 +629,7 @@ const sendTokenSetup = () => {
             } else {
                 showErrorMessage(res.raw_log);
             };
-        }).catch((err) => {
-            console.log(err);
-            showErrorMessage(err);
-        });
+        }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
         hideLoadingAnimation();
     });
     window.scrollTo(0, 400);
@@ -656,9 +647,7 @@ const createKeyringSetup = (page_html, page_setup) => {
             await tauri.invoke("create_keyring", { passphrase: document.querySelector(".each-input-field").value }).then(async () => {
                 sessionStorage.setItem("keyring", '{"required": true, "exists": true}');
                 await changePage("page-content/keyring-auth.html", () => keyringAuthSetup(page_html, page_setup));
-            }).catch((err) => {
-                console.log(err);
-            });
+            }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
             hideLoadingAnimation();
         };
     });
@@ -676,9 +665,7 @@ const keyringAuthSetup = (page_html, page_setup) => {
             await tauri.invoke("delete_keyring").then(async () => {
                 sessionStorage.setItem("keyring", '{"required": true, "exists": false}');
                 await changePage("page-content/create-keyring.html", () => createKeyringSetup(page_html, page_setup));
-            }).catch((err) => {
-                console.log(err);
-            });
+            }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
             hideLoadingAnimation();
         };
     });
@@ -686,10 +673,7 @@ const keyringAuthSetup = (page_html, page_setup) => {
         showLoadingAnimation();
         await tauri.invoke("check_keyring_passphrase", { passw: document.querySelectorAll(".each-input-field")[0].value, exception: exception }).then(async () => {
             await changePage(page_html, page_setup);
-        }).catch((err) => {
-            console.log(err);
-            showErrorMessage(err);
-        });
+        }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
         hideLoadingAnimation();
     });
     document.querySelector(".each-input-field").addEventListener("keydown", (e) => {
@@ -762,10 +746,7 @@ const nodeInformationSetup = async () => {
         fields[21].textContent = obj.ValidatorInfo.PubKey.type;
         fields[22].textContent = obj.ValidatorInfo.PubKey.value;
         fields[23].textContent = obj.ValidatorInfo.VotingPower;
-    }).catch((err) => {
-        console.log(err);
-        dialog.message(err, { title: "Error", type: "error" });
-    });
+    }).catch(async (err) => { await handleTimeOut(err); });
     document.querySelectorAll(".each-output-field-icon-copy").forEach((element) => {
         element.addEventListener("click", () => {
             clipboard.writeText(element.previousElementSibling.textContent);
@@ -849,7 +830,7 @@ const setupNodePage = () => {
     });
     homePageButton.addEventListener("click", async function () {
         showLoadingAnimation();
-        await tauri.invoke("cpu_mem_sync_stop").catch((e) => { console.log(e) });
+        await tauri.invoke("cpu_mem_sync_stop").catch(async (e) => { await handleTimeOut(e); });
         await loadHomePage();
     });
     validatorOperationsButton.addEventListener("click", function () {

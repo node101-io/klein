@@ -49,8 +49,8 @@ body.waiting * {
 
 /* LOGIN PAGE */
 .all-login-header-wrapper {
-  margin-left: 8vw;
-  margin-top: 8vh;
+  margin-left: 6vw;
+  margin-top: 6vh;
 }
 
 .all-login-content-wrapper {
@@ -61,17 +61,19 @@ body.waiting * {
 }
 
 .login-page-wrapper {
-  width: 100vw;
   display: flex;
+  width: 100vw;
+  height: calc(88vh - 55px);
   align-items: center;
-  padding-right: 15vw;
-  padding-left: 8vw;
+  padding-right: 12vw;
+  padding-left: 6vw;
 }
 
 .login-page-left-wrapper {
-  width: auto;
-  margin-right: 10vw;
   display: flex;
+  flex-grow: 1;
+  width: calc(100vw - 18vw - 420px);
+  margin-right: 6vw;
   flex-direction: column;
 }
 
@@ -87,6 +89,135 @@ body.waiting * {
   color: rgba(100, 150, 255, 1);
   font-size: 32px;
   cursor: default;
+}
+
+.onboarding-page-back-button {
+  font-size: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.onboarding-page-back-button:hover {
+  opacity: 0.7;
+}
+
+.onboarding-page-project-header {
+  display: flex;
+  margin-bottom: 18px;
+}
+
+.onboarding-page-project-icon {
+  margin-right: 20px;
+  width: 100px;
+  height: 100px;
+}
+
+.onboarding-page-project-details {
+  display: flex;
+  flex-direction: column;
+  height: 100px;
+  gap: 10px;
+}
+
+.onboarding-page-project-details-heading {
+  font-size: 26px;
+  color: var(--logo-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.onboarding-page-project-details-tags {
+  display: flex;
+}
+
+.onboarding-page-project-rating {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
+}
+
+.onboarding-page-project-rating span {
+  margin-right: 6px;
+}
+
+.onboarding-page-project-rating-heading {
+  font-size: 16px;
+  margin-right: 10px;
+  color: var(--logo-color);
+}
+
+.onboarding-page-project-description {
+  margin-top: 20px;
+  color: var(--logo-color);
+  font-size: 16px;
+  overflow: hidden;
+  min-height: 45px;
+}
+
+@media (max-height: 680px) {
+  .onboarding-page-project-description {
+    display: none;
+  }
+}
+
+.onboarding-page-project-subtitle {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: #78A9FF;
+}
+
+.onboarding-page-project-anchors {
+  display: flex;
+  flex-direction: row;
+}
+
+.each-onboarding-page-project-anchor {
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.each-onboarding-page-project-anchor:hover {
+  text-decoration: underline;
+}
+
+.each-onboarding-page-project-anchor-divider {
+  display: flex;
+  width: 1px;
+  height: 20px;
+  margin-left: 8px;
+  margin-right: 8px;
+  background-color: var(--divider-color);
+}
+
+.onboarding-page-project-system-reqs {
+  display: flex;
+  gap: 10px;
+  max-width: 330px;
+  flex-wrap: wrap;
+}
+
+.each-onboarding-page-project-req {
+  display: flex;
+  min-width: 160px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(90, 104, 114, 0.22);
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.each-onboarding-page-project-req-left {
+  margin-right: auto;
+}
+
+.each-onboarding-page-project-req-right {
+  color: rgba(254, 214, 149, 1);
 }
 
 .login-page-heading {
@@ -163,6 +294,33 @@ body.waiting * {
   align-items: center;
   color: rgba(188, 188, 188, 1);
   width: 420px;
+}
+
+@media (max-width: 1100px) {
+  .each-autocomplete-item {
+    width: 40vw;
+  }
+
+  .each-login-page-text-field {
+    width: 40vw;
+  }
+
+  .each-login-page-toggle {
+    left: calc(40vw - 34px);
+  }
+
+  .onboarding-page-project-description {
+    display: none;
+  }
+
+  .login-page-wrapper {
+    padding-right: 6vw;
+  }
+
+  .login-page-left-wrapper {
+    width: calc(100vw - 6vw - 40vw);
+    margin-right: 6vw;
+  }
 }
 
 .each-autocomplete-item:hover {
@@ -293,8 +451,8 @@ body.waiting * {
 
 .all-footer-wrapper {
   margin-top: auto;
-  margin-left: 8vw;
-  margin-bottom: 8vh;
+  margin-left: 6vw;
+  margin-bottom: 6vh;
 }
 
 .each-footer-anchor {

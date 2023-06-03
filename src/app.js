@@ -1,8 +1,31 @@
 const { tauri, dialog, clipboard, http, event: tevent, window: twindow } = window.__TAURI__;
 
+ONBOARD_USER = true;
+
 const handleRighClick = (e) => {
   if (e.target.tagName === "INPUT" && e.target.type == "text") return;
   e.preventDefault();
+};
+
+const fetchProjects = async () => {
+  projects = [];
+  const client = await http.getClient();
+  const authenticate = await client.post("https://admin.node101.io/api/authenticate", {
+    type: "Json",
+    payload: { key: API_TOKEN },
+  });
+
+  projects.length = 0;
+  for (let count = 0; ; count++) {
+    projects_data = await client.get(`https://admin.node101.io/api/testnets?page=${count}`, {
+      type: "Json",
+      headers: {
+        "Cookie": authenticate.headers["set-cookie"]
+      }
+    });
+    if (!projects_data.data.testnets.length) break;
+    projects.push(...projects_data.data.testnets);
+  };
 };
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -40,5 +63,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   setupNodePage();
   setupHomePage();
   setupHeader();
-  loadLoginPage();
+  if (ONBOARD_USER) {
+    await fetchProjects();
+    loadHomePage();
+  } else
+    loadLoginPage();
 });

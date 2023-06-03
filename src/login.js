@@ -1,32 +1,50 @@
 const loadLoginPage = async () => {
     await fetchProjects();
-    document.querySelector(".all-installation-wrapper").setAttribute("style", "display: none;");
-    document.querySelector(".all-header-wrapper").setAttribute("style", "display: none;");
-    document.querySelector(".all-login-wrapper").setAttribute("style", "display: unset;");
-    document.querySelector(".all-node-wrapper").setAttribute("style", "display: none;");
-    document.querySelector(".all-home-wrapper").setAttribute("style", "display: none;");
+    document.querySelector(".onboarding-page-project").style.display = "none";
+    document.querySelector(".login-page-motto").style.display = "unset";
+    document.querySelector(".all-installation-wrapper").style.display = "none";
+    document.querySelector(".all-header-wrapper").style.display = "none";
+    document.querySelector(".all-login-wrapper").style.display = "unset";
+    document.querySelector(".all-node-wrapper").style.display = "none";
+    document.querySelector(".all-home-wrapper").style.display = "none";
     hideLoadingAnimation();
 };
-const fetchProjects = async () => {
-    projects = [];
-    const client = await http.getClient();
-    const authenticate = await client.post("https://admin.node101.io/api/authenticate", {
-        type: "Json",
-        payload: { key: API_TOKEN },
-    });
 
-    projects.length = 0;
-    for (let count = 0; ; count++) {
-        projects_data = await client.get(`https://admin.node101.io/api/testnets?page=${count}`, {
-            type: "Json",
-            headers: {
-                "Cookie": authenticate.headers["set-cookie"]
-            }
-        });
-        if (!projects_data.data.testnets.length) break;
-        projects.push(...projects_data.data.testnets);
+const loadOnboardingLoginPage = async (project) => {
+    document.querySelector(".all-installation-wrapper").style.display = "none";
+    document.querySelector(".all-header-wrapper").style.display = "none";
+    document.querySelector(".all-login-wrapper").style.display = "unset";
+    document.querySelector(".all-node-wrapper").style.display = "none";
+    document.querySelector(".all-home-wrapper").style.display = "none";
+
+    document.querySelector(".login-page-motto").style.display = "none";
+    document.querySelector(".onboarding-page-project").style.display = "unset";
+    document.querySelector(".onboarding-page-project-icon").src = project.image;
+    document.querySelector(".onboarding-page-project-details-heading").textContent = project.name;
+    rating = document.querySelector(".onboarding-page-project-rating");
+    rating.innerHTML = "";
+    ratingScore = project.rating;
+    for (let j = 0; j < 5; j++) {
+        ratingCircle = document.createElement("span");
+        ratingCircle.classList.add("each-project-rating-value");
+        ratingCircleOn = document.createElement("span");
+        ratingCircleOn.classList.add("each-project-rating-value-on");
+        if (ratingScore != 0) {
+            ratingCircleOn.style.display = "unset";
+            ratingScore = ratingScore - 1;
+        } else {
+            ratingCircleOn.style.display = "none";
+        };
+        ratingCircle.appendChild(ratingCircleOn);
+        rating.appendChild(ratingCircle);
     };
+    document.querySelector(".onboarding-page-project-description").textContent = project.description;
+    document.querySelector(".onboarding-page-back-button").addEventListener("click", (e) => {
+        e.preventDefault();
+        loadHomePage();
+    });
 };
+
 const logIn = async (ip, password, again) => {
     const checkboxInputEl = document.getElementById("checkbox-input");
     const switchIpPromptClose = document.querySelector(".switch-ip-prompt-close");
@@ -77,23 +95,32 @@ const logIn = async (ip, password, again) => {
             ip.value = "";
         }
         password.value = "";
-        res.name ? loadNodePage(true) : loadHomePage();
+        // res.name ? await loadNodePage(true) : await loadHomePage();
         exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
 
         if (res.name && !res.properly_installed) {
             if (await dialog.ask("This node is not properly installed. Do you want to delete it?")) {
-                showLoadingAnimation();
-                await tauri.invoke("cpu_mem_sync_stop").catch((err) => { console.log(err) });
-                await tauri.invoke("delete_node", { exception: exception }).then(async () => {
-                    currentIp.icon = "Empty Server";
-                    currentIp.validator_addr = "";
-                    localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                    loadHomePage();
-                }).catch((err) => {
-                    console.log(err);
-                });
+                await deleteNode();
+                if (ONBOARD_USER) {
+                    await installNode(projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
+                    ONBOARD_USER = false;
+                };
             };
+            await loadNodePage(true);
+        } else if (res.name) {
+            if (ONBOARD_USER) {
+                dialog.message("There is already a node installed!");
+                ONBOARD_USER = false;
+            };
+            await loadNodePage(true);
+        } else {
+            if (ONBOARD_USER) {
+                await installNode(projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
+                ONBOARD_USER = false;
+            };
+            await loadHomePage();
         };
+
     }).catch((err) => {
         showLogInError(err, again);
         hideLoadingAnimation();
