@@ -112,7 +112,6 @@ const logIn = async (ip, password, again) => {
             ip.value = "";
         }
         password.value = "";
-        // res.name ? await loadNodePage(true) : await loadHomePage();
         exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
 
         if (res.name && !res.properly_installed) {
@@ -124,7 +123,6 @@ const logIn = async (ip, password, again) => {
                     ONBOARD_USER = false;
                 };
             };
-            await loadNodePage(true);
         } else if (res.name) {
             if (ONBOARD_USER) {
                 dialog.message("There is already a node installed!");
@@ -134,11 +132,11 @@ const logIn = async (ip, password, again) => {
             await loadNodePage(true);
         } else {
             if (ONBOARD_USER) {
+                await loadHomePage();
                 await installNode(projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
                 localStorage.setItem("onboard_user", 0);
                 ONBOARD_USER = false;
             };
-            await loadHomePage();
         };
 
     }).catch((err) => {
