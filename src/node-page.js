@@ -59,8 +59,14 @@ tevent.listen("cpu_mem_sync", (event) => {
     };
     if (response.version) {
         version_new = response.version.charAt(0).toLowerCase() == "v" ? response.version : "v" + response.version;
-        if (document.querySelector(".each-page-manage-node-button")) {
-            document.querySelectorAll(".each-page-manage-node-button")[3].disabled = (version_new == latest_tag);
+        if (version_new == latest_tag) {
+            updateNodeButton.disabled = true;
+            if (node_action == "update") {
+                node_action = "";
+                document.body.classList.remove("waiting");
+            };
+        } else {
+            updateNodeButton.disabled = false;
         };
         eachSidebarTag[1].textContent = version_new;
         eachSidebarTag[1].classList.add("version-tag");
@@ -377,6 +383,8 @@ const nodeOperationsSetup = async () => {
         await tauri.invoke("start_stop_restart_node", { action: "restart" }).catch(async (err) => { await handleTimeOut(err); });
     });
     updateNodeButton.addEventListener("click", async () => {
+        node_action = "update";
+        document.body.classList.add("waiting");
         await tauri.invoke("update_node", { latestVersion: latest_tag }).catch(async (err) => { await handleTimeOut(err); });
     });
     deleteNodeButton.addEventListener("click", async () => {

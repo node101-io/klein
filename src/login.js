@@ -19,7 +19,10 @@ const loadOnboardingLoginPage = async (project) => {
 
     document.querySelector(".login-page-motto").style.display = "none";
     document.querySelector(".onboarding-page-project").style.display = "unset";
-    document.querySelector(".onboarding-page-project-icon").src = project.image;
+    document.querySelector(".onboarding-page-back-button").addEventListener("click", (e) => {
+        e.preventDefault();
+        loadHomePage();
+    }); document.querySelector(".onboarding-page-project-icon").src = project.image;
     document.querySelector(".onboarding-page-project-details-heading").textContent = project.name;
     rating = document.querySelector(".onboarding-page-project-rating");
     rating.innerHTML = "";
@@ -39,9 +42,23 @@ const loadOnboardingLoginPage = async (project) => {
         rating.appendChild(ratingCircle);
     };
     document.querySelector(".onboarding-page-project-description").textContent = project.description;
-    document.querySelector(".onboarding-page-back-button").addEventListener("click", (e) => {
-        e.preventDefault();
-        loadHomePage();
+    // temporary
+    const requirements = {
+        "Celestia Light": [
+            "1 Core",
+            "2GB",
+            "2GB",
+            "Ubuntu"
+        ],
+        "Nibiru": [
+            "4 Cores",
+            "8GB",
+            "200GB",
+            "Ubuntu"
+        ]
+    };
+    document.querySelectorAll(".each-onboarding-page-project-req-right").forEach((item, index) => {
+        item.textContent = requirements[project.name][index];
     });
 };
 
@@ -103,6 +120,7 @@ const logIn = async (ip, password, again) => {
                 await deleteNode();
                 if (ONBOARD_USER) {
                     await installNode(projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
+                    localStorage.setItem("onboard_user", 0);
                     ONBOARD_USER = false;
                 };
             };
@@ -110,12 +128,14 @@ const logIn = async (ip, password, again) => {
         } else if (res.name) {
             if (ONBOARD_USER) {
                 dialog.message("There is already a node installed!");
+                localStorage.setItem("onboard_user", 0);
                 ONBOARD_USER = false;
             };
             await loadNodePage(true);
         } else {
             if (ONBOARD_USER) {
                 await installNode(projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
+                localStorage.setItem("onboard_user", 0);
                 ONBOARD_USER = false;
             };
             await loadHomePage();

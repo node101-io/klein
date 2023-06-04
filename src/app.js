@@ -1,6 +1,6 @@
 const { tauri, dialog, clipboard, http, event: tevent, window: twindow } = window.__TAURI__;
 
-ONBOARD_USER = true;
+ONBOARD_USER = localStorage.getItem("onboard_user") ? Number(localStorage.getItem("onboard_user")) : 1;
 
 const handleRighClick = (e) => {
   if (e.target.tagName === "INPUT" && e.target.type == "text") return;
