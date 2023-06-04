@@ -1,6 +1,6 @@
 [package]
 name = "wizard"
-version = "0.2.2"
+version = "0.2.3"
 description = "A wizard to install and manage nodes on your remote server.."
 authors = ["node101"]
 license = ""

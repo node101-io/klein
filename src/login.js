@@ -122,7 +122,9 @@ const logIn = async (ip, password, again) => {
                     localStorage.setItem("onboard_user", 0);
                     ONBOARD_USER = false;
                 };
-            };
+            } else {
+                await loadNodePage(true);
+            }
         } else if (res.name) {
             if (ONBOARD_USER) {
                 dialog.message("There is already a node installed!");
@@ -131,8 +133,8 @@ const logIn = async (ip, password, again) => {
             };
             await loadNodePage(true);
         } else {
+            await loadHomePage();
             if (ONBOARD_USER) {
-                await loadHomePage();
                 await installNode(projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
                 localStorage.setItem("onboard_user", 0);
                 ONBOARD_USER = false;

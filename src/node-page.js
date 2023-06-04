@@ -38,13 +38,17 @@ tevent.listen("cpu_mem_sync", (event) => {
         eachSidebarTag[0].classList.add("sidebar-active-tag");
         eachSidebarTag[0].textContent = "Active";
 
-        startNodeButton.disabled = true;
-        stopNodeButton.disabled = false;
+        if (startNodeButton) {
+            startNodeButton.disabled = true;
+            stopNodeButton.disabled = false;
+        };
     } else if (response.status == "") {
         eachSidebarTag[0].textContent = "Loading...";
 
-        startNodeButton.disabled = false;
-        stopNodeButton.disabled = true;
+        if (startNodeButton) {
+            startNodeButton.disabled = false;
+            stopNodeButton.disabled = true;
+        };
     } else {
         if (node_action == "stop") {
             node_action = "";
@@ -54,8 +58,10 @@ tevent.listen("cpu_mem_sync", (event) => {
         eachSidebarTag[0].classList.remove("sidebar-active-tag");
         eachSidebarTag[0].textContent = response.status.charAt(0).toUpperCase() + response.status.slice(1);
 
-        startNodeButton.disabled = false;
-        stopNodeButton.disabled = true;
+        if (startNodeButton) {
+            startNodeButton.disabled = false;
+            stopNodeButton.disabled = true;
+        };
     };
     if (response.version) {
         version_new = response.version.charAt(0).toLowerCase() == "v" ? response.version : "v" + response.version;
