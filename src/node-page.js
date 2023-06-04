@@ -78,6 +78,26 @@ tevent.listen("cpu_mem_sync", (event) => {
         eachSidebarTag[1].classList.add("version-tag");
     };
 });
+tevent.listen("check_logs", (event) => {
+    if (document.getElementById("logs-page-code-block")) {
+        const codeBlock = document.getElementById("logs-page-code-block");
+
+        event.payload = event.payload
+            .replace(/INFO/g, "<span style='color: #43BE66;'>INFO</span>")
+            .replace(/WARN/g, "<span style='color: #FFA800;'>WARN</span>")
+            .replace(/ERROR/g, "<span style='color: #FF2632;'>ERROR</span>")
+            .replace(/\n/g, "<br><br>") + "<br>";
+
+        if (codeBlock.scrollHeight - codeBlock.scrollTop - codeBlock.clientHeight < 10) {
+            codeBlock.innerHTML += event.payload;
+            codeBlock.scrollTop = codeBlock.scrollHeight;
+        } else {
+            codeBlock.innerHTML += event.payload;
+        };
+    } else {
+        tauri.invoke("stop_check_logs");
+    }
+});
 
 const loadNodePage = async (start) => {
     const eachSidebarTag = document.querySelectorAll(".each-sidebar-tag");
@@ -731,6 +751,9 @@ const walletsSetup = async () => {
     hideLoadingAnimation();
     window.scrollTo(0, 400);
 };
+const logsSetup = async () => {
+    tauri.invoke("check_logs");
+};
 const nodeInformationSetup = async () => {
     showLoadingAnimation();
     await tauri.invoke("node_info").then(async (obj) => {
@@ -794,6 +817,8 @@ const setupNodePage = () => {
     const redelegateTokenButton = document.getElementById("redelegate-token-button");
     const voteButton = document.getElementById("vote-button");
     const walletsButton = document.getElementById("wallets-button");
+    const logsButton = document.getElementById("logs-button");
+
     node_action = "";
 
     syncStatusChart = new EasyPieChart(document.querySelectorAll(".each-page-chart")[0], {
@@ -888,6 +913,9 @@ const setupNodePage = () => {
     });
     walletsButton.addEventListener("click", async function () {
         await handleKeyringExistance("page-content/wallets.html", walletsSetup);
+    });
+    logsButton.addEventListener("click", async function () {
+        await changePage("page-content/logs.html", logsSetup);
     });
     nodeInformationButton.addEventListener("click", async function () {
         await changePage("page-content/node-information.html", nodeInformationSetup);

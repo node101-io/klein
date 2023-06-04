@@ -16,6 +16,7 @@ struct SessionManager {
     open_session: Session,
     stop_cpu_mem_sync: bool,
     stop_installation: bool,
+    stop_check_logs: bool,
     walletpassword: String,
 }
 static mut GLOBAL_STRUCT: Option<SessionManager> = None;
@@ -36,6 +37,7 @@ fn log_in(ip: String, password: String) -> Result<String, String> {
             open_session: sess,
             stop_cpu_mem_sync: false,
             stop_installation: false,
+            stop_check_logs: false,
             walletpassword: String::new(),
         });
     }
@@ -147,6 +149,39 @@ fn cpu_mem_sync_stop() -> Result<(), String> {
 }
 
 // NODE FUNCTIONS
+#[tauri::command(async)]
+fn check_logs(window: Window) -> Result<(), String> {
+    let my_boxed_session =
+        unsafe { GLOBAL_STRUCT.as_mut() }.ok_or("There is no active session. Timed out.")?;
+    let mut channel = my_boxed_session
+        .open_session
+        .channel_session()
+        .map_err(|e| e.to_string())?;
+    channel
+        .exec(r#"bash -c -l 'journalctl -fu $EXECUTE -o cat'"#)
+        .map_err(|e| e.to_string())?;
+    my_boxed_session.stop_check_logs = false;
+    loop {
+        if my_boxed_session.stop_check_logs {
+            channel.close().map_err(|e| e.to_string())?;
+            return Ok(());
+        }
+        let mut buf = [0u8; 1024];
+        let len = channel.read(&mut buf).map_err(|e| e.to_string())?;
+        let s = std::str::from_utf8(&buf[0..len]).map_err(|e| e.to_string())?;
+        let _ = window.emit("check_logs", s).map_err(|e| e.to_string())?;
+    }
+}
+
+#[tauri::command(async)]
+fn stop_check_logs() -> Result<(), String> {
+    let my_boxed_session =
+        unsafe { GLOBAL_STRUCT.as_mut() }.ok_or("There is no active session. Timed out.")?;
+    my_boxed_session.stop_check_logs = true;
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    Ok(())
+}
+
 #[tauri::command(async)]
 fn install_node(network: String, identifier: String, window: Window) -> Result<(), String> {
     let mut nosleep = NoSleep::new().unwrap();
@@ -806,7 +841,9 @@ fn main() {
             validator_list,
             set_main_wallet,
             get_main_wallet,
-            stop_installation
+            stop_installation,
+            check_logs,
+            stop_check_logs,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
