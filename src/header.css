@@ -123,6 +123,7 @@
   display: flex;
   align-items: center;
   height: 50px;
+  text-decoration: none;
   background: var(--second-color);
   padding-left: 16px;
   cursor: pointer;

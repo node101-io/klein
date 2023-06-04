@@ -367,7 +367,6 @@ const getLatestTag = async () => {
 const deleteNode = async () => {
     showLoadingAnimation();
     await tauri.invoke("start_stop_restart_node", { action: "stop" }).catch(async (err) => { await handleTimeOut(err); });
-    await tauri.invoke("cpu_mem_sync_stop").catch((err) => { console.log(err); });
     await tauri.invoke("delete_node", { exception: exception }).then(async () => {
         currentIp.icon = "Empty Server";
         currentIp.validator_addr = "";
