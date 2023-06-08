@@ -460,9 +460,8 @@ body.waiting * {
 }
 
 .warning {
-  position: absolute;
-  align-items: center;
   display: flex;
+  align-items: center;
 }
 
 .warning-animation {
@@ -537,18 +536,21 @@ body.waiting * {
 
 .sidebar-info {
   display: flex;
+  margin-bottom: 20px;
 }
 
 .sidebar-info-icon {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   border-radius: 6px;
 }
 
 .sidebar-info-details {
-  height: 60px;
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
   margin-left: 20px;
+  gap: 5px;
 }
 
 .sidebar-info-details-name {
@@ -560,7 +562,6 @@ body.waiting * {
   display: flex;
   align-items: center;
   cursor: pointer;
-  margin-top: 6px;
   gap: 8px;
 }
 
@@ -581,8 +582,14 @@ body.waiting * {
 
 .sidebar-info-details-copy-icon {
   fill: rgba(144, 144, 144, 1);
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+}
+
+.sidebar-info-details-chain-id {
+  color: rgba(144, 144, 144, 1);
+  font-size: 16px;
+  font-style: italic;
 }
 
 .sidebar-tags {
@@ -1667,8 +1674,11 @@ body.waiting * {
   width: 450px;
   height: fit-content;
   background-color: rgba(30, 30, 30, 1);
-  top: calc(50vh - 110px);
-  left: calc(50vw - 225px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
   padding-top: 30px;
   padding-bottom: 30px;
   z-index: 100;

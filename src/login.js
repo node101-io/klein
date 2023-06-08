@@ -75,17 +75,17 @@ const logIn = async (ip, password, again) => {
         return;
     };
     showLoadingAnimation();
-    if (again) {
-        await tauri.invoke("log_in_again", {
-            ip: ip.textContent.split(":")[0],
-            password: password.value,
-            port: ip.textContent.includes(":") ? ip.textContent.split(":")[1] : "22"
-        }).then().catch((err) => {
-            showLogInError(err, again);
-            hideLoadingAnimation();
-            return;
-        });
-    };
+
+    if (again && !await tauri.invoke("log_in_again", {
+        ip: ip.textContent.split(":")[0],
+        password: password.value,
+        port: ip.textContent.includes(":") ? ip.textContent.split(":")[1] : "22"
+    }).then(() => { return true; }).catch((err) => {
+        showLogInError(err, again);
+        hideLoadingAnimation();
+        return false;
+    })) return;
+
     await tauri.invoke("log_in", {
         ip: (again ? ip.textContent.split(":")[0] : ip.value.split(":")[0]),
         password: password.value,
@@ -99,6 +99,7 @@ const logIn = async (ip, password, again) => {
             project_name = res.name ? projects.find(item => item.project.wizard_key === res.name).project.name : "Empty Server";
         } catch (err) {
             showLogInError("Unknown project is installed on your server!", again);
+            hideLoadingAnimation();
             return;
         };
         if (currentIp) {
@@ -134,6 +135,7 @@ const logIn = async (ip, password, again) => {
         password.value = "";
         exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
 
+        CHAIN_ID = res.chain_id;
         if (res.name && !res.properly_installed) {
             if (await dialog.ask("This node is not properly installed. Do you want to delete it?")) {
                 await deleteNode();
@@ -145,14 +147,16 @@ const logIn = async (ip, password, again) => {
             } else {
                 await loadNodePage(true);
             }
-        } else if (res.name) {
+        }
+        else if (res.name) {
             if (ONBOARD_USER) {
                 dialog.message("There is already a node installed!");
                 localStorage.setItem("onboard_user", 0);
                 ONBOARD_USER = false;
             };
             await loadNodePage(true);
-        } else {
+        }
+        else {
             await loadHomePage();
             if (ONBOARD_USER) {
                 await installNode(projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
@@ -160,7 +164,6 @@ const logIn = async (ip, password, again) => {
                 ONBOARD_USER = false;
             };
         };
-
     }).catch((err) => {
         showLogInError(err, again);
         hideLoadingAnimation();

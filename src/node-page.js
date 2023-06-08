@@ -11,7 +11,7 @@ tevent.listen("cpu_mem_sync", (event) => {
     if (response.catchup == "true") {
         syncStatusChart.options.barColor = "#E1AB00";
         syncStatusChartPercent.innerText = convertToKNotation(response.height);
-        syncStatusChartPopupText.innerText = "Syncing...\n\nCurrent Block: " + convertToKNotation(response.height);
+        syncStatusChartPopupText.innerText = "Syncing...\n\nCurrent Block: " + response.height;
         setTimeout(() => {
             syncStatusChart.update(100);
             setTimeout(() => syncStatusChart.update(0), 2300);
@@ -157,9 +157,10 @@ const changePage = async (page, callback) => {
         await callback();
     };
 };
-const updateSidebar = async () => {
-    document.querySelector(".sidebar-info-details-name").textContent = currentIp.icon;
+const updateSidebar = () => {
     document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? projects.find(item => item.project.name == currentIp.icon).project.image : "assets/default.png");
+    document.querySelector(".sidebar-info-details-name").textContent = currentIp.icon;
+    document.querySelector(".sidebar-info-details-chain-id").textContent = CHAIN_ID;
     document.querySelector(".sidebar-info-details-copy").setAttribute("style", currentIp.validator_addr ? "display: flex;" : "display: none;");
     document.querySelector(".sidebar-info-details-copy-address").textContent = currentIp.validator_addr;
 };
@@ -260,7 +261,7 @@ const showWallets = async () => {
                             showLoadingAnimation();
                             currentIp.validator_addr = this.closest(".each-input-label").nextElementSibling.children[0].getAttribute("data");
                             await tauri.invoke("set_main_wallet", { walletname: this.parentNode.textContent, address: currentIp.validator_addr, exception: exception }).catch((err) => { console.log(err); });
-                            await updateSidebar();
+                            updateSidebar();
                             localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
                             await showWallets();
                             hideLoadingAnimation();
@@ -368,6 +369,7 @@ const getLatestTag = async () => {
 };
 const deleteNode = async () => {
     showLoadingAnimation();
+    await tauri.invoke("cpu_mem_sync_stop").catch(async (e) => { await handleTimeOut(e); });
     await tauri.invoke("start_stop_restart_node", { action: "stop" }).catch(async (err) => { await handleTimeOut(err); });
     await tauri.invoke("delete_node", { exception: exception }).then(async () => {
         currentIp.icon = "Empty Server";
@@ -387,6 +389,7 @@ const handleTimeOut = async (err) => {
 };
 const convertToKNotation = (number) => {
     let suffixIndex = 0;
+    if (number < 1000) return number;
     while (number >= 1000 && ++suffixIndex) number /= 1000;
     return number.toFixed(2) + ['', 'k', 'M', 'B', 'T'][suffixIndex];
 }
@@ -513,7 +516,7 @@ const createValidatorSetup = () => {
                         showErrorMessage(err);
                     });
                     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                    await updateSidebar();
+                    updateSidebar();
                 } else {
                     showErrorMessage(res.raw_log);
                 };

@@ -297,10 +297,15 @@
   align-items: center;
   border: 1px solid rgba(69, 137, 255, 0.3);
   width: 450px;
-  height: 220px;
+  height: fit-content;
   background-color: rgba(30, 30, 30, 1);
-  top: calc(50vh - 110px);
-  left: calc(50vw - 225px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  padding-top: 30px;
+  padding-bottom: 30px;
   z-index: 100;
 }
 
@@ -327,7 +332,6 @@
   width: fit-content;
   cursor: pointer;
   margin-top: 16px;
-  margin-bottom: 16px;
   margin-left: auto;
 }
 

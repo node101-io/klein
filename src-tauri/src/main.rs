@@ -49,7 +49,7 @@ fn log_in(ip: String, password: String, port: String) -> Result<String, String> 
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel
-        .exec(r#"bash -c -l 'echo { \"name\": \"$EXECUTE\", \"properly_installed\": \"$NODE_PROPERLY_INSTALLED\" }'"#)
+        .exec(r#"bash -c -l 'echo { \"name\": \"$EXECUTE\", \"properly_installed\": \"$NODE_PROPERLY_INSTALLED\", \"chain_id\": \"$CHAIN_ID\" }'"#)
         .map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -250,10 +250,18 @@ fn delete_node(exception: String) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
         "celestia-lightd" => format!(
-            r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo rm -rf .celestia-app .celestia-light-blockspacerace-0 /etc/systemd/system/$EXECUTE* $(which celestia) $(which celestia-appd) $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*; sed -i '/MAIN_WALLET_NAME/d; /MAIN_WALLET_ADDRESS/d; /NODE_PROPERLY_INSTALLED/d; /EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset NODE_PROPERLY_INSTALLED EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
+            r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE;
+            pkill -f $EXECUTE;
+            sudo rm -rf .celestia-app .celestia-light-blockspacerace-0 /etc/systemd/system/$EXECUTE* $(which celestia) $(which celestia-appd) $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*;
+            sed -i '/MAIN_WALLET_NAME/d; /MAIN_WALLET_ADDRESS/d; /NODE_PROPERLY_INSTALLED/d; /EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile;
+            unset NODE_PROPERLY_INSTALLED EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
         ),
         _ => format!(
-            r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE; sudo kill $(lsof -i :26657 | awk '$1 == \"$EXECUTE\" {{print $2}}'); sudo kill $(lsof -i :6060 | awk '$1 == \"$EXECUTE\" {{print $2}}'); sudo rm -rf /etc/systemd/system/$EXECUTE* $(which $EXECUTE) $HOME/$SYSTEM_FILE* $HOME/$EXECUTE* $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER*; sudo systemctl daemon-reload; sudo systemctl reset-failed; sed -i '/MAIN_WALLET_NAME/d; /MAIN_WALLET_ADDRESS/d; /NODE_PROPERLY_INSTALLED/d; /EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /PATH/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile; unset NODE_PROPERLY_INSTALLED EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE PATH REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
+            r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE;
+            pkill -f $EXECUTE;
+            sudo rm -rf /etc/systemd/system/$EXECUTE* $(which $EXECUTE) $HOME/$SYSTEM_FILE* $HOME/$EXECUTE* $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER*;
+            sed -i '/MAIN_WALLET_NAME/d; /MAIN_WALLET_ADDRESS/d; /NODE_PROPERLY_INSTALLED/d; /EXECUTE/d; /CHAIN_ID/d; /PORT/d; /DENOM/d; /SEEDS/d; /PEERS/d; /VERSION/d; /SYSTEM_FOLDER/d; /PROJECT_FOLDER/d; /GO_VERSION/d; /GENESIS_FILE/d; /ADDRBOOK/d; /MIN_GAS/d; /SEED_MODE/d; /REPO/d; /MONIKER/d; /SNAPSHOT_URL/d; /WALLET_NAME/d' ~/.bash_profile; source ~/.bash_profile;
+            unset NODE_PROPERLY_INSTALLED EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
         ),
     };
     channel.exec(&command).map_err(|e| e.to_string())?;

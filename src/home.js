@@ -72,7 +72,7 @@ const installNode = async (project) => {
                 console.log(err);
             });
             await tauri.invoke("set_main_wallet", { walletname: "my_celes_key", address: currentIp.validator_addr, exception: exception }).catch((err) => { console.log(err); });
-            await updateSidebar();
+            updateSidebar();
         };
 
         endInstallationButton.style.display = "flex";
