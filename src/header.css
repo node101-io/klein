@@ -186,7 +186,7 @@
   height: 60px;
   background: var(--fifth-color);
   padding-left: 16px;
-  padding-right: 40px;
+  padding-right: 20px;
   cursor: pointer;
 }
 
@@ -302,6 +302,54 @@
   top: calc(50vh - 110px);
   left: calc(50vw - 225px);
   z-index: 100;
+}
+
+.switch-ip-prompt-background {
+  position: fixed;
+  display: none;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 99;
+}
+
+.switch-ip-prompt-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--main-color);
+  padding-left: 16px;
+  padding-right: 16px;
+  height: 44px;
+  width: fit-content;
+  cursor: pointer;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  margin-left: auto;
+}
+
+.switch-ip-prompt-button:hover {
+  opacity: 0.8;
+}
+
+.switch-ip-prompt-input {
+  outline: none;
+  border: none;
+  background-color: var(--third-color);
+  width: 320px;
+  height: 44px;
+  padding-left: 16px;
+  padding-right: 16px;
+  font-size: 16px;
+  color: rgba(149, 149, 149, 1);
+  overflow: auto;
+}
+
+.switch-ip-prompt-input:not(:placeholder-shown) {
+  background-color: var(--second-color);
 }
 
 .switch-ip-prompt-close {

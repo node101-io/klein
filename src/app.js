@@ -4,6 +4,7 @@ ONBOARD_USER = localStorage.getItem("onboard_user") ? Number(localStorage.getIte
 
 const handleRighClick = (e) => {
   if (e.target.tagName === "INPUT" && e.target.type == "text") return;
+  if (e.target.classList.contains("allow-select")) return;
   e.preventDefault();
 };
 
@@ -28,7 +29,50 @@ const fetchProjects = async () => {
   };
 };
 
+const createMessage = (title, message) => {
+  const customMessage = document.querySelector(".custom-message");
+  const customMessageBackground = document.querySelector(".custom-message-background");
+  const customMessageTitle = document.querySelector(".custom-message-content .page-heading");
+  const customMessageText = document.querySelector(".custom-message .each-input-label");
+
+  customMessageBackground.style.display = "flex";
+  customMessageTitle.textContent = title;
+  customMessageText.textContent = message;
+  customMessage.style.display = "flex";
+};
+
+const loadOnboardPage = () => {
+  document.querySelector(".all-login-wrapper").style.display = "unset";
+  document.querySelector(".login-page-wrapper").style.display = "none";
+  document.querySelector(".start-onboarding-page-wrapper").style.display = "flex";
+  hideLoadingAnimation();
+};
+
 window.addEventListener("DOMContentLoaded", async () => {
+  const customMessage = document.querySelector(".custom-message");
+  const customMessageBackground = document.querySelector(".custom-message-background");
+  const customMessageClose = document.querySelector(".custom-message-close");
+  const customMessageButton = document.querySelector(".custom-message-button");
+  const startOnboardButton = document.getElementById("start-onboard-button");
+
+  startOnboardButton.addEventListener("click", () => {
+    loadHomePage();
+  });
+
+  customMessageBackground.addEventListener("click", () => {
+    customMessageBackground.style.display = "none";
+    customMessage.style.display = "none";
+  });
+
+  customMessageClose.addEventListener("click", () => {
+    customMessage.style.display = "none";
+    customMessageBackground.style.display = "none";
+  });
+
+  customMessageButton.addEventListener("click", () => {
+    customMessageClose.click();
+  });
+
   window.addEventListener("contextmenu", handleRighClick);
 
   prevent_close = false;
@@ -65,7 +109,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   setupHeader();
   if (ONBOARD_USER) {
     await fetchProjects();
-    loadHomePage();
+    loadOnboardPage();
   } else
     loadLoginPage();
 });

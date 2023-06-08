@@ -1,33 +1,43 @@
 tevent.listen("cpu_mem_sync", (event) => {
     try {
         response = JSON.parse(event.payload);
-        console.log(response);
+        console.log("response: ", response);
     } catch (e) {
         console.log("error parsing: ", event.payload);
         return;
     };
 
-    syncStatusChart.options.barColor = response.catchup == "true" ? "#0F62FE" : response.catchup == "false" ? "#43BE66" : "#FF2632";
-    syncStatusChartPercent.textContent = response.catchup == "true" || response.catchup == "false" ? response.height : "!";
-    syncStatusChartPopupText.innerText = response.catchup == "true" ? "Syncing...\n\nCurrent Block: " + response.height : response.catchup == "false" ? "Node is synced!" : "Can't get sync status!";
+    // SYNC STATUS
     if (response.catchup == "true") {
+        syncStatusChart.options.barColor = "#E1AB00";
+        syncStatusChartPercent.innerText = convertToKNotation(response.height);
+        syncStatusChartPopupText.innerText = "Syncing...\n\nCurrent Block: " + convertToKNotation(response.height);
         setTimeout(() => {
             syncStatusChart.update(100);
-            setTimeout(() => {
-                syncStatusChart.update(0);
-            }, 2300);
+            setTimeout(() => syncStatusChart.update(0), 2300);
         }, 2300);
-    } else {
+    }
+    else if (response.catchup == "false") {
+        syncStatusChart.options.barColor = "#1FD0D0";
+        syncStatusChartPercent.innerText = convertToKNotation(response.height);
+        syncStatusChartPopupText.innerText = "Node is synced!\n\n" + convertToKNotation(response.height);
+        syncStatusChart.update(100);
+    }
+    else {
+        syncStatusChart.options.barColor = "#C32316";
+        syncStatusChartPercent.innerText = "!";
+        syncStatusChartPopupText.innerText = "Can't get sync status!";
         syncStatusChart.update(100);
     };
 
-    if (response.cpu < 100) {
+    // CPU STATUS
+    if (response.cpu < 100)
         cpuStatusChart.update(Math.floor(response.cpu));
-        cpuStatusChartPercent.textContent = Math.floor(response.cpu) + "%";
-    };
-    memStatusChart.update(Math.floor(response.mem));
-    memStatusChartPercent.textContent = Math.floor(response.mem) + "%";
 
+    // MEM STATUS
+    memStatusChart.update(Math.floor(response.mem));
+
+    // ACTIVE STATUS
     const eachSidebarTag = document.querySelectorAll(".each-sidebar-tag");
     if (response.status == "active") {
         if (node_action == "start" || node_action == "restart") {
@@ -36,20 +46,12 @@ tevent.listen("cpu_mem_sync", (event) => {
         };
         eachSidebarTag[0].classList.remove("sidebar-inactive-tag");
         eachSidebarTag[0].classList.add("sidebar-active-tag");
-        eachSidebarTag[0].textContent = "Active";
-
-        if (startNodeButton) {
-            startNodeButton.disabled = true;
-            stopNodeButton.disabled = false;
-        };
-    } else if (response.status == "") {
+        eachSidebarTag[0].textContent = "Active"
+    }
+    else if (response.status == "") {
         eachSidebarTag[0].textContent = "Loading...";
-
-        if (startNodeButton) {
-            startNodeButton.disabled = false;
-            stopNodeButton.disabled = true;
-        };
-    } else {
+    }
+    else {
         if (node_action == "stop") {
             node_action = "";
             document.body.classList.remove("waiting");
@@ -58,11 +60,13 @@ tevent.listen("cpu_mem_sync", (event) => {
         eachSidebarTag[0].classList.remove("sidebar-active-tag");
         eachSidebarTag[0].textContent = response.status.charAt(0).toUpperCase() + response.status.slice(1);
 
-        if (startNodeButton) {
-            startNodeButton.disabled = false;
-            stopNodeButton.disabled = true;
-        };
     };
+    if (startNodeButton) {
+        startNodeButton.disabled = response.status == "active";
+        stopNodeButton.disabled = !(response.status == "active");
+    };
+
+    // VERSION STATUS
     if (response.version) {
         version_new = response.version.charAt(0).toLowerCase() == "v" ? response.version : "v" + response.version;
         if (version_new == latest_tag) {
@@ -71,9 +75,8 @@ tevent.listen("cpu_mem_sync", (event) => {
                 node_action = "";
                 document.body.classList.remove("waiting");
             };
-        } else {
-            updateNodeButton.disabled = false;
-        };
+        }
+        else updateNodeButton.disabled = false;
         eachSidebarTag[1].textContent = version_new;
         eachSidebarTag[1].classList.add("version-tag");
     };
@@ -83,7 +86,7 @@ tevent.listen("check_logs", (event) => {
         const codeBlock = document.getElementById("logs-page-code-block");
 
         event.payload = event.payload
-            .replace(/INFO/g, "<span style='color: #43BE66;'>INFO</span>")
+            .replace(/INFO/g, "<span style='color: #1FD0D0;'>INFO</span>")
             .replace(/WARN/g, "<span style='color: #FFA800;'>WARN</span>")
             .replace(/ERROR/g, "<span style='color: #FF2632;'>ERROR</span>")
             .replace(/\n/g, "<br><br>") + "<br>";
@@ -116,9 +119,7 @@ const loadNodePage = async (start) => {
     memStatusChart.update(0);
     memStatusChart.update(0);
 
-    syncStatusChartPercent.textContent = "";
-    cpuStatusChartPercent.textContent = "";
-    memStatusChartPercent.textContent = "";
+    syncStatusChartPercent.innerText = "0";
 
     document.querySelector(".all-installation-wrapper").setAttribute("style", "display: none;");
     document.querySelector(".all-header-wrapper").setAttribute("style", "display: flex;");
@@ -143,7 +144,8 @@ const loadNodePage = async (start) => {
         await tauri.invoke("password_keyring_check", { exception: exception }).then((res) => {
             sessionStorage.setItem("keyring", `{ "required": ${res[0]}, "exists": ${res[1]} }`);
         }).catch((err) => {
-            console.log(err);
+            dialog.message("You have timed out. Please login again.");
+            loadLoginPage();
         });
         await changePage("page-content/node-operations.html", nodeOperationsSetup);
         tauri.invoke("cpu_mem_sync", { exception: exception }).catch(async (err) => { await handleTimeOut(err); });
@@ -179,7 +181,7 @@ const createWallet = async (walletname) => {
             await tauri.invoke("delete_wallet", { walletname, exception }).catch(async (err) => { await handleTimeOut(err); });
         };
         await tauri.invoke("create_wallet", { walletname, exception })
-            .then((mnemonic) => dialog.message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to acces your wallet.", type: "info" }))
+            .then((mnemonic) => createMessage("Please keep this secure.", mnemonic))
             .catch(async (err) => { await handleTimeOut(err); });
         await showWallets();
         document.querySelector(".each-input-field").value = "";
@@ -196,7 +198,7 @@ const recoverWallet = async (walletname) => {
             await tauri.invoke("delete_wallet", { walletname: walletname, exception: exception }).catch(async (err) => { await handleTimeOut(err); });
         };
         await tauri.invoke("recover_wallet", { walletname: walletname, mnemo: mnemonic, passwordneed: JSON.parse(sessionStorage.getItem("keyring")).required, exception: exception })
-            .then((res) => { dialog.message("", { title: "Your wallet has been recovered successfully.", type: "info" }) })
+            .then(() => createMessage("Your wallet has been recovered successfully.", ""))
             .catch(async (err) => { await handleTimeOut(err); });
         await showWallets();
         document.querySelectorAll(".each-input-field")[1].value = "";
@@ -247,7 +249,7 @@ const showWallets = async () => {
                 if (currentIp.validator_addr == list[count - i - 1].address) {
                     labelicon.style.fill = "var(--main-color)";
                     labelicon.addEventListener("click", () => {
-                        dialog.message("This is your main wallet.", { title: "Main Wallet", type: "info" });
+                        createMessage("This is your main wallet.", "");
                     });
                     appendlater = halfrow;
                     labelicon.appendChild(labeliconpath);
@@ -383,6 +385,12 @@ const handleTimeOut = async (err) => {
         return function () { return; };
     };
 };
+const convertToKNotation = (number) => {
+    let suffixIndex = 0;
+    while (number >= 1000 && ++suffixIndex) number /= 1000;
+    return number.toFixed(2) + ['', 'k', 'M', 'B', 'T'][suffixIndex];
+}
+
 
 const nodeOperationsSetup = async () => {
     startNodeButton = document.querySelectorAll(".each-page-manage-node-button")[0];
@@ -492,7 +500,7 @@ const createValidatorSetup = () => {
                 res = JSON.parse(res);
                 console.log(res);
                 if (res.raw_log.length == 2) {
-                    dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+                    createMessage("Tx Hash", res.txhash);
                     await tauri.invoke("show_wallets", { exception: exception }).then(async (list) => {
                         list = JSON.parse(list);
                         currentIp.validator_addr = list.filter((item) => item.name == document.querySelectorAll(".each-input-field")[1].value)[0].address;
@@ -533,7 +541,7 @@ const editValidatorSetup = () => {
             }).then((res) => {
                 res = JSON.parse(res);
                 if (res.raw_log.length == 2) {
-                    dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+                    createMessage("Tx Hash", res.txhash);
                 } else {
                     showErrorMessage(res.raw_log);
                 };
@@ -555,7 +563,7 @@ const withdrawRewardsSetup = () => {
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
-                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+                createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
             };
@@ -576,7 +584,7 @@ const delegateSetup = (valoper) => {
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
-                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+                createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
             };
@@ -598,7 +606,7 @@ const redelegateSetup = () => {
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
-                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+                createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
             };
@@ -618,7 +626,7 @@ const voteSetup = () => {
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
-                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+                createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
             };
@@ -637,7 +645,7 @@ const unjailSetup = () => {
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
-                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+                createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
             };
@@ -658,7 +666,7 @@ const sendTokenSetup = () => {
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
-                dialog.message("Tx Hash: \n" + res.txhash, { title: "Success", type: "info" });
+                createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
             };
@@ -822,35 +830,50 @@ const setupNodePage = () => {
 
     syncStatusChart = new EasyPieChart(document.querySelectorAll(".each-page-chart")[0], {
         size: 160,
-        barColor: "rgba(15, 98, 254, 1)",
-        scaleLength: 0,
-        lineWidth: 6,
+        scaleLength: false,
+        lineWidth: 10,
         trackColor: "#373737",
-        lineCap: "circle",
         animate: 2000,
+        lineCap: "round",
     });
 
     syncStatusChartPercent = document.querySelectorAll(".each-page-chart-percentage")[0];
     syncStatusChartPopupText = document.querySelector(".each-page-chart-text-pop-up");
     cpuStatusChart = new EasyPieChart(document.querySelectorAll(".each-page-chart")[1], {
         size: 160,
-        barColor: "rgba(15, 98, 254, 1)",
-        scaleLength: 0,
-        lineWidth: 6,
+        scaleLength: false,
+        barColor: "#1FD0D0",
+        lineWidth: 10,
         trackColor: "#373737",
-        lineCap: "circle",
         animate: 2000,
+        lineCap: "round",
+        onStep: (from, to, percent) => {
+            percent = percent.toFixed(0);
+            cpuStatusChartPercent.innerText = `${percent}%`;
+            if (percent == 90)
+                cpuStatusChart.options.barColor = "#C32316";
+            else if (percent == 89)
+                cpuStatusChart.options.barColor = "#1FD0D0";
+        }
     });
 
     cpuStatusChartPercent = document.querySelectorAll(".each-page-chart-percentage")[1];
     memStatusChart = new EasyPieChart(document.querySelectorAll(".each-page-chart")[2], {
         size: 160,
-        barColor: "rgba(15, 98, 254, 1)",
-        scaleLength: 0,
-        lineWidth: 6,
+        scaleLength: false,
+        barColor: "#1FD0D0",
+        lineWidth: 10,
         trackColor: "#373737",
-        lineCap: "circle",
         animate: 2000,
+        lineCap: "round",
+        onStep: (from, to, percent) => {
+            percent = percent.toFixed(0);
+            memStatusChartPercent.innerText = `${percent}%`;
+            if (percent == 90)
+                memStatusChart.options.barColor = "#C32316";
+            else if (percent == 89)
+                memStatusChart.options.barColor = "#1FD0D0";
+        }
     });
 
     memStatusChartPercent = document.querySelectorAll(".each-page-chart-percentage")[2];

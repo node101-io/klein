@@ -17,18 +17,6 @@ const loadHomePage = async () => {
     hideLoadingAnimation();
 };
 const installNode = async (project) => {
-    // const client = await http.getClient();
-    // const videos = await client.get("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=PL5c21nTlaW9Pu58608pF0HM9e9_T-hZIK&key=" + GOOGLE_API, {
-    //     type: "Json"
-    // });
-    // let video_id = "";
-    // for (let i = 0; i < videos.data.items.length; i++) {
-    //     if (videos.data.items[i].snippet.title.includes(currentIp.icon.split(" ")[0])) {
-    //         video_id = videos.data.items[i].snippet.resourceId.videoId;
-    //         break;
-    //     }
-    // }
-    // document.querySelector(".page-video").src = `https://www.youtube.com/embed/${video_id ? video_id : "VnWTTcixqds"}?color=white&rel=0&widget_referrer=https://www.node101.io/wizard`;
     const homeWrapper = document.querySelector(".all-home-wrapper");
     const installationWrapper = document.querySelector(".all-installation-wrapper");
     const installationInfoIcon = document.querySelector(".installation-info-icon");
@@ -39,6 +27,7 @@ const installNode = async (project) => {
     const progressBarTextRight = document.querySelector(".progress-bar-text-right");
     const progressBarSuccessIcon = document.querySelectorAll(".each-progress-bar-status-icon")[0];
     const progressBarErrorIcon = document.querySelectorAll(".each-progress-bar-status-icon")[1];
+    const onboardingInstallationInfo = document.querySelector(".onboarding-installation-info");
 
     prevent_close = true;
     currentIp.icon = project.name;
@@ -55,6 +44,7 @@ const installNode = async (project) => {
     progressBarErrorIcon.style.display = "none";
 
     homeWrapper.style.display = "none";
+    onboardingInstallationInfo.style.display = ONBOARD_USER ? "flex" : "none";
     installationWrapper.style.display = "flex";
 
     (async () => {
@@ -72,7 +62,7 @@ const installNode = async (project) => {
         if (exception == "celestia-lightd") {
             await tauri.invoke("delete_wallet", { walletname: "my_celes_key", exception: exception }).catch((err) => { console.log(err); });
             await tauri.invoke("create_wallet", { walletname: "my_celes_key", exception: exception })
-                .then((mnemonic) => dialog.message(mnemonic, { title: "Keep your mnemonic private and secure. It's the only way to access your wallet.", type: "info" }))
+                .then((mnemonic) => createMessage("Please keep this secure.", mnemonic))
                 .catch((err) => { console.log(err) });
             await tauri.invoke("show_wallets", { exception: exception }).then(async (list) => {
                 list = list.length ? JSON.parse(list) : [];

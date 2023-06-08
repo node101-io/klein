@@ -1,5 +1,6 @@
 const loadLoginPage = async () => {
     await fetchProjects();
+    document.querySelector(".start-onboarding-page-wrapper").style.display = "none";
     document.querySelector(".onboarding-page-project").style.display = "none";
     document.querySelector(".login-page-motto").style.display = "unset";
     document.querySelector(".all-installation-wrapper").style.display = "none";
@@ -11,6 +12,8 @@ const loadLoginPage = async () => {
 };
 
 const loadOnboardingLoginPage = async (project) => {
+    document.querySelector(".start-onboarding-page-wrapper").style.display = "none";
+    document.querySelector(".login-page-wrapper").style.display = "flex";
     document.querySelector(".all-installation-wrapper").style.display = "none";
     document.querySelector(".all-header-wrapper").style.display = "none";
     document.querySelector(".all-login-wrapper").style.display = "unset";

@@ -47,6 +47,12 @@ body.waiting * {
   user-select: none;
 }
 
+.allow-select {
+  -webkit-user-select: auto;
+  -ms-user-select: auto;
+  user-select: auto;
+}
+
 /* LOGIN PAGE */
 .all-login-header-wrapper {
   margin-left: 6vw;
@@ -59,6 +65,43 @@ body.waiting * {
   min-height: fit-content;
   align-items: center;
 }
+
+.start-onboarding-page-wrapper {
+  display: flex;
+  width: 100vw;
+  height: calc(88vh - 55px);
+  align-items: center;
+  padding-right: 12vw;
+  padding-left: 6vw;
+}
+
+.start-onboarding-page-left-wrapper {
+  display: flex;
+  flex-grow: 1;
+  width: calc(100vw - 18vw - 420px);
+  margin-right: 6vw;
+  flex-direction: column;
+}
+
+.start-onboarding-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--main-color);
+  padding-left: 16px;
+  padding-right: 16px;
+  height: 44px;
+  width: fit-content;
+  cursor: pointer;
+}
+
+/* .onboarding-page-right-wrapper {
+  display: flex;
+  flex-grow: 1;
+  width: calc(100vw - 18vw - 420px);
+  margin-right: 6vw;
+  flex-direction: column;
+} */
 
 .login-page-wrapper {
   display: flex;
@@ -779,15 +822,17 @@ body.waiting * {
 
 .all-installation-wrapper {
   position: relative;
+  display: flex;
+  flex-direction: row;
+  width: 70vw;
   left: 0px;
   top: 92px;
-  display: flex;
-  flex-direction: column;
-  display: flex;
-  flex-direction: column;
-  width: 70vw;
   gap: 20px;
   margin: 40px auto;
+}
+
+.installation-wrapper {
+  flex-grow: 1;
 }
 
 .installation-warning {
@@ -804,6 +849,10 @@ body.waiting * {
 .installation-warning-text {
   font-size: 17px;
   margin-left: 14px;
+}
+
+.onboarding-installation-info {
+  margin-left: 50px;
 }
 
 .installation-info {
@@ -1587,42 +1636,6 @@ body.waiting * {
   margin-left: 16px;
 }
 
-.switch-ip-prompt-button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: var(--main-color);
-  padding-left: 16px;
-  padding-right: 16px;
-  height: 44px;
-  width: fit-content;
-  cursor: pointer;
-  margin-top: 16px;
-  margin-bottom: 16px;
-  margin-left: auto;
-}
-
-.switch-ip-prompt-button:hover {
-  opacity: 0.8;
-}
-
-.switch-ip-prompt-input {
-  outline: none;
-  border: none;
-  background-color: var(--third-color);
-  width: 320px;
-  height: 44px;
-  padding-left: 16px;
-  padding-right: 16px;
-  font-size: 16px;
-  color: rgba(149, 149, 149, 1);
-  overflow: auto;
-}
-
-.switch-ip-prompt-input:not(:placeholder-shown) {
-  background-color: var(--second-color);
-}
-
 .each-row-divider {
   display: flex;
   align-items: center;
@@ -1642,4 +1655,83 @@ body.waiting * {
   background-color: var(--fifth-color);
   border: 1px solid var(--divider-color);
   padding: 30px;
+}
+
+.custom-message {
+  position: fixed;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid rgba(69, 137, 255, 0.3);
+  width: 450px;
+  height: fit-content;
+  background-color: rgba(30, 30, 30, 1);
+  top: calc(50vh - 110px);
+  left: calc(50vw - 225px);
+  padding-top: 30px;
+  padding-bottom: 30px;
+  z-index: 100;
+}
+
+.custom-message-background {
+  position: fixed;
+  display: none;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 99;
+}
+
+.custom-message-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--main-color);
+  padding-left: 16px;
+  padding-right: 16px;
+  height: 44px;
+  width: fit-content;
+  cursor: pointer;
+  margin-top: 16px;
+  margin-left: auto;
+}
+
+.custom-message-button:hover {
+  opacity: 0.8;
+}
+
+.custom-message-input {
+  outline: none;
+  border: none;
+  background-color: var(--third-color);
+  width: 320px;
+  height: 44px;
+  padding-left: 16px;
+  padding-right: 16px;
+  font-size: 16px;
+  color: rgba(149, 149, 149, 1);
+  overflow: auto;
+}
+
+.custom-message-input:not(:placeholder-shown) {
+  background-color: var(--second-color);
+}
+
+.custom-message-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.custom-message-content {
+  display: flex;
+  flex-direction: column;
+  width: 80%;
 }

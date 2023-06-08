@@ -27,6 +27,8 @@ const setupHeader = function () {
     const nodeIcons = document.querySelector(".header-node-icons");
     const notificationsButton = document.getElementById("notifications-button");
     const logoutButton = document.getElementById("logout-button");
+    const switchIpPrompt = document.querySelector(".switch-ip-prompt");
+    const switchIpPromptBackground = document.querySelector(".switch-ip-prompt-background");
     const switchIpPromptClose = document.querySelector(".switch-ip-prompt-close");
     const switchIpPromptButton = document.querySelector(".switch-ip-prompt-button");
     const switchIpPromptInput = document.querySelector(".switch-ip-prompt-input");
@@ -68,7 +70,8 @@ const setupHeader = function () {
                 } else {
                     document.querySelector(".all-header-wrapper").click();
                     document.querySelector(".switch-ip-prompt .each-input-label").textContent = ipAddresses[i].ip;
-                    document.querySelector(".switch-ip-prompt").style.display = "flex";
+                    switchIpPromptBackground.style.display = "flex";
+                    switchIpPrompt.style.display = "flex";
                     switchIpPromptInput.focus();
                 };
             });
@@ -131,8 +134,13 @@ const setupHeader = function () {
         };
     });
 
+    switchIpPromptBackground.addEventListener('click', function () {
+        switchIpPromptClose.click();
+    });
+
     switchIpPromptClose.addEventListener('click', function () {
-        document.querySelector(".switch-ip-prompt").style.display = "none";
+        switchIpPrompt.style.display = "none";
+        switchIpPromptBackground.style.display = "none";
         hideLogInError(true);
         switchIpPromptInput.value = "";
     });
