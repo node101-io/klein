@@ -69,21 +69,38 @@ const logIn = async (ip, password, again) => {
     const checkboxInputEl = document.getElementById("checkbox-input");
     const switchIpPromptClose = document.querySelector(".switch-ip-prompt-close");
 
-    if ((again ? false : (ip.value == "")) || password.value == "" || (again ? false : !/^(\d{1,3}\.){3}\d{1,3}$/g.test(ip.value))) {
+    if ((again ? false : (ip.value == "")) || password.value == "" || (again ? false : !/^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/g.test(ip.value))) {
         showLogInError("Please fill in all the fields correctly.", again);
         password.focus();
         return;
     };
     showLoadingAnimation();
+    if (again) {
+        await tauri.invoke("log_in_again", {
+            ip: ip.textContent.split(":")[0],
+            password: password.value,
+            port: ip.textContent.includes(":") ? ip.textContent.split(":")[1] : "22"
+        }).then().catch((err) => {
+            showLogInError(err, again);
+            hideLoadingAnimation();
+            return;
+        });
+    };
     await tauri.invoke("log_in", {
-        ip: (again ? ip.textContent : ip.value),
-        password: password.value
+        ip: (again ? ip.textContent.split(":")[0] : ip.value.split(":")[0]),
+        password: password.value,
+        port: again ? (ip.textContent.includes(":") ? ip.textContent.split(":")[1] : "22") : (ip.value.includes(":") ? ip.value.split(":")[1] : "22")
     }).then(async (res) => {
         res = JSON.parse(res);
-        await tauri.invoke("cpu_mem_sync_stop").catch((err) => { console.log(err) });
+        await tauri.invoke("cpu_mem_sync_stop").catch((err) => console.log(err));
         hideLogInError(again);
         currentIp = ipAddresses.find(item => item.ip == (again ? ip.textContent : ip.value));
-        const project_name = res.name ? projects.find(item => item.project.wizard_key === res.name).project.name : "Empty Server";
+        try {
+            project_name = res.name ? projects.find(item => item.project.wizard_key === res.name).project.name : "Empty Server";
+        } catch (err) {
+            showLogInError("Unknown project is installed on your server!", again);
+            return;
+        };
         if (currentIp) {
             if (currentIp.icon !== project_name) {
                 currentIp.icon = project_name;

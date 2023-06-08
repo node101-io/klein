@@ -23,8 +23,8 @@ static mut GLOBAL_STRUCT: Option<SessionManager> = None;
 
 // SSH FUNCTIONS
 #[tauri::command(async)]
-fn log_in(ip: String, password: String) -> Result<String, String> {
-    let tcp = TcpStream::connect(format!("{ip}:22")).map_err(|e| e.to_string())?;
+fn log_in(ip: String, password: String, port: String) -> Result<String, String> {
+    let tcp = TcpStream::connect(format!("{ip}:{port}")).map_err(|e| e.to_string())?;
     tcp.set_read_timeout(Some(Duration::from_secs(1)))
         .map_err(|e| e.to_string())?;
     let mut sess = Session::new().map_err(|e| e.to_string())?;
@@ -76,15 +76,17 @@ fn log_out() -> Result<(), String> {
 }
 
 #[tauri::command(async)]
-fn log_in_again(ip: String, password: String) -> Result<(), String> {
-    let tcp = TcpStream::connect(format!("{ip}:22")).map_err(|e| e.to_string())?;
-    tcp.set_read_timeout(Some(Duration::from_secs(1)))
+fn log_in_again(ip: String, password: String, port: String) -> Result<(), String> {
+    let tcp2 = TcpStream::connect(format!("{ip}:{port}")).map_err(|e| e.to_string())?;
+    tcp2.set_read_timeout(Some(Duration::from_secs(1)))
         .map_err(|e| e.to_string())?;
-    let mut sess = Session::new().map_err(|e| e.to_string())?;
-    sess.set_tcp_stream(tcp);
-    sess.handshake().map_err(|e| e.to_string())?;
-    sess.userauth_password("root", &password)
+    let mut sess2 = Session::new().map_err(|e| e.to_string())?;
+    sess2.set_tcp_stream(tcp2);
+    sess2.handshake().map_err(|e| e.to_string())?;
+    sess2
+        .userauth_password("root", &password)
         .map_err(|_e| "Authentication failed!".to_string())?;
+    log_out().map_err(|e| e.to_string())?;
     Ok(())
 }
 
