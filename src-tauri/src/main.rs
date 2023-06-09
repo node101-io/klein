@@ -172,7 +172,10 @@ fn check_logs(window: Window) -> Result<(), String> {
         let mut buf = [0u8; 1024];
         let len = channel.read(&mut buf).map_err(|e| e.to_string())?;
         let s = std::str::from_utf8(&buf[0..len]).map_err(|e| e.to_string())?;
-        let _ = window.emit("check_logs", s).map_err(|e| e.to_string())?;
+        let converted = ansi_to_html::convert_escaped(s).map_err(|e| e.to_string())?;
+        let _ = window
+            .emit("check_logs", converted)
+            .map_err(|e| e.to_string())?;
     }
 }
 

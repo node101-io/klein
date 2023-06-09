@@ -20,7 +20,7 @@ tevent.listen("cpu_mem_sync", (event) => {
     else if (response.catchup == "false") {
         syncStatusChart.options.barColor = "#1FD0D0";
         syncStatusChartPercent.innerText = convertToKNotation(response.height);
-        syncStatusChartPopupText.innerText = "Node is synced!\n\n" + convertToKNotation(response.height);
+        syncStatusChartPopupText.innerText = "Node is synced!\n\n" + response.height;
         syncStatusChart.update(100);
     }
     else {
@@ -82,22 +82,15 @@ tevent.listen("cpu_mem_sync", (event) => {
     };
 });
 tevent.listen("check_logs", (event) => {
-    if (document.getElementById("logs-page-code-block")) {
+    try {
         const codeBlock = document.getElementById("logs-page-code-block");
-
-        event.payload = event.payload
-            .replace(/INFO/g, "<span style='color: #1FD0D0;'>INFO</span>")
-            .replace(/WARN/g, "<span style='color: #FFA800;'>WARN</span>")
-            .replace(/ERROR/g, "<span style='color: #FF2632;'>ERROR</span>")
-            .replace(/\n/g, "<br><br>") + "<br>";
-
-        if (codeBlock.scrollHeight - codeBlock.scrollTop - codeBlock.clientHeight < 10) {
-            codeBlock.innerHTML += event.payload;
-            codeBlock.scrollTop = codeBlock.scrollHeight;
-        } else {
-            codeBlock.innerHTML += event.payload;
-        };
-    } else {
+        let gonnaScroll = true;
+        if (codeBlock.scrollHeight - codeBlock.scrollTop - codeBlock.clientHeight > 30) gonnaScroll = false;
+        codeBlock.innerHTML += event.payload.replace(/\n/g, "<br>");
+        if (gonnaScroll) codeBlock.scrollTop = codeBlock.scrollHeight;
+        if (codeBlock.innerHTML.length > 100000) codeBlock.innerHTML = codeBlock.innerHTML.slice(50000);
+    } catch (e) {
+        console.log(e);
         tauri.invoke("stop_check_logs");
     }
 });
@@ -757,7 +750,8 @@ const walletsSetup = async () => {
     window.scrollTo(0, 400);
 };
 const logsSetup = async () => {
-    tauri.invoke("check_logs");
+    tauri.invoke("check_logs").catch((err) => { console.log(err); });
+    window.scrollTo(0, 400);
 };
 const nodeInformationSetup = async () => {
     showLoadingAnimation();

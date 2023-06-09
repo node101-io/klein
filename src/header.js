@@ -35,6 +35,7 @@ const setupHeader = () => {
     const switchIpPromptInput = document.querySelector(".switch-ip-prompt-input");
 
     homePageButton.addEventListener("click", async function () {
+        if (prevent_close && !(await dialog.ask("Installatin is in progress. Are you sure you want to proceed?"))) return;
         showLoadingAnimation();
         await tauri.invoke("cpu_mem_sync_stop").catch(async (e) => { await handleTimeOut(e); });
         await loadHomePage();
