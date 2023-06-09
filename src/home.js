@@ -33,7 +33,7 @@ const installNode = async (project) => {
     currentIp.icon = project.name;
     updateHeader();
     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-    exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
+    exception = projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
 
     endInstallationButton.style.display = "none";
     installationInfoIcon.src = project.image;
@@ -59,7 +59,7 @@ const installNode = async (project) => {
     })();
 
     await tauri.invoke("install_node", { network: sessionStorage.getItem("current_tab"), identifier: project.identifier }).then(async () => {
-        if (exception == "celestia-lightd") {
+        if (exception == "celestia-light") {
             await tauri.invoke("delete_wallet", { walletname: "my_celes_key", exception: exception }).catch((err) => { console.log(err); });
             await tauri.invoke("create_wallet", { walletname: "my_celes_key", exception: exception })
                 .then((mnemonic) => createMessage("Please keep this secure.", mnemonic))
@@ -72,7 +72,7 @@ const installNode = async (project) => {
                 console.log(err);
             });
             await tauri.invoke("set_main_wallet", { walletname: "my_celes_key", address: currentIp.validator_addr, exception: exception }).catch((err) => { console.log(err); });
-            updateSidebar();
+            await updateSidebar();
         };
 
         endInstallationButton.style.display = "flex";

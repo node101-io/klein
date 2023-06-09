@@ -133,9 +133,8 @@ const logIn = async (ip, password, again) => {
             ip.value = "";
         }
         password.value = "";
-        exception = currentIp.icon == "Celestia Light" ? "celestia-lightd" : "";
+        exception = projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
 
-        CHAIN_ID = res.chain_id;
         if (res.name && !res.properly_installed) {
             if (await dialog.ask("This node is not properly installed. Do you want to delete it?")) {
                 await deleteNode();

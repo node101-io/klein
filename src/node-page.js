@@ -110,7 +110,7 @@ const loadNodePage = async (start) => {
     eachSidebarTag[1].textContent = "Loading...";
 
     updateHeader();
-    updateSidebar();
+    await updateSidebar();
 
     syncStatusChart.update(0);
     syncStatusChart.update(0);
@@ -127,13 +127,7 @@ const loadNodePage = async (start) => {
     document.querySelector(".all-node-wrapper").setAttribute("style", "display: flex;");
     document.querySelector(".all-home-wrapper").setAttribute("style", "display: none;");
 
-    if (currentIp.icon == "Celestia Light") {
-        exception = "celestia-lightd";
-    } else if (currentIp.icon == "Babylon") {
-        exception = "babylon";
-    } else {
-        exception = "";
-    };
+    exception = projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
     buttons_to_hide = ["node-information-button", "validator-list-button", "create-validator-button", "edit-validator-button", "withdraw-rewards-button", "delegate-token-button", "redelegate-token-button", "vote-button", "unjail-button", "send-token-button"];
     for (button of buttons_to_hide) {
         document.getElementById(button).style.display = currentIp.icon == "Celestia Light" ? "none" : "";
@@ -157,10 +151,10 @@ const changePage = async (page, callback) => {
         await callback();
     };
 };
-const updateSidebar = () => {
+const updateSidebar = async () => {
     document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? projects.find(item => item.project.name == currentIp.icon).project.image : "assets/default.png");
     document.querySelector(".sidebar-info-details-name").textContent = currentIp.icon;
-    document.querySelector(".sidebar-info-details-chain-id").textContent = CHAIN_ID;
+    document.querySelector(".sidebar-info-details-chain-id").textContent = await tauri.invoke("get_chain_id").then((res) => { return JSON.parse(res).chain_id; });
     document.querySelector(".sidebar-info-details-copy").setAttribute("style", currentIp.validator_addr ? "display: flex;" : "display: none;");
     document.querySelector(".sidebar-info-details-copy-address").textContent = currentIp.validator_addr;
 };
@@ -255,13 +249,14 @@ const showWallets = async () => {
                     appendlater = halfrow;
                     labelicon.appendChild(labeliconpath);
                     label.appendChild(labelicon);
-                } else if (exception == "celestia-lightd" || exception == "celestia-bridge") {
+                }
+                else if (exception == "celestia-light") {
                     labelicon.addEventListener("click", async function () {
                         if (await dialog.ask("Do you want to set this wallet as your main wallet?", { title: "Set Main Wallet", type: "info" })) {
                             showLoadingAnimation();
                             currentIp.validator_addr = this.closest(".each-input-label").nextElementSibling.children[0].getAttribute("data");
                             await tauri.invoke("set_main_wallet", { walletname: this.parentNode.textContent, address: currentIp.validator_addr, exception: exception }).catch((err) => { console.log(err); });
-                            updateSidebar();
+                            await updateSidebar();
                             localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
                             await showWallets();
                             hideLoadingAnimation();
@@ -516,7 +511,7 @@ const createValidatorSetup = () => {
                         showErrorMessage(err);
                     });
                     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                    updateSidebar();
+                    await updateSidebar();
                 } else {
                     showErrorMessage(res.raw_log);
                 };
@@ -815,7 +810,6 @@ const setupNodePage = () => {
     const validatorOperationsArrow = document.querySelector(".each-dropdown-button-arrow");
     const nodeInformationButton = document.getElementById("node-information-button");
     const subButtonsDiv = document.querySelector(".sidebar-dropdown-subbuttons");
-    const homePageButton = document.getElementById("home-page-button");
     const nodeOperationsButton = document.getElementById("node-operations-button");
     const validatorListButton = document.getElementById("validator-list-button");
     const createValidatorButton = document.getElementById("create-validator-button");
@@ -891,11 +885,6 @@ const setupNodePage = () => {
 
     nodeOperationsButton.addEventListener("click", async function () {
         await changePage("page-content/node-operations.html", nodeOperationsSetup);
-    });
-    homePageButton.addEventListener("click", async function () {
-        showLoadingAnimation();
-        await tauri.invoke("cpu_mem_sync_stop").catch(async (e) => { await handleTimeOut(e); });
-        await loadHomePage();
     });
     validatorOperationsButton.addEventListener("click", function () {
         if (window.getComputedStyle(subButtonsDiv).getPropertyValue("display") == "none") {

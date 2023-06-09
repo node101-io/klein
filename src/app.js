@@ -48,6 +48,12 @@ const loadOnboardPage = () => {
   hideLoadingAnimation();
 };
 
+const changeLanguage = () => {
+  document.querySelectorAll("[translation]").forEach((element) => {
+    element.textContent = translations[localStorage.getItem("language") || "en"][element.getAttribute("translation")];
+  });
+};
+
 window.addEventListener("DOMContentLoaded", async () => {
   const customMessage = document.querySelector(".custom-message");
   const customMessageBackground = document.querySelector(".custom-message-background");
@@ -107,6 +113,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   setupNodePage();
   setupHomePage();
   setupHeader();
+
+  changeLanguage();
+
   if (ONBOARD_USER) {
     await fetchProjects();
     loadOnboardPage();

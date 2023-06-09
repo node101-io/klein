@@ -9,12 +9,25 @@
 
 .all-header-logo-anchor {
   cursor: pointer;
-  margin-right: auto;
+  margin-right: 80px;
 }
 
 .all-header-logo-svg {
   width: 128px;
   fill: var(--logo-color);
+}
+
+.each-header-button {
+  display: flex;
+  align-items: center;
+  margin-right: auto;
+  font-size: 16px;
+  color: var(--divider-color);
+  cursor: pointer;
+}
+
+.each-header-button:hover {
+  opacity: 0.8;
 }
 
 .header-node-icons {
@@ -343,7 +356,8 @@
   outline: none;
   border: none;
   background-color: var(--third-color);
-  width: 320px;
+  min-width: 320px;
+  width: -webkit-fill-available;
   height: 44px;
   padding-left: 16px;
   padding-right: 16px;

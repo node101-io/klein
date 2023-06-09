@@ -49,7 +49,7 @@ fn log_in(ip: String, password: String, port: String) -> Result<String, String> 
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel
-        .exec(r#"bash -c -l 'echo { \"name\": \"$EXECUTE\", \"properly_installed\": \"$NODE_PROPERLY_INSTALLED\", \"chain_id\": \"$CHAIN_ID\" }'"#)
+        .exec(r#"bash -c -l 'echo { \"name\": \"$EXECUTE\", \"properly_installed\": \"$NODE_PROPERLY_INSTALLED\" }'"#)
         .map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -100,8 +100,8 @@ fn cpu_mem_sync(window: Window, exception: String) -> Result<(), String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     let (status_command, height_command, catchup_command, version_command) = match exception.as_str() {
-        "celestia-lightd" => (
-            format!("$(systemctl is-active {exception}.service 2>/dev/null)"),
+        "celestia-light" => (
+            format!("$(systemctl is-active {exception}*.service 2>/dev/null)"),
             "$(curl -sX GET http://127.0.0.1:26659/head | jq -r .header.height 2>/dev/null)",
             "$(echo $(if [ $((10#$(curl -sX GET https://rpc-blockspacerace.pops.one/block | jq -r .result.block.header.height) > 10#$(curl -sX GET http://127.0.0.1:26659/head | jq -r .header.height))) -eq 1 ]; then echo true; else echo false; fi) 2>/dev/null)",
             r#"$(celestia version | grep -oP "Semantic version: \K[^ ]+" 2>/dev/null)"#,
@@ -249,7 +249,7 @@ fn delete_node(exception: String) -> Result<(), String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-lightd" => format!(
+        "celestia-light" => format!(
             r#"bash -c -l "sudo systemctl stop $EXECUTE; sudo systemctl disable $EXECUTE;
             pkill -f $EXECUTE;
             sudo rm -rf .celestia-app .celestia-light-blockspacerace-0 /etc/systemd/system/$EXECUTE* $(which celestia) $(which celestia-appd) $SYSTEM_FOLDER* $HOME/$SYSTEM_FOLDER* $HOME/$SYSTEM_FILE* $HOME/$EXECUTE*;
@@ -275,7 +275,7 @@ fn delete_node(exception: String) -> Result<(), String> {
 // KEYRING FUNCTIONS
 #[tauri::command(async)]
 fn password_keyring_check(exception: String) -> Result<(bool, bool), String> {
-    if exception == "celestia-lightd" {
+    if exception == "celestia-light" {
         return Ok((false, false));
     }
     let my_boxed_session =
@@ -362,7 +362,7 @@ fn create_wallet(walletname: String, exception: String) -> Result<String, String
         .map_err(|e| e.to_string())?;
     let mut s = String::new();
     let command = match exception.as_str() {
-        "celestia-lightd" => format!(
+        "celestia-light" => format!(
             r#"bash -c -l 'celestia-node/cel-key add {walletname} --node.type light --p2p.network blockspacerace --output json 2>&1 | awk "NR > 1" | jq -r .mnemonic'"#
         ),
         _ => format!(
@@ -385,7 +385,7 @@ fn show_wallets(exception: String) -> Result<String, String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-lightd" => {
+        "celestia-light" => {
             format!(
                 r#"bash -c -l 'echo -n "["; first=true; celestia-node/cel-key list --node.type light --p2p.network blockspacerace --output json | awk "NR > 1" | jq -c ".[]" | while read -r line; do address=$(echo $line | jq -r ".address"); balances=$(curl -sX GET http://localhost:26659/balance/$address); if [ $first = true ]; then echo -n "{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}, \"denom\": \"$DENOM\"}}"; first=false; else echo -n ",{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}}}"; fi; done; echo "]"' | jq"#,
             )
@@ -411,7 +411,7 @@ fn delete_wallet(walletname: String, exception: String) -> Result<(), String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-lightd" => {
+        "celestia-light" => {
             format!(
                 r#"yes '{}' | bash -c -l 'celestia-node/cel-key delete {} --node.type light --p2p.network blockspacerace --output json -y | awk "NR > 1"'"#,
                 my_boxed_session.walletpassword, walletname
@@ -444,7 +444,7 @@ fn recover_wallet(
         .map_err(|e| e.to_string())?;
     let mut s = String::new();
     let command = match exception.as_str() {
-        "celestia-lightd" => {
+        "celestia-light" => {
             format!(
                 r#"echo -e '{}\n{}' | bash -c -l 'celestia-node/cel-key add {} --recover --node.type light --p2p.network blockspacerace --output json | awk "NR > 1"'"#,
                 mnemo,
@@ -483,13 +483,11 @@ fn set_main_wallet(walletname: String, address: String, exception: String) -> Re
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-lightd" => {
+        "celestia-light" => {
             format!(
-                r#"yes '{}' | bash -c -l 'systemctl stop {}; celestia light init --keyring.accname {} --p2p.network blockspacerace; systemctl start {}'; echo 'export MAIN_WALLET_NAME={}' >> $HOME/.bash_profile; echo 'export MAIN_WALLET_ADDRESS={}' >> $HOME/.bash_profile; source $HOME/.bash_profile"#,
+                r#"yes '{}' | bash -c -l 'systemctl stop $EXECUTE; celestia light init --keyring.accname {} --p2p.network blockspacerace; systemctl start $EXECUTE'; echo 'export MAIN_WALLET_NAME={}' >> $HOME/.bash_profile; echo 'export MAIN_WALLET_ADDRESS={}' >> $HOME/.bash_profile; source $HOME/.bash_profile"#,
                 my_boxed_session.walletpassword,
-                exception,
                 walletname,
-                exception,
                 walletname,
                 address
             )
@@ -515,6 +513,22 @@ fn get_main_wallet() -> Result<String, String> {
     let command = format!(
         r#"bash -c -l 'echo "{{ \"name\": \"$MAIN_WALLET_NAME\", \"address\": \"$MAIN_WALLET_ADDRESS\" }}"'"#
     );
+    channel.exec(&command).map_err(|e| e.to_string())?;
+    let mut s = String::new();
+    channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
+    channel.close().map_err(|e| e.to_string())?;
+    Ok(s)
+}
+
+#[tauri::command(async)]
+fn get_chain_id() -> Result<String, String> {
+    let my_boxed_session =
+        unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
+    let mut channel = my_boxed_session
+        .open_session
+        .channel_session()
+        .map_err(|e| e.to_string())?;
+    let command = format!(r#"bash -c -l 'echo "{{ \"chain_id\": \"$CHAIN_ID\" }}"'"#);
     channel.exec(&command).map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -852,6 +866,7 @@ fn main() {
             validator_list,
             set_main_wallet,
             get_main_wallet,
+            get_chain_id,
             stop_installation,
             check_logs,
             stop_check_logs,

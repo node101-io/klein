@@ -1,4 +1,4 @@
-const updateHeader = function () {
+const updateHeader = () => {
     if (!ONBOARD_USER) {
         document.querySelector(".header-node-icons").style.display = "flex";
         if (currentIp.icon == "Empty Server") {
@@ -17,8 +17,9 @@ const updateHeader = function () {
     };
 };
 
-const setupHeader = function () {
+const setupHeader = () => {
     const headerMenu = document.querySelector(".header-menu");
+    const homePageButton = document.getElementById("home-page-button");
     const submenuIpList = document.querySelector(".header-submenu-ip-list");
     const submenuNotifications = document.querySelector(".header-submenu-notifications");
     const scrollbarBackground = document.querySelector(".header-menu-scroll-background");
@@ -32,6 +33,12 @@ const setupHeader = function () {
     const switchIpPromptClose = document.querySelector(".switch-ip-prompt-close");
     const switchIpPromptButton = document.querySelector(".switch-ip-prompt-button");
     const switchIpPromptInput = document.querySelector(".switch-ip-prompt-input");
+
+    homePageButton.addEventListener("click", async function () {
+        showLoadingAnimation();
+        await tauri.invoke("cpu_mem_sync_stop").catch(async (e) => { await handleTimeOut(e); });
+        await loadHomePage();
+    });
 
     nodeIcons.addEventListener('click', function () {
         if (headerMenu.style.display == "block") {

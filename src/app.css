@@ -83,6 +83,23 @@ body.waiting * {
   flex-direction: column;
 }
 
+.start-onboarding-page-right-image {
+  border: 1px solid var(--border-color);
+  width: 600px;
+}
+
+@media (max-width: 1200px) {
+  .start-onboarding-page-right-image {
+    width: 500px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .start-onboarding-page-right-image {
+    width: 400px;
+  }
+}
+
 .start-onboarding-button {
   display: flex;
   align-items: center;
@@ -595,6 +612,7 @@ body.waiting * {
 .sidebar-tags {
   display: flex;
   flex-wrap: wrap;
+  margin-bottom: 14px;
 }
 
 .each-sidebar-tag {
@@ -625,7 +643,7 @@ body.waiting * {
   color: #a3382a;
 }
 
-.sidebar-buttons {
+/* .sidebar-buttons {
   color: rgba(243, 243, 243, 1);
   margin-top: 55px;
   margin-bottom: 30px;
@@ -662,7 +680,7 @@ body.waiting * {
 
 .each-sidebar-button-name {
   font-size: 18px;
-}
+} */
 
 .each-dropdown-button {
   display: flex;
@@ -670,12 +688,12 @@ body.waiting * {
   margin-bottom: 10px;
   background: #313131;
   width: 260px;
-  height: 44px;
+  height: 42px;
   color: var(--divider-color);
   border: none;
   border-left: 3px solid rgba(255, 255, 255, 1);
   font-size: 18px;
-  padding-left: 30px;
+  padding-left: 18px;
   cursor: pointer;
 }
 
@@ -729,7 +747,7 @@ body.waiting * {
 }
 
 .sidebar-anchors {
-  margin-top: 50px;
+  margin-top: 20px;
 }
 
 .each-sidebar-anchor {
@@ -785,30 +803,6 @@ body.waiting * {
     left: 20px;
   }
 
-  .each-sidebar-button:nth-child(1) {
-    top: 140px;
-  }
-
-  .each-sidebar-button:nth-child(2) {
-    top: 200px;
-  }
-
-  .each-sidebar-button:nth-child(3) {
-    top: 260px;
-  }
-
-  .each-sidebar-button-name {
-    display: none;
-  }
-
-  .sidebar-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-  }
-
   .each-dropdown-button {
     display: none;
   }
@@ -860,6 +854,19 @@ body.waiting * {
 
 .onboarding-installation-info {
   margin-left: 50px;
+  width: 440px;
+}
+
+@media (max-width: 1140px) {
+  .onboarding-installation-info {
+    width: 500px;
+  }
+}
+
+@media (max-width: 950px) {
+  .onboarding-installation-info {
+    width: 400px;
+  }
 }
 
 .installation-info {
