@@ -309,6 +309,7 @@ fn create_keyring(passphrase: String) -> Result<(), String> {
     channel.exec(&*format!(
         "echo -e '{passphrase}\n{passphrase}\n' | bash -c -l '$EXECUTE keys add forkeyringpurpose --output json'"
     )).map_err(|e| e.to_string())?;
+    println!("asdf");
     channel.close().map_err(|e| e.to_string())?;
     Ok(())
 }
