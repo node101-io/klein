@@ -45,23 +45,8 @@ const loadOnboardingLoginPage = async (project) => {
         rating.appendChild(ratingCircle);
     };
     document.querySelector(".onboarding-page-project-description").textContent = project.description;
-    // temporary
-    const requirements = {
-        "Celestia Light": [
-            "1 Core",
-            "2GB",
-            "2GB",
-            "Ubuntu"
-        ],
-        "Nibiru": [
-            "4 Cores",
-            "8GB",
-            "200GB",
-            "Ubuntu"
-        ]
-    };
     document.querySelectorAll(".each-onboarding-page-project-req-right").forEach((item, index) => {
-        item.textContent = requirements[project.name][index];
+        item.textContent = project.requirements[Object.keys(project.requirements)[index]] || "Unknown";
     });
 };
 
