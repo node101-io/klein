@@ -5,7 +5,7 @@ const updateHeader = () => {
             imgSrc = "assets/default.png";
             document.querySelector(".header-menu-ip-list-button-icon").style.display = "none";
         } else {
-            imgSrc = projects.find(item => item.project.name == currentIp.icon).project.image;
+            imgSrc = all_projects.find(item => item.project.name == currentIp.icon).project.image;
             document.querySelector(".header-menu-ip-list-button-icon").style.display = "unset";
             document.querySelector(".header-menu-ip-list-button-icon").src = imgSrc;
         };
@@ -61,7 +61,7 @@ const setupHeader = () => {
             ipListItem = document.createElement("div");
             ipListItem.classList.add("each-header-submenu-ip-list-item");
             ipListItemIcon = document.createElement("img");
-            ipListItemIcon.src = projects.find(item => item.project.name == ipAddresses[i].icon) ? projects.find(item => item.project.name == ipAddresses[i].icon).project.image : "";
+            ipListItemIcon.src = all_projects.find(item => item.project.name == ipAddresses[i].icon) ? all_projects.find(item => item.project.name == ipAddresses[i].icon).project.image : "";
             ipListItemIcon.classList.add("each-header-submenu-ip-list-item-icon");
             ipListItemName = document.createElement("div");
             ipListItemName.classList.add("each-header-submenu-ip-list-item-name");

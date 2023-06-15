@@ -120,7 +120,7 @@ const loadNodePage = async (start) => {
     document.querySelector(".all-node-wrapper").setAttribute("style", "display: flex;");
     document.querySelector(".all-home-wrapper").setAttribute("style", "display: none;");
 
-    exception = projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
+    exception = all_projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
     buttons_to_hide = ["node-information-button", "validator-list-button", "create-validator-button", "edit-validator-button", "withdraw-rewards-button", "delegate-token-button", "redelegate-token-button", "vote-button", "unjail-button", "send-token-button"];
     for (button of buttons_to_hide) {
         document.getElementById(button).style.display = currentIp.icon == "Celestia Light" ? "none" : "";
@@ -145,7 +145,7 @@ const changePage = async (page, callback) => {
     };
 };
 const updateSidebar = async () => {
-    document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? projects.find(item => item.project.name == currentIp.icon).project.image : "assets/default.png");
+    document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? all_projects.find(item => item.project.name == currentIp.icon).project.image : "assets/default.png");
     document.querySelector(".sidebar-info-details-name").textContent = currentIp.icon;
     document.querySelector(".sidebar-info-details-chain-id").textContent = await tauri.invoke("get_chain_id").then((res) => { return JSON.parse(res).chain_id; });
     document.querySelector(".sidebar-info-details-copy").setAttribute("style", currentIp.validator_addr ? "display: flex;" : "display: none;");
@@ -350,7 +350,7 @@ const hideErrorMessage = () => {
 };
 const getLatestTag = async () => {
     const client = await http.getClient();
-    const repoUrl = projects.find(item => item.project.name == currentIp.icon).project.social_media_accounts.github;
+    const repoUrl = all_projects.find(item => item.project.name == currentIp.icon).project.social_media_accounts.github;
     latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
         type: 'Json'
     })).data.tag_name;

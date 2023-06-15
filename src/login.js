@@ -54,6 +54,7 @@ const logIn = async (ip, password, again) => {
     const checkboxInputEl = document.getElementById("checkbox-input");
     const switchIpPromptClose = document.querySelector(".switch-ip-prompt-close");
 
+    ip.value = ip.value.trim();
     if ((again ? false : (ip.value == "")) || password.value == "" || (again ? false : !/^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/g.test(ip.value))) {
         showLogInError("Please fill in all the fields correctly.", again);
         password.focus();
@@ -81,7 +82,7 @@ const logIn = async (ip, password, again) => {
         hideLogInError(again);
         currentIp = ipAddresses.find(item => item.ip == (again ? ip.textContent : ip.value));
         try {
-            project_name = res.name ? projects.find(item => item.project.wizard_key === res.name).project.name : "Empty Server";
+            project_name = res.name ? all_projects.find(item => item.project.wizard_key === res.name).project.name : "Empty Server";
         } catch (err) {
             showLogInError("Unknown project is installed on your server!", again);
             hideLoadingAnimation();
@@ -118,13 +119,13 @@ const logIn = async (ip, password, again) => {
             ip.value = "";
         }
         password.value = "";
-        exception = projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
+        exception = all_projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
 
         if (res.name && !res.properly_installed) {
             if (await dialog.ask("This node is not properly installed. Do you want to delete it?")) {
                 await deleteNode();
                 if (ONBOARD_USER) {
-                    await installNode(projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
+                    await installNode(all_projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
                     localStorage.setItem("onboard_user", 0);
                     ONBOARD_USER = false;
                 };
@@ -143,7 +144,7 @@ const logIn = async (ip, password, again) => {
         else {
             await loadHomePage();
             if (ONBOARD_USER) {
-                await installNode(projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
+                await installNode(all_projects.find(item => item.project.name == document.querySelector(".onboarding-page-project-details-heading").textContent).project);
                 localStorage.setItem("onboard_user", 0);
                 ONBOARD_USER = false;
             };
@@ -195,7 +196,7 @@ const setupLoginPage = () => {
         ipInputEl.value = ip;
         ipInputEl.setAttribute("style", "display: none;");
         selectedItemEl.setAttribute("style", "display: flex;");
-        selectedItemEl.children[0].setAttribute("src", projects.find(item => item.project.name == icon) ? projects.find(item => item.project.name == icon).project.image : "assets/default.png");
+        selectedItemEl.children[0].setAttribute("src", all_projects.find(item => item.project.name == icon) ? all_projects.find(item => item.project.name == icon).project.image : "assets/default.png");
         selectedItemEl.children[1].textContent = icon;
         selectedItemEl.children[2].textContent = ip;
     };
@@ -243,7 +244,7 @@ const setupLoginPage = () => {
                 });
                 img = document.createElement("img");
                 img.setAttribute("class", "each-autocomplete-item-icon");
-                img.setAttribute("src", projects.find(item => item.project.name == ipAddresses[i].icon) ? projects.find(item => item.project.name == ipAddresses[i].icon).project.image : "assets/default.png");
+                img.setAttribute("src", all_projects.find(item => item.project.name == ipAddresses[i].icon) ? all_projects.find(item => item.project.name == ipAddresses[i].icon).project.image : "assets/default.png");
                 div1 = document.createElement("div");
                 div1.textContent = ipAddresses[i].icon;
                 div2 = document.createElement("div");

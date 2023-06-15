@@ -9,24 +9,39 @@ const handleRighClick = (e) => {
 };
 
 const fetchProjects = async () => {
-  projects = [];
   const client = await http.getClient();
   const authenticate = await client.post("https://admin.node101.io/api/authenticate", {
     type: "Json",
     payload: { key: API_TOKEN },
   });
 
-  projects.length = 0;
+  testnet_projects = [];
+  mainnet_projects = [];
   for (let count = 0; ; count++) {
-    projects_data = await client.get(`https://admin.node101.io/api/testnets?page=${count}`, {
+    testnets_data = await client.get(`https://admin.node101.io/api/testnets?page=${count}`, {
       type: "Json",
       headers: {
         "Cookie": authenticate.headers["set-cookie"]
       }
     });
-    if (!projects_data.data.testnets.length) break;
-    projects.push(...projects_data.data.testnets);
+    if (!testnets_data.data.testnets.length) break;
+    testnet_projects.push(...testnets_data.data.testnets);
   };
+
+  for (let count = 0; ; count++) {
+    mainnets_data = await client.get(`https://admin.node101.io/api/mainnets?page=${count}`, {
+      type: "Json",
+      headers: {
+        "Cookie": authenticate.headers["set-cookie"]
+      }
+    });
+    if (!mainnets_data.data.mainnets.length) break;
+    mainnet_projects.push(...mainnets_data.data.mainnets);
+  }
+
+  all_projects = [...testnet_projects, ...mainnet_projects];
+  all_projects.sort((a, b) => a.project.name.localeCompare(b.project.name));
+  console.log(all_projects);
 };
 
 const createMessage = (title, message) => {

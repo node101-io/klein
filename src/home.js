@@ -8,7 +8,7 @@ tevent.listen("installation_progress", (data) => {
 const loadHomePage = async () => {
     document.getElementById("testnet-tab-button").click();
     updateHeader();
-    await showTestnetProjects();
+    await showProjects();
     document.querySelector(".all-installation-wrapper").setAttribute("style", "display: none;");
     document.querySelector(".all-header-wrapper").style.display = "flex";
     document.querySelector(".all-login-wrapper").style.display = "none";
@@ -33,7 +33,7 @@ const installNode = async (project) => {
     currentIp.icon = project.name;
     updateHeader();
     localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-    exception = projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
+    exception = all_projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
 
     endInstallationButton.style.display = "none";
     installationInfoIcon.src = project.image;
@@ -89,25 +89,27 @@ const installNode = async (project) => {
     });
     prevent_close = false;
 };
-const showTestnetProjects = async () => {
+const showProjects = async () => {
     const testnetTabContent = document.getElementById('testnet-tab-content');
+    const mainnetTabContent = document.getElementById('mainnet-tab-content');
     let gonna_prepend = "";
     testnetTabContent.innerHTML = "";
+    mainnetTabContent.innerHTML = "";
 
-    for (let i = 0; i < projects.length; i++) {
+    for (let i = 0; i < all_projects.length; i++) {
         row = document.createElement("div");
         row.classList.add("each-node-page-project");
         header = document.createElement("div");
         header.classList.add("project-header");
         headerIcon = document.createElement("img");
         headerIcon.classList.add("project-icon");
-        headerIcon.src = projects[i].project.image;
+        headerIcon.src = all_projects[i].project.image;
         header.appendChild(headerIcon);
         details = document.createElement("div");
         details.classList.add("project-details")
         detailsHeading = document.createElement("div");
         detailsHeading.classList.add("project-details-heading");
-        detailsHeading.textContent = projects[i].project.name;
+        detailsHeading.textContent = all_projects[i].project.name;
         detailsTags = document.createElement("div");
         detailsTags.classList.add("project-details-tags");
         detailsTagsSpan1 = document.createElement("span");
@@ -126,7 +128,7 @@ const showTestnetProjects = async () => {
         ratingHeading.classList.add("project-rating-heading");
         ratingHeading.textContent = "Rating"
         rating.appendChild(ratingHeading);
-        ratingScore = projects[i].project.rating;
+        ratingScore = all_projects[i].project.rating;
         for (let j = 0; j < 5; j++) {
             ratingCircle = document.createElement("span");
             ratingCircle.classList.add("each-project-rating-value");
@@ -148,7 +150,7 @@ const showTestnetProjects = async () => {
         row.appendChild(header);
         description = document.createElement("div");
         description.classList.add("project-description");
-        description.textContent = projects[i].project.description;
+        description.textContent = all_projects[i].project.description;
         row.appendChild(description);
         buttons = document.createElement("div");
         buttons.classList.add("project-buttons");
@@ -168,15 +170,15 @@ const showTestnetProjects = async () => {
         installButton.appendChild(installButtonSVG)
         installButton.addEventListener("click", async function () {
             if (ONBOARD_USER) {
-                loadOnboardingLoginPage(projects[i].project);
+                loadOnboardingLoginPage(all_projects[i].project);
             } else {
-                if (await dialog.confirm("Node is going to be installed, please confirm.", projects[i].project.name)) installNode(projects[i].project);
+                if (await dialog.confirm("Node is going to be installed, please confirm.", all_projects[i].project.name)) installNode(all_projects[i].project);
             };
         });
         discoverButton = document.createElement("a");
         discoverButton.classList.add("each-project-button", "discover-button");
         discoverButton.setAttribute("target", "_blank");
-        discoverButton.setAttribute("href", projects[i].project.social_media_accounts.web);
+        discoverButton.setAttribute("href", all_projects[i].project.social_media_accounts.web);
         textDiv2 = document.createElement("div");
         textDiv2.textContent = "Discover";
         discoverButtonSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -192,11 +194,14 @@ const showTestnetProjects = async () => {
         buttons.appendChild(installButton);
         buttons.appendChild(discoverButton);
         row.appendChild(buttons);
-        testnetTabContent.appendChild(row);
-        if (!ONBOARD_USER && projects[i].project.name == currentIp.icon) gonna_prepend = row;
+        // testnetTabContent.appendChild(row);
+        if (all_projects[i].project.is_mainnet) mainnetTabContent.appendChild(row);
+        else testnetTabContent.appendChild(row);
+        if (!ONBOARD_USER && all_projects[i].project.name == currentIp.icon) gonna_prepend = row;
     };
     if (gonna_prepend) {
-        testnetTabContent.prepend(gonna_prepend);
+        if (all_projects[i].project.is_mainnet) mainnetTabContent.prepend(gonna_prepend);
+        else testnetTabContent.prepend(gonna_prepend);
         document.querySelector(".install-button").replaceWith(document.querySelector(".install-button").cloneNode(true));
         document.querySelector(".install-button").addEventListener("click", function () {
             loadNodePage(true);
