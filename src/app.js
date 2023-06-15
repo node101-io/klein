@@ -25,6 +25,7 @@ const fetchProjects = async () => {
       }
     });
     if (!testnets_data.data.testnets.length) break;
+    console.log("testnet_data", testnets_data.data.testnets);
     testnet_projects.push(...testnets_data.data.testnets);
   };
 
@@ -36,12 +37,12 @@ const fetchProjects = async () => {
       }
     });
     if (!mainnets_data.data.mainnets.length) break;
+    console.log("mainnet_data", mainnets_data.data.mainnets);
     mainnet_projects.push(...mainnets_data.data.mainnets);
   }
 
   all_projects = [...testnet_projects, ...mainnet_projects];
   all_projects.sort((a, b) => a.project.name.localeCompare(b.project.name));
-  console.log(all_projects);
 };
 
 const createMessage = (title, message) => {
