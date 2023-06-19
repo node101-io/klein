@@ -52,7 +52,11 @@ jobs:
       - name: Update the version
         run: |
           ref_name=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-          sed -i "s/^version = \"[^\"]*\"/version = \"$ref_name\"/" ./src-tauri/Cargo.toml
+          if [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+            (Get-Content ./src-tauri/Cargo.toml) -replace '^version = "[^"]*"', "version = \"$ref_name\"" | Out-File ./src-tauri/Cargo.toml
+          else
+            perl -i -pe "s/^version = \"[^\"]*\"/version = \"$ref_name\"/" ./src-tauri/Cargo.toml
+          fi
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
