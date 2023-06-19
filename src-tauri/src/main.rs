@@ -203,7 +203,7 @@ fn install_node(network: String, identifier: String, window: Window) -> Result<(
         .map_err(|e| e.to_string())?;
     channel.exec(&format!(
         "echo 'export MONIKER=node101' >> $HOME/.bash_profile; echo 'export WALLET_NAME=node101' >> $HOME/.bash_profile; \
-        wget -O {identifier}.sh https://node101.io/{network}/{identifier}.sh && chmod +x {identifier}.sh && ./{identifier}.sh"
+        wget -O {identifier}.sh https://raw.githubusercontent.com/node101-io/klein-scripts/main/{network}/{identifier}/{identifier}.sh && chmod +x {identifier}.sh && ./{identifier}.sh"
     )).map_err(|e| e.to_string())?;
     my_boxed_session.stop_installation = false;
     loop {
@@ -606,6 +606,7 @@ fn node_info() -> Result<String, String> {
         .exec(&format!("bash -c -l '$EXECUTE status 2>&1 | jq'"))
         .map_err(|e| e.to_string())?;
     let mut s = String::new();
+    println!("{:?}", s);
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
     channel.close().map_err(|e| e.to_string())?;
     if s.is_empty() {

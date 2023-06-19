@@ -170,7 +170,7 @@ const showProjects = async () => {
         installButton.appendChild(installButtonSVG)
         installButton.addEventListener("click", async function () {
             if (ONBOARD_USER) {
-                loadOnboardingLoginPage(all_projects[i].project);
+                loadOnboardingLoginPage(all_projects[i]);
             } else {
                 if (await dialog.confirm("Node is going to be installed, please confirm.", all_projects[i].project.name)) installNode(all_projects[i].project);
             };
@@ -178,7 +178,7 @@ const showProjects = async () => {
         discoverButton = document.createElement("a");
         discoverButton.classList.add("each-project-button", "discover-button");
         discoverButton.setAttribute("target", "_blank");
-        discoverButton.setAttribute("href", all_projects[i].project.social_media_accounts.web);
+        discoverButton.setAttribute("href", all_projects[i].social_media_accounts.web);
         textDiv2 = document.createElement("div");
         textDiv2.textContent = "Discover";
         discoverButtonSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -195,12 +195,12 @@ const showProjects = async () => {
         buttons.appendChild(discoverButton);
         row.appendChild(buttons);
         // testnetTabContent.appendChild(row);
-        if (all_projects[i].project.is_mainnet) mainnetTabContent.appendChild(row);
+        if (all_projects[i].is_mainnet) mainnetTabContent.appendChild(row);
         else testnetTabContent.appendChild(row);
         if (!ONBOARD_USER && all_projects[i].project.name == currentIp.icon) gonna_prepend = row;
     };
     if (gonna_prepend) {
-        if (all_projects[i].project.is_mainnet) mainnetTabContent.prepend(gonna_prepend);
+        if (all_projects[i].is_mainnet) mainnetTabContent.prepend(gonna_prepend);
         else testnetTabContent.prepend(gonna_prepend);
         document.querySelector(".install-button").replaceWith(document.querySelector(".install-button").cloneNode(true));
         document.querySelector(".install-button").addEventListener("click", function () {

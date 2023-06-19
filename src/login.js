@@ -25,11 +25,11 @@ const loadOnboardingLoginPage = async (project) => {
     document.querySelector(".onboarding-page-back-button").addEventListener("click", (e) => {
         e.preventDefault();
         loadHomePage();
-    }); document.querySelector(".onboarding-page-project-icon").src = project.image;
-    document.querySelector(".onboarding-page-project-details-heading").textContent = project.name;
+    }); document.querySelector(".onboarding-page-project-icon").src = project.project.image;
+    document.querySelector(".onboarding-page-project-details-heading").textContent = project.project.name;
     rating = document.querySelector(".onboarding-page-project-rating");
     rating.innerHTML = "";
-    ratingScore = project.rating;
+    ratingScore = project.project.rating;
     for (let j = 0; j < 5; j++) {
         ratingCircle = document.createElement("span");
         ratingCircle.classList.add("each-project-rating-value");
@@ -44,9 +44,9 @@ const loadOnboardingLoginPage = async (project) => {
         ratingCircle.appendChild(ratingCircleOn);
         rating.appendChild(ratingCircle);
     };
-    document.querySelector(".onboarding-page-project-description").textContent = project.description;
+    document.querySelector(".onboarding-page-project-description").textContent = project.project.description;
     document.querySelectorAll(".each-onboarding-page-project-req-right").forEach((item, index) => {
-        item.textContent = project.requirements[Object.keys(project.requirements)[index]] || "Unknown";
+        item.textContent = project.system_requirements[Object.keys(project.system_requirements)[index]] || "Unknown";
     });
 };
 
@@ -82,7 +82,7 @@ const logIn = async (ip, password, again) => {
         hideLogInError(again);
         currentIp = ipAddresses.find(item => item.ip == (again ? ip.textContent : ip.value));
         try {
-            project_name = res.name ? all_projects.find(item => item.project.wizard_key === res.name).project.name : "Empty Server";
+            project_name = res.name ? all_projects.find(item => item.wizard_key === res.name).project.name : "Empty Server";
         } catch (err) {
             showLogInError("Unknown project is installed on your server!", again);
             hideLoadingAnimation();

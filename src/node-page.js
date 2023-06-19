@@ -69,7 +69,7 @@ tevent.listen("cpu_mem_sync", (event) => {
     // VERSION STATUS
     if (response.version) {
         version_new = response.version.charAt(0).toLowerCase() == "v" ? response.version : "v" + response.version;
-        if (version_new == latest_tag) {
+        if (version_new == latest_tag || latest_tag == "v0.0.0") {
             updateNodeButton.disabled = true;
             if (node_action == "update") {
                 node_action = "";
@@ -350,10 +350,14 @@ const hideErrorMessage = () => {
 };
 const getLatestTag = async () => {
     const client = await http.getClient();
-    const repoUrl = all_projects.find(item => item.project.name == currentIp.icon).project.social_media_accounts.github;
-    latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
-        type: 'Json'
-    })).data.tag_name;
+    try {
+        const repoUrl = all_projects.find(item => item.project.name == currentIp.icon).social_media_accounts.github;
+        latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
+            type: 'Json'
+        })).data.tag_name;
+    } catch (e) {
+        latest_tag = "v0.0.0";
+    }
 };
 const deleteNode = async () => {
     showLoadingAnimation();
