@@ -51,7 +51,7 @@ jobs:
 
       - name: Update the version
         run: |
-          sed -i "s/version = \"[^\"]*\"/version = \"${{ github.ref_name }}\"/" ./src-tauri/Cargo.toml
+          sed -i 's/^version = "[^"]*"/version = "${{ github.ref_name }}"/' ./src-tauri/Cargo.toml
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
