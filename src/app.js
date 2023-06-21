@@ -1,4 +1,4 @@
-const { tauri, dialog, clipboard, http, event: tevent, window: twindow } = window.__TAURI__;
+const { tauri, dialog, clipboard, http, event: tevent, window: twindow, updater, process } = window.__TAURI__;
 
 ONBOARD_USER = localStorage.getItem("onboard_user") ? Number(localStorage.getItem("onboard_user")) : 1;
 
@@ -71,6 +71,12 @@ const changeLanguage = () => {
 };
 
 window.addEventListener("DOMContentLoaded", async () => {
+  (async () => {
+    const update = await updater.checkUpdate();
+    if (update.shouldUpdate && await dialog.ask("Do you want to update now (recommended)? \n\n Release notes:\n" + update.manifest.body, `Version ${update.manifest.version} Available`))
+      await updater.installUpdate().then(() => process.relaunch()).catch((e) => console.log(e));
+  })();
+
   const customMessage = document.querySelector(".custom-message");
   const customMessageBackground = document.querySelector(".custom-message-background");
   const customMessageClose = document.querySelector(".custom-message-close");
