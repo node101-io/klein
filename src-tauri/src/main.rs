@@ -110,7 +110,7 @@ fn cpu_mem_sync(window: Window, exception: String) -> Result<(), String> {
             "$(systemctl is-active $EXECUTE 2>/dev/null)".to_string(),
             r#"$($EXECUTE status 2>&1 | jq -r \""\(.SyncInfo.latest_block_height)"\" 2>/dev/null)"#,
             r#"$($EXECUTE status 2>&1 | jq -r \""\(.SyncInfo.catching_up)"\" 2>/dev/null)"#,
-            r#"$($EXECUTE version 2>&1 2>/dev/null)"#,
+            r#"$($EXECUTE version 2>&1)"#,
         ),
     };
     channel
@@ -295,7 +295,10 @@ fn password_keyring_check(exception: String) -> Result<(bool, bool), String> {
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
     channel.close().map_err(|e| e.to_string())?;
-    Ok((!s.starts_with("{"), s.contains("password_does_exist")))
+    Ok((
+        !s.starts_with("{") && !s.starts_with("["),
+        s.contains("password_does_exist"),
+    ))
 }
 
 #[tauri::command(async)]
@@ -309,7 +312,6 @@ fn create_keyring(passphrase: String) -> Result<(), String> {
     channel.exec(&*format!(
         "echo -e '{passphrase}\n{passphrase}\n' | bash -c -l '$EXECUTE keys add forkeyringpurpose --output json'"
     )).map_err(|e| e.to_string())?;
-    println!("asdf");
     channel.close().map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -370,7 +372,7 @@ fn create_wallet(walletname: String, exception: String) -> Result<String, String
             r#"bash -c -l 'celestia-node/cel-key add {walletname} --node.type light --p2p.network blockspacerace --output json 2>&1 | awk "NR > 1" | jq -r .mnemonic'"#
         ),
         _ => format!(
-            r#"echo -e '{}\ny\n' | bash -c -l '$EXECUTE keys add {} --output json | jq -r .mnemonic'"#,
+            r#"echo -e '{}\ny\n' | bash -c -l '$EXECUTE keys add {} --output json 2>&1 | jq -r .mnemonic'"#,
             my_boxed_session.walletpassword, walletname
         ),
     };
@@ -473,7 +475,6 @@ fn recover_wallet(
     };
     channel.exec(&command).map_err(|e| e.to_string())?;
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
-    println!("{}", s);
     channel.close().map_err(|e| e.to_string())?;
     Ok(())
 }

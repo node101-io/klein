@@ -1671,6 +1671,7 @@ body.waiting * {
   background-color: var(--fifth-color);
   border: 1px solid var(--divider-color);
   padding: 30px;
+  scroll-behavior: smooth;
 }
 
 #logs-page-code-block::-webkit-scrollbar {

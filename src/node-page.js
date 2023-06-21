@@ -90,7 +90,6 @@ tevent.listen("check_logs", (event) => {
         if (gonnaScroll) codeBlock.scrollTop = codeBlock.scrollHeight;
         if (codeBlock.innerHTML.length > 100000) codeBlock.innerHTML = codeBlock.innerHTML.slice(50000);
     } catch (e) {
-        console.log(e);
         tauri.invoke("stop_check_logs");
     }
 });
@@ -394,6 +393,8 @@ const nodeOperationsSetup = async () => {
     updateNodeButton = document.querySelectorAll(".each-page-manage-node-button")[3];
     deleteNodeButton = document.getElementById("delete-node-button");
 
+    startNodeButton.disabled = true;
+    stopNodeButton.disabled = true;
     updateNodeButton.disabled = true;
     startNodeButton.addEventListener("click", async () => {
         node_action = "start";

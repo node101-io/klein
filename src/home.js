@@ -194,23 +194,26 @@ const showProjects = async () => {
         buttons.appendChild(installButton);
         buttons.appendChild(discoverButton);
         row.appendChild(buttons);
-        // testnetTabContent.appendChild(row);
         if (all_projects[i].is_mainnet) mainnetTabContent.appendChild(row);
         else testnetTabContent.appendChild(row);
-        if (!ONBOARD_USER && all_projects[i].project.name == currentIp.icon) gonna_prepend = row;
+        if (!ONBOARD_USER && all_projects[i].project.name == currentIp.icon) { // TODO: Checking by name is not a good idea. Testnet and mainnet can have same name.
+            gonna_prepend = row;
+            gonna_prepend_is_mainnet = all_projects[i].is_mainnet;
+        }
     };
     if (gonna_prepend) {
-        if (all_projects[i].is_mainnet) mainnetTabContent.prepend(gonna_prepend);
+        if (gonna_prepend_is_mainnet) mainnetTabContent.prepend(gonna_prepend);
         else testnetTabContent.prepend(gonna_prepend);
-        document.querySelector(".install-button").replaceWith(document.querySelector(".install-button").cloneNode(true));
-        document.querySelector(".install-button").addEventListener("click", function () {
+        gonna_prepend.querySelector(".install-button").replaceWith(gonna_prepend.querySelector(".install-button").cloneNode(true));
+        gonna_prepend.querySelector(".install-button").addEventListener("click", function () {
             loadNodePage(true);
         });
-        document.querySelector(".install-button").firstChild.textContent = "Manage";
-        document.querySelector(".install-button").firstChild.nextSibling.style.transform = "rotate(-90deg)";
-        for (let i = 1; i < document.querySelectorAll(".install-button").length; i++) {
+        gonna_prepend.querySelector(".install-button").firstChild.textContent = "Manage";
+        gonna_prepend.querySelector(".install-button").firstChild.nextSibling.style.transform = "rotate(-90deg)";
+        for (let i = 0; i < document.querySelectorAll(".install-button").length; i++) {
             document.querySelectorAll(".install-button")[i].disabled = true;
         };
+        gonna_prepend.querySelector(".install-button").disabled = false;
     };
 }
 

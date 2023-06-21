@@ -54,7 +54,7 @@ const logIn = async (ip, password, again) => {
     const checkboxInputEl = document.getElementById("checkbox-input");
     const switchIpPromptClose = document.querySelector(".switch-ip-prompt-close");
 
-    ip.value = ip.value.trim();
+    if (!again) ip.value = ip.value.trim();
     if ((again ? false : (ip.value == "")) || password.value == "" || (again ? false : !/^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/g.test(ip.value))) {
         showLogInError("Please fill in all the fields correctly.", again);
         password.focus();
