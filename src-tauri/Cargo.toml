@@ -1,10 +1,10 @@
 [package]
-name = "wizard"
+name = "klein"
 version = "0.0.0"
-description = "A wizard to install and manage nodes on your remote server.."
+description = "A tool to install and manage nodes on your remote server."
 authors = ["node101"]
 license = ""
-repository = "https://github.com/node101-io/node-wizard"
+repository = "https://github.com/node101-io/klein"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

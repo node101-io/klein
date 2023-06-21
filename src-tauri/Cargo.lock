@@ -2265,6 +2265,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "klein"
+version = "0.0.0"
+dependencies = [
+ "ansi-to-html",
+ "nosleep",
+ "openssl",
+ "ssh2",
+ "tauri",
+ "tauri-build",
+ "tauri-cli",
+]
+
+[[package]]
 name = "kqueue"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6014,19 +6027,6 @@ checksum = "524e57b2c537c0f9b1e69f1965311ec12182b4122e45035b1508cd24d2adadb1"
 dependencies = [
  "cfg-if",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "wizard"
-version = "0.0.0"
-dependencies = [
- "ansi-to-html",
- "nosleep",
- "openssl",
- "ssh2",
- "tauri",
- "tauri-build",
- "tauri-cli",
 ]
 
 [[package]]

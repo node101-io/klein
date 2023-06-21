@@ -45,9 +45,9 @@ const loadOnboardingLoginPage = async (project) => {
         rating.appendChild(ratingCircle);
     };
     document.querySelector(".onboarding-page-project-description").textContent = project.project.description;
-    document.querySelectorAll(".each-onboarding-page-project-req-right").forEach((item, index) => {
-        item.textContent = project.system_requirements[Object.keys(project.system_requirements)[index]] || "Unknown";
-    });
+    const systemRequirements = ["cpu", "ram", "storage", "os"];
+    for (let i = 0; i < systemRequirements.length; i++)
+        document.getElementById(`each-onboarding-page-project-req-${systemRequirements[i]}`).textContent = project.system_requirements[systemRequirements[i]] || "Unknown";
 };
 
 const logIn = async (ip, password, again) => {

@@ -7,7 +7,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "Node Wizard"
+    "productName": "Klein"
   },
   "tauri": {
     "allowlist": {
@@ -54,7 +54,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "nodewizard",
+      "identifier": "klein",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -92,7 +92,7 @@
         "fullscreen": false,
         "height": 800,
         "resizable": true,
-        "title": "Wizard",
+        "title": "Klein",
         "width": 1340
       }
     ]

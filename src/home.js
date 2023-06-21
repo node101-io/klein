@@ -178,7 +178,7 @@ const showProjects = async () => {
         discoverButton = document.createElement("a");
         discoverButton.classList.add("each-project-button", "discover-button");
         discoverButton.setAttribute("target", "_blank");
-        discoverButton.setAttribute("href", all_projects[i].social_media_accounts.web);
+        discoverButton.setAttribute("href", all_projects[i].project.social_media_accounts.web);
         textDiv2 = document.createElement("div");
         textDiv2.textContent = "Discover";
         discoverButtonSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg");

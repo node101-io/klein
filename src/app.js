@@ -71,11 +71,11 @@ const changeLanguage = () => {
 };
 
 window.addEventListener("DOMContentLoaded", async () => {
-  (async () => {
-    const update = await updater.checkUpdate();
-    if (update.shouldUpdate && await dialog.ask("Do you want to update now (recommended)? \n\n Release notes:\n" + update.manifest.body, `Version ${update.manifest.version} Available`))
-      await updater.installUpdate().then(() => process.relaunch()).catch((e) => console.log(e));
-  })();
+  // (async () => {
+  //   const update = await updater.checkUpdate();
+  //   if (update.shouldUpdate && await dialog.ask("Do you want to update now (recommended)? \n\n Release notes:\n" + update.manifest.body, `Version ${update.manifest.version} Available`))
+  //     await updater.installUpdate().then(() => process.relaunch()).catch((e) => console.log(e));
+  // })();
 
   const customMessage = document.querySelector(".custom-message");
   const customMessageBackground = document.querySelector(".custom-message-background");
