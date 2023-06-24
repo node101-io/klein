@@ -11,7 +11,7 @@ tevent.listen("cpu_mem_sync", (event) => {
     if (response.catchup == "true") {
         syncStatusChart.options.barColor = "#E1AB00";
         syncStatusChartPercent.innerText = convertToKNotation(response.height);
-        syncStatusChartPopupText.innerText = "Syncing...\n\nCurrent Block: " + response.height;
+        syncStatusChartPopupText.innerText = "Syncing...\n\nCurrent Block Height: " + response.height;
         setTimeout(() => {
             syncStatusChart.update(100);
             setTimeout(() => syncStatusChart.update(0), 2300);
@@ -26,7 +26,7 @@ tevent.listen("cpu_mem_sync", (event) => {
     else {
         syncStatusChart.options.barColor = "#C32316";
         syncStatusChartPercent.innerText = "!";
-        syncStatusChartPopupText.innerText = "Can't get sync status!";
+        syncStatusChartPopupText.innerText = "Cannot get sync status!";
         syncStatusChart.update(100);
     };
 

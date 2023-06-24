@@ -47,7 +47,7 @@ jobs:
         
       - name: Set up config.js
         run: |
-          echo "GOOGLE_API = '${{ secrets.GOOGLE_API }}'; API_TOKEN = '${{ secrets.API_TOKEN }}'; " > ./src/config.js
+          echo "const GOOGLE_API = '${{ secrets.GOOGLE_API }}'; const API_TOKEN = '${{ secrets.API_TOKEN }}'; " > ./src/config.js
 
       - name: Update the version
         shell: bash
