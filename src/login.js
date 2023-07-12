@@ -27,23 +27,6 @@ const loadOnboardingLoginPage = async (project) => {
         loadHomePage();
     }); document.querySelector(".onboarding-page-project-icon").src = project.project.image;
     document.querySelector(".onboarding-page-project-details-heading").textContent = project.project.name;
-    rating = document.querySelector(".onboarding-page-project-rating");
-    rating.innerHTML = "";
-    ratingScore = project.project.rating;
-    for (let j = 0; j < 5; j++) {
-        ratingCircle = document.createElement("span");
-        ratingCircle.classList.add("each-project-rating-value");
-        ratingCircleOn = document.createElement("span");
-        ratingCircleOn.classList.add("each-project-rating-value-on");
-        if (ratingScore != 0) {
-            ratingCircleOn.style.display = "unset";
-            ratingScore = ratingScore - 1;
-        } else {
-            ratingCircleOn.style.display = "none";
-        };
-        ratingCircle.appendChild(ratingCircleOn);
-        rating.appendChild(ratingCircle);
-    };
     document.querySelector(".onboarding-page-project-description").textContent = project.project.description;
     const systemRequirements = ["cpu", "ram", "storage", "os"];
     for (let i = 0; i < systemRequirements.length; i++)

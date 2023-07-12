@@ -88,6 +88,7 @@ const installNode = async (project) => {
         await handleTimeOut(err);
     });
     prevent_close = false;
+    twindow.appWindow.requestUserAttention(1);
 };
 const showProjects = async () => {
     const testnetTabContent = document.getElementById('testnet-tab-content');
@@ -103,7 +104,7 @@ const showProjects = async () => {
         header.classList.add("project-header");
         headerIcon = document.createElement("img");
         headerIcon.classList.add("project-icon");
-        headerIcon.src = all_projects[i].project.image;
+        headerIcon.src = `${all_projects[i].project.image}?${new Date().getTime()}`;
         header.appendChild(headerIcon);
         details = document.createElement("div");
         details.classList.add("project-details")
@@ -122,30 +123,8 @@ const showProjects = async () => {
         detailsTagsSpan2.textContent = "Active";
         // detailsTags.appendChild(detailsTagsSpan1);
         detailsTags.appendChild(detailsTagsSpan2);
-        rating = document.createElement("div");
-        rating.classList.add("project-rating");
-        ratingHeading = document.createElement("div");
-        ratingHeading.classList.add("project-rating-heading");
-        ratingHeading.textContent = "Rating"
-        rating.appendChild(ratingHeading);
-        ratingScore = all_projects[i].project.rating;
-        for (let j = 0; j < 5; j++) {
-            ratingCircle = document.createElement("span");
-            ratingCircle.classList.add("each-project-rating-value");
-            ratingCircleOn = document.createElement("span");
-            ratingCircleOn.classList.add("each-project-rating-value-on");
-            if (ratingScore != 0) {
-                ratingCircleOn.style.display = "unset";
-                ratingScore = ratingScore - 1;
-            } else {
-                ratingCircleOn.style.display = "none";
-            };
-            ratingCircle.appendChild(ratingCircleOn);
-            rating.appendChild(ratingCircle);
-        };
         details.appendChild(detailsHeading);
         details.appendChild(detailsTags);
-        details.appendChild(rating);
         header.appendChild(details);
         row.appendChild(header);
         description = document.createElement("div");
