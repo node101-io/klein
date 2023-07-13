@@ -260,13 +260,13 @@ body.waiting * {
 .onboarding-page-project-system-reqs {
   display: flex;
   gap: 10px;
-  max-width: 330px;
+  max-width: 370px;
   flex-wrap: wrap;
 }
 
 .each-onboarding-page-project-req {
   display: flex;
-  min-width: 160px;
+  min-width: 180px;
   height: 34px;
   align-items: center;
   justify-content: center;
@@ -361,15 +361,15 @@ body.waiting * {
 
 @media (max-width: 1100px) {
   .each-autocomplete-item {
-    width: 40vw;
+    width: 35vw;
   }
 
   .each-login-page-text-field {
-    width: 40vw;
+    width: 35vw;
   }
 
   .each-login-page-toggle {
-    left: calc(40vw - 34px);
+    left: calc(35vw - 34px);
   }
 
   .onboarding-page-project-description {
@@ -381,7 +381,7 @@ body.waiting * {
   }
 
   .login-page-left-wrapper {
-    width: calc(100vw - 6vw - 40vw);
+    width: calc(100vw - 6vw - 35vw);
     margin-right: 6vw;
   }
 }
