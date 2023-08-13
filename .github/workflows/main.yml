@@ -47,7 +47,7 @@ jobs:
         
       - name: Set up config.js
         run: |
-          const API_TOKEN = '${{ secrets.API_TOKEN }}'; " > ./src/config.js
+          "const API_TOKEN = '${{ secrets.API_TOKEN }}'; " > ./src/config.js
 
       - name: Update the version
         shell: bash
