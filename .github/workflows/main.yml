@@ -47,7 +47,7 @@ jobs:
         
       - name: Set up config.js
         run: |
-          echo "const GOOGLE_API = '${{ secrets.GOOGLE_API }}'; const API_TOKEN = '${{ secrets.API_TOKEN }}'; " > ./src/config.js
+          const API_TOKEN = '${{ secrets.API_TOKEN }}'; " > ./src/config.js
 
       - name: Update the version
         shell: bash
@@ -66,6 +66,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}          
+          
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Sample Release for Modern Desktop App v__VERSION__"
