@@ -79,7 +79,7 @@ const checkUpdateAndInstall = async () => {
 
 
 window.addEventListener("DOMContentLoaded", async () => {
-  checkUpdateAndInstall();
+  if (typeof IS_LOCAL === "undefined") checkUpdateAndInstall();
 
   const customMessage = document.querySelector(".custom-message");
   const customMessageBackground = document.querySelector(".custom-message-background");
