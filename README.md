@@ -59,7 +59,7 @@ After the node is installed and synced with the latest block, you can recover an
 
 ### Validator Operations
 
-You can perform operations such as "Validator List, Create Validator, Edit Validator, Withdraw Rewards, Delegate, Redelegate, Vote, Unjail, Send Token, Wallets, Logs" of your Node from the Validator Operations section.
+You can perform operations such as "Validator List, Add Validator, Edit Validator, Withdraw Rewards, Delegate, Redelegate, Vote, Unjail, Send Token, Wallets, Logs" of your Node from the Validator Operations section.
 You can easily update your node with the latest binary versions, participate in network proposals, unjail your node if necessary, send tokens, delegate(stake) tokens to your node or other validators, redelegate tokens, and manage your wallets securely. Klein empowers you to perform all the necessary tasks and operations on your node without complex command-line interactions. It's a convenient and efficient solution for managing and maximizing the potential of your blockchain node.
 
 ![](/docs/images/image5.png)

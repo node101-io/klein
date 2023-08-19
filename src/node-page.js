@@ -120,7 +120,7 @@ const loadNodePage = async (start) => {
     document.querySelector(".all-home-wrapper").setAttribute("style", "display: none;");
 
     exception = all_projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
-    buttons_to_hide = ["node-information-button", "validator-list-button", "create-validator-button", "edit-validator-button", "withdraw-rewards-button", "delegate-token-button", "redelegate-token-button", "vote-button", "unjail-button", "send-token-button"];
+    buttons_to_hide = ["node-information-button", "validator-list-button", "add-validator-button", "edit-validator-button", "withdraw-rewards-button", "delegate-token-button", "redelegate-token-button", "vote-button", "unjail-button", "send-token-button"];
     for (button of buttons_to_hide) {
         document.getElementById(button).style.display = currentIp.icon == "Celestia Light" ? "none" : "";
         document.getElementById(button).nextElementSibling.style.display = currentIp.icon == "Celestia Light" ? "none" : "";
@@ -476,7 +476,7 @@ const validatorListSetup = async () => {
     hideLoadingAnimation();
     window.scrollTo(0, 400);
 };
-const createValidatorSetup = () => {
+const addValidatorSetup = () => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         if (syncStatusChartPopupText.innerText.includes("Node is synced!")) {
             showLoadingAnimation();
@@ -811,7 +811,7 @@ const setupNodePage = () => {
     const subButtonsDiv = document.querySelector(".sidebar-dropdown-subbuttons");
     const nodeOperationsButton = document.getElementById("node-operations-button");
     const validatorListButton = document.getElementById("validator-list-button");
-    const createValidatorButton = document.getElementById("create-validator-button");
+    const addValidatorButton = document.getElementById("add-validator-button");
     const editValidatorButton = document.getElementById("edit-validator-button");
     const withdrawRewardsButton = document.getElementById("withdraw-rewards-button");
     const unjailButton = document.getElementById("unjail-button");
@@ -900,8 +900,8 @@ const setupNodePage = () => {
     validatorListButton.addEventListener("click", async function () {
         await changePage("page-content/validator-list.html", validatorListSetup);
     });
-    createValidatorButton.addEventListener("click", async function () {
-        await handleKeyringExistance("page-content/create-validator.html", createValidatorSetup);
+    addValidatorButton.addEventListener("click", async function () {
+        await handleKeyringExistance("page-content/add-validator.html", addValidatorSetup);
     });
     editValidatorButton.addEventListener("click", async function () {
         await handleKeyringExistance("page-content/edit-validator.html", editValidatorSetup);
