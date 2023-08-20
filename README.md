@@ -13,10 +13,7 @@ Please, visit this [link](https://github.com/node101-io/klein/releases/latest "l
 ##### MacOS users:
 1. Download and open the .dmg file.
 2. Drag the app into the applications folder.
-3. Right click on the app and click "Open".
-4. Click "Cancel".
-5. Right click on the app and click "Open" again.
-6. Click "Open".
+3. Click on the app to open it.
 
 Now whenever you want to launch the app, go to the Applications folder and do steps 5 and 6.
 
