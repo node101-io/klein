@@ -95,7 +95,7 @@ const showProjects = async () => {
     const mainnetTabContent = document.getElementById('mainnet-tab-content');
     let gonna_prepend = "";
     testnetTabContent.innerHTML = "";
-    mainnetTabContent.innerHTML = "";
+    mainnetTabContent.innerHTML = "Coming soon...";
 
     for (let i = 0; i < all_projects.length; i++) {
         row = document.createElement("div");
@@ -173,16 +173,18 @@ const showProjects = async () => {
         buttons.appendChild(installButton);
         buttons.appendChild(discoverButton);
         row.appendChild(buttons);
-        if (all_projects[i].is_mainnet) mainnetTabContent.appendChild(row);
-        else testnetTabContent.appendChild(row);
+        // if (all_projects[i].is_mainnet) mainnetTabContent.appendChild(row);
+        // else testnetTabContent.appendChild(row);
+        if (!all_projects[i].is_mainnet) testnetTabContent.appendChild(row);
         if (!ONBOARD_USER && all_projects[i].project.name == currentIp.icon) { // TODO: Checking by name is not a good idea. Testnet and mainnet can have same name.
             gonna_prepend = row;
             gonna_prepend_is_mainnet = all_projects[i].is_mainnet;
         }
     };
     if (gonna_prepend) {
-        if (gonna_prepend_is_mainnet) mainnetTabContent.prepend(gonna_prepend);
-        else testnetTabContent.prepend(gonna_prepend);
+        // if (gonna_prepend_is_mainnet) mainnetTabContent.prepend(gonna_prepend);
+        // else testnetTabContent.prepend(gonna_prepend);
+        if (!gonna_prepend_is_mainnet) testnetTabContent.prepend(gonna_prepend);
         gonna_prepend.querySelector(".install-button").replaceWith(gonna_prepend.querySelector(".install-button").cloneNode(true));
         gonna_prepend.querySelector(".install-button").addEventListener("click", function () {
             loadNodePage(true);
