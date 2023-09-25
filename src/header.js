@@ -5,7 +5,7 @@ const updateHeader = () => {
             imgSrc = "assets/default.png";
             document.querySelector(".header-menu-ip-list-button-icon").style.display = "none";
         } else {
-            imgSrc = all_projects.find(item => item.project.name == currentIp.icon).project.image;
+            imgSrc = all_projects.find(item => item.project.name == currentIp.icon).project.image + "?" + new Date().getTime();
             document.querySelector(".header-menu-ip-list-button-icon").style.display = "unset";
             document.querySelector(".header-menu-ip-list-button-icon").src = imgSrc;
         };

@@ -36,7 +36,7 @@ const installNode = async (project) => {
     exception = all_projects.find(item => item.project.name == currentIp.icon)?.project.identifier;
 
     endInstallationButton.style.display = "none";
-    installationInfoIcon.src = project.image;
+    installationInfoIcon.src = project.image + "?" + new Date().getTime();
     installationInfoTitle.textContent = project.name;
     progressBar.className = "progress-bar progress-bar-loading";
     progressBarTextLeft.textContent = "Installing...";

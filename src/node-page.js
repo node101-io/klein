@@ -144,7 +144,7 @@ const changePage = async (page, callback) => {
     };
 };
 const updateSidebar = async () => {
-    document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? all_projects.find(item => item.project.name == currentIp.icon).project.image : "assets/default.png");
+    document.querySelector(".sidebar-info-icon").setAttribute("src", currentIp.icon ? all_projects.find(item => item.project.name == currentIp.icon).project.image + "?" + new Date().getTime() : "assets/default.png");
     document.querySelector(".sidebar-info-details-name").textContent = currentIp.icon;
     document.querySelector(".sidebar-info-details-chain-id").textContent = await tauri.invoke("get_chain_id").then((res) => { return JSON.parse(res).chain_id; });
     document.querySelector(".sidebar-info-details-copy").setAttribute("style", currentIp.validator_addr ? "display: flex;" : "display: none;");

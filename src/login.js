@@ -25,7 +25,7 @@ const loadOnboardingLoginPage = async (project) => {
     document.querySelector(".onboarding-page-back-button").addEventListener("click", (e) => {
         e.preventDefault();
         loadHomePage();
-    }); document.querySelector(".onboarding-page-project-icon").src = project.project.image;
+    }); document.querySelector(".onboarding-page-project-icon").src = project.project.image + "?" + new Date().getTime();
     document.querySelector(".onboarding-page-project-details-heading").textContent = project.project.name;
     document.querySelector(".onboarding-page-project-description").textContent = project.project.description;
     const systemRequirements = ["cpu", "ram", "storage", "os"];
@@ -227,7 +227,7 @@ const setupLoginPage = () => {
                 });
                 img = document.createElement("img");
                 img.setAttribute("class", "each-autocomplete-item-icon");
-                img.setAttribute("src", all_projects.find(item => item.project.name == ipAddresses[i].icon) ? all_projects.find(item => item.project.name == ipAddresses[i].icon).project.image : "assets/default.png");
+                img.setAttribute("src", all_projects.find(item => item.project.name == ipAddresses[i].icon) ? all_projects.find(item => item.project.name == ipAddresses[i].icon).project.image + "?" + new Date().getTime() : "assets/default.png");
                 div1 = document.createElement("div");
                 div1.textContent = ipAddresses[i].icon;
                 div2 = document.createElement("div");
