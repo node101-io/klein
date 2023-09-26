@@ -184,17 +184,22 @@ const showProjects = async () => {
     if (gonna_prepend) {
         // if (gonna_prepend_is_mainnet) mainnetTabContent.prepend(gonna_prepend);
         // else testnetTabContent.prepend(gonna_prepend);
-        testnetTabContent.prepend(gonna_prepend);
-        gonna_prepend.querySelector(".install-button").replaceWith(gonna_prepend.querySelector(".install-button").cloneNode(true));
-        gonna_prepend.querySelector(".install-button").addEventListener("click", function () {
-            loadNodePage(true);
-        });
-        gonna_prepend.querySelector(".install-button").firstChild.textContent = "Manage";
-        gonna_prepend.querySelector(".install-button").firstChild.nextSibling.style.transform = "rotate(-90deg)";
-        for (let i = 0; i < document.querySelectorAll(".install-button").length; i++) {
-            document.querySelectorAll(".install-button")[i].disabled = true;
+
+        testnetTabContent.insertAdjacentElement("afterbegin", gonna_prepend.cloneNode(true));
+
+        gonna_prepend.remove();
+        
+        const installButton = document.querySelector(".install-button");        
+        installButton.addEventListener("click", () => loadNodePage(true));
+        installButton.firstChild.textContent = "Manage";
+        installButton.firstChild.nextSibling.style.transform = "rotate(-90deg)";
+        
+        const allInstallButtons = document.querySelectorAll(".install-button");
+        for (let i = 0; i < allInstallButtons.length; i++) {
+            allInstallButtons[i].disabled = true;
         };
-        gonna_prepend.querySelector(".install-button").disabled = false;
+        
+        installButton.disabled = false;
     };
 }
 
