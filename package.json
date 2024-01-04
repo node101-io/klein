@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "dev": "tauri dev"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.4.0"

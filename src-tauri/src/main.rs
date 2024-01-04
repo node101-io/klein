@@ -604,22 +604,33 @@ fn validator_list() -> Result<String, String> {
 }
 
 #[tauri::command(async)]
-fn update_node(latest_version: String) -> Result<(), String> {
+fn update_node(latest_version: String, exception: String) -> Result<(), String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
     let mut channel = my_boxed_session
         .open_session
         .channel_session()
         .map_err(|e| e.to_string())?;
-    let command = format!(
-        "bash -c -l 'systemctl stop $EXECUTE;
-        cd celestia-node;
-        git fetch --tags;
-        git checkout {latest_version};
-        make build;
-        sudo make install;
-        systemctl restart $EXECUTE;'"
-    );
+    let command = match exception.as_str() {
+        "celestia-full" => format!(
+            "bash -c -l 'systemctl stop $EXECUTE;
+            cd celestia-node;
+            git fetch --tags;
+            git checkout {latest_version};
+            make build;
+            sudo make install;
+            systemctl restart $EXECUTE;'"
+        ),
+        _ => format!(
+            "bash -c -l 'systemctl stop $EXECUTE;
+            cd $PROJECT_FOLDER;
+            git fetch --tags;
+            git checkout {latest_version};
+            make build;
+            sudo make install;
+            systemctl restart $EXECUTE;'"
+        ),
+    };
     channel.exec(&command).map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;

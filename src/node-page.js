@@ -414,7 +414,7 @@ const nodeOperationsSetup = async () => {
     updateNodeButton.addEventListener("click", async () => {
         node_action = "update";
         document.body.classList.add("waiting");
-        await tauri.invoke("update_node", { latestVersion: latest_tag }).catch(async (err) => { await handleTimeOut(err); });
+        await tauri.invoke("update_node", { latestVersion: latest_tag, exception: exception }).catch(async (err) => { await handleTimeOut(err); });
     });
     deleteNodeButton.addEventListener("click", async () => {
         if (await dialog.ask("This action cannot be reverted. Are you sure?", { title: "Delete Node", type: "warning" })) {
