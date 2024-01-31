@@ -576,9 +576,11 @@ const delegateSetup = (valoper) => {
         await tauri.invoke("delegate_token", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             validatorValoper: document.querySelectorAll(".each-input-field")[1].value,
-            amount: document.querySelectorAll(".each-input-field")[2].value,
+            fees: document.querySelectorAll(".each-input-field")[2].value,
+            amount: document.querySelectorAll(".each-input-field")[3].value,
             exception: exception
         }).then((res) => {
+            console.log(res);
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
                 createMessage("Tx Hash", res.txhash);
