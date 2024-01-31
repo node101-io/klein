@@ -4,3 +4,7 @@
 node_modules/
 out/
 frontend/render/*
+
+# temp
+development.js
+development_2.js
