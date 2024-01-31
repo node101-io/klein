@@ -577,6 +577,7 @@ const delegateSetup = (valoper) => {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             validatorValoper: document.querySelectorAll(".each-input-field")[1].value,
             amount: document.querySelectorAll(".each-input-field")[2].value,
+            exception: exception
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
@@ -599,6 +600,7 @@ const redelegateSetup = () => {
             firstValidator: document.querySelectorAll(".each-input-field")[2].value,
             fees: document.querySelectorAll(".each-input-field")[3].value,
             amount: document.querySelectorAll(".each-input-field")[4].value,
+            exception: exception
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {

@@ -665,6 +665,7 @@ fn delegate_token(
     validator_valoper: String,
     amount: String,
     fees: String,
+    exception: String,
 ) -> Result<String, String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
@@ -673,8 +674,12 @@ fn delegate_token(
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel.exec(&format!(
-        "yes '{password}' | bash -c -l '$EXECUTE tx staking delegate {validator_valoper} {amount}$DENOM --from={wallet_name} --fees={fees}$DENOM --chain-id=$CHAIN_ID --gas=auto'",
+        "yes '{password}' | bash -c -l '$EXECUTE tx {operation} delegate {validator_valoper} {amount}$DENOM --from={wallet_name} --fees={fees}$DENOM --chain-id=$CHAIN_ID --gas=auto'",
         password = my_boxed_session.walletpassword,
+        operation = match exception.as_str() {
+            "babylon" => "epoching",
+            _ => "staking",
+        }
     )).map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -689,6 +694,7 @@ fn redelegate_token(
     fees: String,
     amount: String,
     first_validator: String,
+    exception: String
 ) -> Result<String, String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
@@ -697,8 +703,16 @@ fn redelegate_token(
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel.exec(&*format!(
-        "yes '{password}' |  bash -c -l '$EXECUTE tx staking redelegate {first_validator} {destination_validator} {amount}$DENOM --from={wallet_name} --fees={fees}$DENOM --chain-id=$CHAIN_ID --gas=auto'",
+        "yes '{password}' |  bash -c -l '$EXECUTE tx {operation} redelegate {first_validator} {destination_validator} {amount}$DENOM --from={wallet_name} --fees={fees}$DENOM --chain-id=$CHAIN_ID --gas=auto {extra}'",
         password = my_boxed_session.walletpassword,
+        operation = match exception.as_str() {
+            "babylon" => "epoching",
+            _ => "staking",
+        }
+        extra = match exception.as_str() {
+            "babylon" => "--gas-adjustment 1.4",
+            _ => "",
+        }
     )).map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
