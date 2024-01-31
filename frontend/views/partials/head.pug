@@ -1,0 +1,18 @@
+head
+  meta(name='viewport' content='width=device-width, initial-scale=1.0, shrink-to-fit=no, maximum-scale=1.0, user-scalable=0')
+  meta(charset='UTF-8')
+  meta(http-equiv='Content-Security-Policy' content='script-src \'self\'')
+  if includes
+    if includes.external
+      if includes.external.css
+        each file_name in includes.external.css
+          if file_name == 'page'
+            link(rel='stylesheet' href=`../frontend/css/${page}.css`)
+          else
+            link(rel='stylesheet' href=`../frontend/css/general/${file_name}.css`)
+      if includes.external.js
+        each file_name in includes.external.js
+          if file_name == 'page'
+            script(src=`../frontend/js/${page}.js`)
+          else
+            script(src=`../frontend/js/functions/${file_name}.js`)

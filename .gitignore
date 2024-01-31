@@ -1,0 +1,6 @@
+.DS_Store
+.env
+.vscode/
+node_modules/
+out/
+frontend/render/*
