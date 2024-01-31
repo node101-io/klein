@@ -674,11 +674,15 @@ fn delegate_token(
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel.exec(&format!(
-        "yes '{password}' | bash -c -l '$EXECUTE tx {operation} delegate {validator_valoper} {amount}$DENOM --from={wallet_name} --fees={fees}$DENOM --chain-id=$CHAIN_ID --gas=auto'",
+        "yes '{password}' | bash -c -l '$EXECUTE tx {operation} delegate {validator_valoper} {amount}$DENOM --from={wallet_name} --fees={fees}$DENOM --chain-id=$CHAIN_ID --gas=auto {extra}'",
         password = my_boxed_session.walletpassword,
         operation = match exception.as_str() {
             "babylon" => "epoching",
             _ => "staking",
+        },
+        extra = match exception.as_str() {
+            "babylon" => "--gas-adjustment 1.4",
+            _ => "",
         }
     )).map_err(|e| e.to_string())?;
     let mut s = String::new();
@@ -708,7 +712,7 @@ fn redelegate_token(
         operation = match exception.as_str() {
             "babylon" => "epoching",
             _ => "staking",
-        }
+        },
         extra = match exception.as_str() {
             "babylon" => "--gas-adjustment 1.4",
             _ => "",
