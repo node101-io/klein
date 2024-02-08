@@ -350,10 +350,13 @@ const hideErrorMessage = () => {
 const getLatestTag = async () => {
     const client = await http.getClient();
     try {
-        const repoUrl = all_projects.find(item => item.project.name == currentIp.icon).social_media_accounts.github;
-        latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
-            type: 'Json'
-        })).data.tag_name;
+        // const repoUrl = all_projects.find(item => item.project.name == currentIp.icon).social_media_accounts.github;
+        // latest_tag = (await client.get(`https://api.github.com/repos${repoUrl.split("github.com")[1]}/releases/latest`, {
+        //     type: 'Json'
+        // })).data.tag_name;
+        const temp = all_projects.find(item => item.project.name == currentIp.icon).latest_version;
+        console.log("temp", temp);
+        latest_tag = temp ? temp : "v0.0.0";
     } catch (e) {
         latest_tag = "v0.0.0";
     }
