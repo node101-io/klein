@@ -427,6 +427,9 @@ const nodeOperationsSetup = async () => {
             await deleteNode();
         };
     });
+    if (currentIp.icon != "Babylon") {
+        document.getElementById("babylon-guide").style.display = "none";
+    };
     await getLatestTag();
     hideLoadingAnimation();
     window.scrollTo(0, 0);
