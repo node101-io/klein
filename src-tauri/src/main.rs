@@ -891,6 +891,24 @@ fn withdraw_rewards(valoper_address: String, wallet_name: String) -> Result<Stri
     Ok(s)
 }
 
+#[tauri::command(async)]
+fn create_bls_key(wallet_name: String) -> Result<String, String> {
+    let my_boxed_session =
+        unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
+    let mut channel = my_boxed_session
+        .open_session
+        .channel_session()
+        .map_err(|e| e.to_string())?;
+    channel.exec(&format!(
+        "yes '{password}' | bash -c -l '$EXECUTE create-bls-key $($EXECUTE keys show {wallet_name} -a) 2>&1'",
+        password = my_boxed_session.walletpassword,
+    )).map_err(|e| e.to_string())?;
+    let mut s = String::new();
+    channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
+    channel.close().map_err(|e| e.to_string())?;
+    Ok(s)
+}
+
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
@@ -938,6 +956,7 @@ fn main() {
             stop_installation,
             check_logs,
             stop_check_logs,
+            create_bls_key,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

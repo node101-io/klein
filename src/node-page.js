@@ -126,6 +126,9 @@ const loadNodePage = async (start) => {
         document.getElementById(button).nextElementSibling.style.display = currentIp.icon == "Celestia Light" ? "none" : "";
     };
 
+    if (currentIp.icon != "Babylon")
+        document.getElementById("create-bls-key-button").style.display = "none";
+
     if (start) {
         await tauri.invoke("password_keyring_check", { exception: exception }).then((res) => {
             sessionStorage.setItem("keyring", `{ "required": ${res[0]}, "exists": ${res[1]} }`);
@@ -678,6 +681,22 @@ const sendTokenSetup = () => {
     });
     window.scrollTo(0, 400);
 };
+const createBLSKeySetup = () => {
+    document.querySelector(".each-button").addEventListener("click", async () => {
+        showLoadingAnimation();
+        hideErrorMessage();
+        await tauri.invoke("create_bls_key", { walletName: document.querySelectorAll(".each-input-field")[0].value }).then((res) => {
+            console.log(res);
+            if (res.includes("Error")) {
+                showErrorMessage("Wrong wallet name!");
+            } else {
+                createMessage("Success", "BLS Key created successfully!");
+            };
+        }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
+        hideLoadingAnimation();
+    });
+    window.scrollTo(0, 400);
+};
 const createKeyringSetup = (page_html, page_setup) => {
     document.querySelector(".each-button").addEventListener("click", async () => {
         if (document.querySelectorAll(".each-input-field")[0].value.length < 8) {
@@ -824,6 +843,7 @@ const setupNodePage = () => {
     const unjailButton = document.getElementById("unjail-button");
     const delegateTokenButton = document.getElementById("delegate-token-button");
     const sendTokenButton = document.getElementById("send-token-button");
+    const createBLSKeyButton = document.getElementById("create-bls-key-button");
     const redelegateTokenButton = document.getElementById("redelegate-token-button");
     const voteButton = document.getElementById("vote-button");
     const walletsButton = document.getElementById("wallets-button");
@@ -930,6 +950,9 @@ const setupNodePage = () => {
     });
     sendTokenButton.addEventListener("click", async function () {
         await handleKeyringExistance("page-content/send-token.html", sendTokenSetup);
+    });
+    createBLSKeyButton.addEventListener("click", async function () {
+        await handleKeyringExistance("page-content/create-bls-key.html", createBLSKeySetup);
     });
     walletsButton.addEventListener("click", async function () {
         await handleKeyringExistance("page-content/wallets.html", walletsSetup);
