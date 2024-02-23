@@ -621,14 +621,26 @@ fn update_node(latest_version: String, exception: String) -> Result<(), String> 
             sudo make install;
             systemctl restart $EXECUTE;'"
         ),
-        _ => format!(
-            "bash -c -l 'systemctl stop $EXECUTE;
+        "lavad" => format!(
+            "bash -c -l '
             cd $PROJECT_FOLDER;
-            git fetch --tags;
+            git pull;
+            git checkout {latest_version};
+            export LAVA_BINARY=lavad;
+            make build;
+            mkdir -p $HOME/$SYSTEM_FOLDER/cosmovisor/upgrades/{latest_version}/bin;
+            mv $(which $EXECUTE) $HOME/$SYSTEM_FOLDER/cosmovisor/upgrades/{latest_version}/bin/;
+            rm -rf build;'"
+        ),
+        _ => format!(
+            "bash -c -l '
+            cd $PROJECT_FOLDER;
+            git pull;
             git checkout {latest_version};
             make build;
-            sudo make install;
-            systemctl restart $EXECUTE;'"
+            mkdir -p $HOME/$SYSTEM_FOLDER/cosmovisor/upgrades/{latest_version}/bin;
+            mv $(which $EXECUTE) $HOME/$SYSTEM_FOLDER/cosmovisor/upgrades/{latest_version}/bin/;
+            rm -rf build;'"
         ),
     };
     channel.exec(&command).map_err(|e| e.to_string())?;
