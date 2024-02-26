@@ -276,7 +276,7 @@ fn delete_node(exception: String) -> Result<(), String> {
             unset NODE_PROPERLY_INSTALLED EXECUTE CHAIN_ID PORT DENOM SEEDS PEERS VERSION SYSTEM_FOLDER PROJECT_FOLDER GO_VERSION GENESIS_FILE ADDRBOOK MIN_GAS SEED_MODE REPO MONIKER SNAPSHOT_URL WALLET_NAME""#
         ),
         _ => format!(r#"bash -c -l '
-            sudo systemctl stop $EXECUTE; 
+            sudo systemctl stop $EXECUTE;
             sudo systemctl disable $EXECUTE;
             pkill -f $EXECUTE;
             if [ -d "/etc/systemd/system/$EXECUTE" ]; then
@@ -927,7 +927,7 @@ fn main() {
             app.get_window("main")
                 .unwrap()
                 .set_min_size(Some(Size::Logical(LogicalSize {
-                    width: 800.0,
+                    width: 900.0,
                     height: 600.0,
                 })))
                 .unwrap();

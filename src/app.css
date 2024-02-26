@@ -779,20 +779,24 @@ body.waiting * {
 }
 
 @media (max-width: 1140px) {
-  .all-page-wrapper {
+  /* .all-page-wrapper {
     left: 60px;
     width: calc(99vw - 60px);
     padding: 80px 45px;
+  } */
+  :root {
+    --sidebar-width: 295px;
   }
 
   .all-sidebar-wrapper {
     padding: 50px 20px;
     padding-right: 0px;
-    background-color: var(--second-color);
-    width: 60px;
-    height: 100%;
   }
 
+  .all-page-wrapper {
+    padding: 80px 40px;
+  }
+/*
   .sidebar-info {
     display: none;
   }
@@ -816,7 +820,7 @@ body.waiting * {
 
   .sidebar-anchors {
     display: none;
-  }
+  } */
 }
 
 .all-page-content {
