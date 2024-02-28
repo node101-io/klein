@@ -834,14 +834,19 @@ fn create_validator(
                 --commission-rate={com_rate} \
                 --commission-max-rate=0.20 \
                 --commission-max-change-rate=0.01 \
-                --fees={fees}$DENOM \
+                --gas=auto \
+                --{tx_gas}={fees}$DENOM \
                 --min-self-delegation=1 \
                 --details={details}'",
             password = my_boxed_session.walletpassword,
             operation = match exception.as_str() {
                 "babylon" => "checkpointing",
                 _ => "staking",
-            }
+            },
+            tx_gas = match exception.as_str() {
+                "babylon" => "fees",
+                _ => "gas-prices",
+            },
         ))
         .map_err(|e| e.to_string())?;
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -858,6 +863,7 @@ fn edit_validator(
     keybase_id: String,
     com_rate: String,
     details: String,
+    exception: String,
 ) -> Result<String, String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
@@ -868,7 +874,7 @@ fn edit_validator(
     let mut s = String::new();
     channel
         .exec(&format!(
-            "yes '{password}' | bash -c -l '$EXECUTE tx staking edit-validator \
+            "yes '{password}' | bash -c -l '$EXECUTE tx {operation} edit-validator \
                 --output json
                 --amount={amount}$DENOM \
                 --from={wallet_name} \
@@ -878,6 +884,10 @@ fn edit_validator(
                 --commission-rate={com_rate} \
                 --details={details}'",
             password = my_boxed_session.walletpassword,
+            operation = match exception.as_str() {
+                "babylon" => "checkpointing",
+                _ => "staking",
+            },
         ))
         .map_err(|e| e.to_string())?;
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
