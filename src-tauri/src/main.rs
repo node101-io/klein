@@ -106,6 +106,12 @@ fn cpu_mem_sync(window: Window, exception: String) -> Result<(), String> {
             "$(echo $(if [ $((10#$(curl -sX GET https://rpc-blockspacerace.pops.one/block | jq -r .result.block.header.height) > 10#$(curl -sX GET http://127.0.0.1:26659/head | jq -r .header.height))) -eq 1 ]; then echo true; else echo false; fi) 2>/dev/null)",
             r#"$(celestia version | grep -oP "Semantic version: \K[^ ]+" 2>/dev/null)"#,
         ),
+        "babylon" => (
+            "$(systemctl is-active $EXECUTE 2>/dev/null)".to_string(),
+            r#"$($EXECUTE status 2>&1 | jq -r \""\(.sync_info.latest_block_height)"\" 2>/dev/null)"#,
+            r#"$($EXECUTE status 2>&1 | jq -r \""\(.sync_info.catching_up)"\" 2>/dev/null)"#,
+            r#"$($EXECUTE version 2>&1)"#,
+        ),
         _ => (
             "$(systemctl is-active $EXECUTE 2>/dev/null)".to_string(),
             r#"$($EXECUTE status 2>&1 | jq -r \""\(.SyncInfo.latest_block_height)"\" 2>/dev/null)"#,
