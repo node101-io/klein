@@ -501,8 +501,8 @@ const addValidatorSetup = () => {
                 details: document.querySelectorAll(".each-input-field")[8].value,
                 exception: exception
             }).then(async (res) => {
-                res = res.slice(res.indexOf('{'));
                 console.log(res);
+                res = res.slice(res.indexOf('{'));
                 res = JSON.parse(res);
                 if (res.raw_log.length == 2) {
                     createMessage("Tx Hash", res.txhash);

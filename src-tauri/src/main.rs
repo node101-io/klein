@@ -859,18 +859,19 @@ fn create_validator(
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
         "babylon" => format!(
-            "echo '{{
-                \"pubkey\": '$(babylond tendermint show-validator)',
-                \"amount\": \"{amount}\'\"${{DENOM}}\"\'\",
-                \"moniker\": \"{moniker_name}\",
-                \"identity\": \"{keybase_id}\",
-                \"website\": \"{website}\",
-                \"details\": \"{details}\",
-                \"commission-rate\": \"{com_rate}\",
-                \"commission-max-rate\": \"0.20\",
-                \"commission-max-change-rate\": \"0.01\",
-                \"min-self-delegation\": \"1\"
-            }}' > $HOME/$SYSTEM_FOLDER/data/validator.json;
+            r#"bash -c -l 'touch $HOME/$SYSTEM_FOLDER/data/validator.json' &&
+            bash -c -l 'echo {{ \
+                \"pubkey\": $(babylond tendermint show-validator), \
+                \"amount\": \"{amount}$DENOM\", \
+                \"moniker\": \"{moniker_name}\", \
+                \"identity\": \"{keybase_id}\", \
+                \"website\": \"{website}\", \
+                \"details\": \"{details}\", \
+                \"commission-rate\": \"{com_rate}\", \
+                \"commission-max-rate\": \"0.20\", \
+                \"commission-max-change-rate\": \"0.01\", \
+                \"min-self-delegation\": \"1\" \
+            }} > $HOME/$SYSTEM_FOLDER/data/validator.json' &&
             yes '{password}' | bash -c -l '$EXECUTE tx checkpointing create-validator $HOME/$SYSTEM_FOLDER/data/validator.json -y \
                 --output json \
                 --keyring-backend test \
@@ -878,7 +879,7 @@ fn create_validator(
                 --gas=auto \
                 --gas-adjustment=1.4 \
                 --gas-prices={fees}$DENOM \
-                --from={wallet_name}' 2>&1",
+                --from={wallet_name}' 2>&1"#,
             password = my_boxed_session.walletpassword,
         ),
         _ => format!(
