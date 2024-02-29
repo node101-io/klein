@@ -878,7 +878,7 @@ fn create_validator(
                 --chain-id=$CHAIN_ID \
                 --gas=auto \
                 --gas-adjustment=1.4 \
-                --gas-prices={fees}$DENOM \
+                --fees={fees}$DENOM \
                 --from={wallet_name}' 2>&1"#,
             password = my_boxed_session.walletpassword,
         ),
@@ -896,7 +896,7 @@ fn create_validator(
                 --commission-max-rate=0.20 \
                 --commission-max-change-rate=0.01 \
                 --gas=auto \
-                --fees={fees}$DENOM \
+                --gas-prices={fees}$DENOM \
                 --min-self-delegation=1 \
                 --details={details}'",
             password = my_boxed_session.walletpassword,
