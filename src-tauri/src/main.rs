@@ -406,6 +406,10 @@ fn create_wallet(walletname: String, exception: String) -> Result<String, String
         .map_err(|e| e.to_string())?;
     let mut s = String::new();
     let command = match exception.as_str() {
+        "babylon" => format!(
+            r#"echo -e '{}\ny\n' | bash -c -l '$EXECUTE keys add {} --keyring-backend test --output json 2>&1 | jq -r .mnemonic'"#,
+            my_boxed_session.walletpassword, walletname
+        ),
         "celestia-light" => format!(
             r#"bash -c -l 'celestia-node/cel-key add {walletname} --node.type light --p2p.network blockspacerace --output json 2>&1 | awk "NR > 1" | jq -r .mnemonic'"#
         ),
@@ -429,11 +433,13 @@ fn show_wallets(exception: String) -> Result<String, String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-light" => {
-            format!(
-                r#"bash -c -l 'echo -n "["; first=true; celestia-node/cel-key list --node.type light --p2p.network blockspacerace --output json | awk "NR > 1" | jq -c ".[]" | while read -r line; do address=$(echo $line | jq -r ".address"); balances=$(curl -sX GET http://localhost:26659/balance/$address); if [ $first = true ]; then echo -n "{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}, \"denom\": \"$DENOM\"}}"; first=false; else echo -n ",{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}}}"; fi; done; echo "]"' | jq"#,
-            )
-        }
+        "babylon" => format!(
+            r#"yes '{}' | bash -c -l 'echo -n "["; first=true; $EXECUTE keys list --output json --keyring-backend test | jq -c ".[]" | while read -r line; do address=$(echo $line | jq -r ".address"); balances=$($EXECUTE query bank balances $address --output json); if [ $first = true ]; then echo -n " {{ \"name\": \"$(echo $line | jq -r .name)\", \"address\": \"$address\", \"balance\": $balances, \"denom\": \"$DENOM\" }} "; first=false; else echo -n ", {{ \"name\": \"$(echo $line | jq -r .name)\", \"address\": \"$address\", \"balance\": $balances }} "; fi; done; echo "]"' | jq"#,
+            my_boxed_session.walletpassword,
+        ),
+        "celestia-light" => format!(
+            r#"bash -c -l 'echo -n "["; first=true; celestia-node/cel-key list --node.type light --p2p.network blockspacerace --output json | awk "NR > 1" | jq -c ".[]" | while read -r line; do address=$(echo $line | jq -r ".address"); balances=$(curl -sX GET http://localhost:26659/balance/$address); if [ $first = true ]; then echo -n "{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}, \"denom\": \"$DENOM\"}}"; first=false; else echo -n ",{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}}}"; fi; done; echo "]"' | jq"#,
+        ),
         _ => format!(
             r#"yes '{}' | bash -c -l 'echo -n "["; first=true; $EXECUTE keys list --output json | jq -c ".[]" | while read -r line; do address=$(echo $line | jq -r ".address"); balances=$($EXECUTE query bank balances $address --output json); if [ $first = true ]; then echo -n " {{ \"name\": \"$(echo $line | jq -r .name)\", \"address\": \"$address\", \"balance\": $balances, \"denom\": \"$DENOM\" }} "; first=false; else echo -n ", {{ \"name\": \"$(echo $line | jq -r .name)\", \"address\": \"$address\", \"balance\": $balances }} "; fi; done; echo "]"' | jq"#,
             my_boxed_session.walletpassword,
@@ -455,12 +461,14 @@ fn delete_wallet(walletname: String, exception: String) -> Result<(), String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-light" => {
-            format!(
-                r#"yes '{}' | bash -c -l 'celestia-node/cel-key delete {} --node.type light --p2p.network blockspacerace --output json -y | awk "NR > 1"'"#,
-                my_boxed_session.walletpassword, walletname
-            )
-        }
+        "babylon" => format!(
+            r#"yes "{}" | bash -c -l '$EXECUTE keys delete {} -y --output json --keyring-backend test'"#,
+            my_boxed_session.walletpassword, walletname
+        ),
+        "celestia-light" => format!(
+            r#"yes '{}' | bash -c -l 'celestia-node/cel-key delete {} --node.type light --p2p.network blockspacerace --output json -y | awk "NR > 1"'"#,
+            my_boxed_session.walletpassword, walletname
+        ),
         _ => format!(
             r#"yes "{}" | bash -c -l '$EXECUTE keys delete {} -y --output json'"#,
             my_boxed_session.walletpassword, walletname
@@ -488,18 +496,26 @@ fn recover_wallet(
         .map_err(|e| e.to_string())?;
     let mut s = String::new();
     let command = match exception.as_str() {
-        "celestia-light" => {
-            format!(
-                r#"echo -e '{}\n{}' | bash -c -l 'celestia-node/cel-key add {} --recover --node.type light --p2p.network blockspacerace --output json | awk "NR > 1"'"#,
-                mnemo,
-                if passwordneed {
-                    my_boxed_session.walletpassword.to_string() + "\n"
-                } else {
-                    String::new()
-                },
-                walletname
-            )
-        }
+        "babylon" => format!(
+            "echo -e '{}\n{}' | bash -c -l '$EXECUTE keys add {} --recover --output json --keyring-backend test'",
+            mnemo,
+            if passwordneed {
+                my_boxed_session.walletpassword.to_string() + "\n"
+            } else {
+                String::new()
+            },
+            walletname
+        ),
+        "celestia-light" => format!(
+            r#"echo -e '{}\n{}' | bash -c -l 'celestia-node/cel-key add {} --recover --node.type light --p2p.network blockspacerace --output json | awk "NR > 1"'"#,
+            mnemo,
+            if passwordneed {
+                my_boxed_session.walletpassword.to_string() + "\n"
+            } else {
+                String::new()
+            },
+            walletname
+        ),
         _ => format!(
             "echo -e '{}\n{}' | bash -c -l '$EXECUTE keys add {} --recover --output json'",
             mnemo,
@@ -526,15 +542,13 @@ fn set_main_wallet(walletname: String, address: String, exception: String) -> Re
         .channel_session()
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
-        "celestia-light" => {
-            format!(
-                r#"yes '{}' | bash -c -l 'systemctl stop $EXECUTE; celestia light init --keyring.accname {} --p2p.network blockspacerace; systemctl start $EXECUTE'; echo 'export MAIN_WALLET_NAME={}' >> $HOME/.bash_profile; echo 'export MAIN_WALLET_ADDRESS={}' >> $HOME/.bash_profile; source $HOME/.bash_profile"#,
-                my_boxed_session.walletpassword,
-                walletname,
-                walletname,
+        "celestia-light" => format!(
+            r#"yes '{}' | bash -c -l 'systemctl stop $EXECUTE; celestia light init --keyring.accname {} --p2p.network blockspacerace; systemctl start $EXECUTE'; echo 'export MAIN_WALLET_NAME={}' >> $HOME/.bash_profile; echo 'export MAIN_WALLET_ADDRESS={}' >> $HOME/.bash_profile; source $HOME/.bash_profile"#,
+            my_boxed_session.walletpassword,
+            walletname,
+            walletname,
                 address
-            )
-        }
+        ),
         _ => format!(
             "echo 'export MAIN_WALLET_NAME={}' >> $HOME/.bash_profile; echo 'export MAIN_WALLET_ADDRESS={}' >> $HOME/.bash_profile; source $HOME/.bash_profile",
             walletname, address
@@ -627,7 +641,7 @@ fn update_node(latest_version: String, exception: String) -> Result<(), String> 
             sudo make install;
             systemctl restart $EXECUTE;'"
         ),
-        "lavad" => format!(
+        "lava-network" => format!(
             "bash -c -l '
             cd $PROJECT_FOLDER;
             git pull;
@@ -700,7 +714,7 @@ fn delegate_token(
             _ => "staking",
         },
         extra = match exception.as_str() {
-            "babylon" => "--gas-adjustment 1.4 -y",
+            "babylon" => "--keyring-backend test --gas-adjustment 1.4 -y",
             _ => "",
         }
     )).map_err(|e| e.to_string())?;
@@ -733,7 +747,7 @@ fn redelegate_token(
             _ => "staking",
         },
         extra = match exception.as_str() {
-            "babylon" => "--gas-adjustment 1.4 -y",
+            "babylon" => "--keyring-backend test --gas-adjustment 1.4 -y",
             _ => "",
         }
     )).map_err(|e| e.to_string())?;
@@ -748,6 +762,7 @@ fn vote(
     wallet_name: String,
     proposal_number: String,
     selected_option: String,
+    exception: String
 ) -> Result<String, String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
@@ -756,8 +771,12 @@ fn vote(
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel.exec(&*format!(
-        "yes '{password}' | bash -c -l '$EXECUTE tx gov vote {proposal_number} {selected_option} --from {wallet_name} --chain-id=$CHAIN_ID -y'",
-        password = my_boxed_session.walletpassword
+        "yes '{password}' | bash -c -l '$EXECUTE tx gov vote {proposal_number} {selected_option} --from {wallet_name} --chain-id=$CHAIN_ID {extra} -y'",
+        password = my_boxed_session.walletpassword,
+        extra = match exception.as_str() {
+            "babylon" => "--keyring-backend test",
+            _ => "",
+        }
     )).map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -771,6 +790,7 @@ fn send_token(
     receiver_address: String,
     amount: String,
     fees: String,
+    exception: String
 ) -> Result<String, String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
@@ -779,8 +799,12 @@ fn send_token(
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel.exec(&*format!(
-        "yes '{password}' | bash -c -l '$EXECUTE tx bank send {wallet_name} {receiver_address} {amount}$DENOM -y --fees={fees}$DENOM --output json'",
-        password = my_boxed_session.walletpassword
+        "yes '{password}' | bash -c -l '$EXECUTE tx bank send {wallet_name} {receiver_address} {amount}$DENOM -y --fees={fees}$DENOM --output json {extra}'",
+        password = my_boxed_session.walletpassword,
+        extra = match exception.as_str() {
+            "babylon" => "--keyring-backend test",
+            _ => "",
+        }
     )).map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -789,7 +813,11 @@ fn send_token(
 }
 
 #[tauri::command(async)]
-fn unjail(wallet_name: String, fees: String) -> Result<String, String> {
+fn unjail(
+    wallet_name: String,
+    fees: String,
+    exception: String
+) -> Result<String, String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
     let mut channel = my_boxed_session
@@ -797,8 +825,12 @@ fn unjail(wallet_name: String, fees: String) -> Result<String, String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel.exec(&format!(
-        "yes '{password}' | bash -c -l '$EXECUTE tx slashing unjail --from={wallet_name} --chain-id=$CHAIN_ID --gas=auto --fees{fees}$DENOM -y'",
+        "yes '{password}' | bash -c -l '$EXECUTE tx slashing unjail --from={wallet_name} --chain-id=$CHAIN_ID --gas=auto --fees{fees}$DENOM {extra} -y'",
         password = my_boxed_session.walletpassword,
+        extra = match exception.as_str() {
+            "babylon" => "--keyring-backend test",
+            _ => "",
+        }
     )).map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -825,10 +857,32 @@ fn create_validator(
         .open_session
         .channel_session()
         .map_err(|e| e.to_string())?;
-    let mut s = String::new();
-    channel
-        .exec(&format!(
-            "yes '{password}' | bash -c -l '$EXECUTE tx {operation} create-validator -y \
+    let command = match exception.as_str() {
+        "babylon" => format!(
+            "echo '{{
+                \"pubkey\": '$(babylond tendermint show-validator)',
+                \"amount\": \"{amount}\'\"${{DENOM}}\"\'\",
+                \"moniker\": \"{moniker_name}\",
+                \"identity\": \"{keybase_id}\",
+                \"website\": \"{website}\",
+                \"details\": \"{details}\",
+                \"commission-rate\": \"{com_rate}\",
+                \"commission-max-rate\": \"0.20\",
+                \"commission-max-change-rate\": \"0.01\",
+                \"min-self-delegation\": \"1\"
+            }}' > $HOME/$SYSTEM_FOLDER/data/validator.json;
+            yes '{password}' | bash -c -l '$EXECUTE tx checkpointing create-validator $HOME/$SYSTEM_FOLDER/data/validator.json -y \
+                --output json \
+                --keyring-backend test \
+                --chain-id=$CHAIN_ID \
+                --gas=auto \
+                --gas-adjustment=1.4 \
+                --gas-prices={fees}$DENOM \
+                --from={wallet_name}' 2>&1",
+            password = my_boxed_session.walletpassword,
+        ),
+        _ => format!(
+            "yes '{password}' | bash -c -l '$EXECUTE tx staking create-validator -y \
                 --output json \
                 --pubkey=$($EXECUTE tendermint show-validator) \
                 --amount={amount}$DENOM \
@@ -841,28 +895,23 @@ fn create_validator(
                 --commission-max-rate=0.20 \
                 --commission-max-change-rate=0.01 \
                 --gas=auto \
-                --{tx_gas}={fees}$DENOM \
+                --fees={fees}$DENOM \
                 --min-self-delegation=1 \
                 --details={details}'",
             password = my_boxed_session.walletpassword,
-            operation = match exception.as_str() {
-                "babylon" => "checkpointing",
-                _ => "staking",
-            },
-            tx_gas = match exception.as_str() {
-                "babylon" => "fees",
-                _ => "gas-prices",
-            },
-        ))
-        .map_err(|e| e.to_string())?;
+        ),
+    };
+    println!("{}", command);
+    let mut s = String::new();
+    channel.exec(&command).map_err(|e| e.to_string())?;
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
     channel.close().map_err(|e| e.to_string())?;
+    println!("{}", s);
     Ok(s)
 }
 
 #[tauri::command(async)]
 fn edit_validator(
-    amount: String,
     wallet_name: String,
     website: String,
     contact: String,
@@ -881,8 +930,8 @@ fn edit_validator(
     channel
         .exec(&format!(
             "yes '{password}' | bash -c -l '$EXECUTE tx {operation} edit-validator \
-                --output json
-                --amount={amount}$DENOM \
+                --output json \
+                --keyring-backend test \
                 --from={wallet_name} \
                 --website={website} \
                 --security-contact={contact} \
@@ -902,7 +951,11 @@ fn edit_validator(
 }
 
 #[tauri::command(async)]
-fn withdraw_rewards(valoper_address: String, wallet_name: String) -> Result<String, String> {
+fn withdraw_rewards(
+    valoper_address: String,
+    wallet_name: String,
+    exception: String
+) -> Result<String, String> {
     let my_boxed_session =
         unsafe { GLOBAL_STRUCT.as_ref() }.ok_or("There is no active session. Timed out.")?;
     let mut channel = my_boxed_session
@@ -910,8 +963,12 @@ fn withdraw_rewards(valoper_address: String, wallet_name: String) -> Result<Stri
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel.exec(&format!(
-        "yes '{password}' | bash -c -l '$EXECUTE tx distribution withdraw-rewards {valoper_address} --from={wallet_name} --commission --chain-id=$CHAIN_ID'",
+        "yes '{password}' | bash -c -l '$EXECUTE tx distribution withdraw-rewards {valoper_address} --from={wallet_name} --commission --chain-id=$CHAIN_ID {extra}'",
         password = my_boxed_session.walletpassword,
+        extra = match exception.as_str() {
+            "babylon" => "--keyring-backend test",
+            _ => "",
+        }
     )).map_err(|e| e.to_string())?;
     let mut s = String::new();
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
@@ -928,11 +985,11 @@ fn create_bls_key(wallet_name: String) -> Result<String, String> {
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel.exec(&format!(
-        "yes '{password}' | bash -c -l '$EXECUTE create-bls-key $($EXECUTE keys show {wallet_name} -a) 2>&1'",
+        "yes '{password}' | bash -c -l '$EXECUTE create-bls-key $($EXECUTE keys show {wallet_name} -a --keyring-backend test) 2>&1'",
         password = my_boxed_session.walletpassword,
     )).map_err(|e| e.to_string())?;
     let mut s = String::new();
-    channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
+    channel.read_to_string(&mut s).map_err(|e: std::io::Error| e.to_string())?;
     channel.close().map_err(|e| e.to_string())?;
     Ok(s)
 }

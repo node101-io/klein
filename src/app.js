@@ -26,134 +26,134 @@ const fetchProjects = async () => {
     });
     if (!testnets_data.data.testnets.length) break;
 
-    testnets_data.data.testnets = testnets_data.data.testnets.filter((testnet) => testnet.project.name == "Babylon Bitcoin Staking Testnet");
+    // testnets_data.data.testnets = testnets_data.data.testnets.filter((testnet) => testnet.project.name == "Babylon Bitcoin Staking Testnet");
 
-    testnets_data.data.testnets.push({
-      "_id": "6534625d65144dde9d6df3e1",
-      "project":{
-        "_id":"653460d365144dde9d6df3cc",
-        "name":"Babylon Bitcoin Staking Testnet",
-        "identifier":"babylon",
-        "description":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
-        "rating":3,
-        "image":"https://node101.s3.eu-central-1.amazonaws.com/node101-project-jackal-testnet",
-        "is_completed":true,
-        "social_media_accounts":{
-          "telegram":"https://t.me/+rtuZnbTlHaIzNjVh",
-          "github":"https://github.com/JackalLabs/canine-chain",
-          "discord":"https://discord.com/invite/5GKym3p6rj",
-          "twitter":"https://twitter.com/Jackal_Protocol",
-          "web":"https://www.jackalprotocol.com/",
-          "gitbook":"https://docs.jackalprotocol.com/"
-        },
-        "translations":{
-          "tr":{
-            "name":"Babylon Bitcoin Staking Testnet",
-            "description":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
-            "social_media_accounts":{}
-          },
-          "ru":{
-            "name":"Babylon Bitcoin Staking Testnet",
-            "description":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
-            "social_media_accounts":{}
-          }
-        }
-      },
-      "title":"Babylon Bitcoin Staking Testnet",
-      "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
-      "identifier":"babylon",
-      "image":"https://node101.s3.eu-central-1.amazonaws.com/node101-guide-jackal-testnet",
-      "is_completed":true,
-      "mainnet_explorer_url":null,
-      "testnet_explorer_url":null,
-      "rewards":null,"lock_period":null,
-      "cpu":"4 Cores (modern CPU's)",
-      "ram":"128GB RAM",
-      "os":null,
-      "network":"testnet",
-      "frequently_asked_questions":[],
-      "social_media_accounts":{},
-      "translations":{
-        "tr":{
-          "title":"Jackal Testnet",
-          "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
-          "social_media_accounts":{},
-          "mainnet_explorer_url":null,
-          "testnet_explorer_url":null,
-          "rewards":null,
-          "lock_period":null,
-          "cpu":"4 Cores (modern CPU's)",
-          "ram":"128GB RAM",
-          "os":null,
-          "network":"testnet",
-          "frequently_asked_questions":[]
-        },
-        "ru":{
-          "title":"Jackal Testnet",
-          "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
-          "social_media_accounts":{},
-          "mainnet_explorer_url":null,
-          "testnet_explorer_url":null,
-          "rewards":null,
-          "lock_period":null,
-          "cpu":"4 Cores (modern CPU's)",
-          "ram":"128GB RAM",
-          "os":null,
-          "network":"testnet",
-          "frequently_asked_questions":[]
-        }
-      },
-      "is_active":false,
-      "is_mainnet":false,
-      "wizard_key":"babylond",
-      "latest_version":null,
-      "system_requirements":{
-        "cpu":"4 Cores (modern CPU's)",
-        "ram":"128GB RAM",
-        "storage":"3TB of storage (SSD or NVME)"
-      },
-      "writing":{
-        "_id":"6534625d65144dde9d6df3e5",
-        "title":"Jackal Testnet",
-        "identifier":"jackal-testnet",
-        "parent_id":"6534625d65144dde9d6df3e1",
-        "parent_title":null,
-        "created_at":"2023-10-21T23:44:29.551Z",
-        "writer_id":null,
-        "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
-        "logo":"https://node101.s3.eu-central-1.amazonaws.com/node101-writing-logo-jackal-testnet",
-        "cover":null,
-        "content":[],
-        "is_completed":true,
-        "label":null,
-        "flag":null,
-        "social_media_accounts":{},
-        "is_hidden":false,
-        "translations":{
-          "tr":{
-            "title":"Jackal Testnet",
-            "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
-            "logo":null,
-            "cover":null,
-            "content":[],
-            "flag":null,
-            "social_media_accounts":{},
-            "is_hidden":false
-          },
-          "ru":{
-            "title":"Jackal Testnet",
-            "parent_title":null,
-            "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
-            "logo":null,
-            "cover":null,
-            "content":[],
-            "flag":null,
-            "social_media_accounts":{},
-            "is_hidden":false
-          }
-        }
-      }
-    });
+    // testnets_data.data.testnets.push({
+    //   "_id": "6534625d65144dde9d6df3e1",
+    //   "project":{
+    //     "_id":"653460d365144dde9d6df3cc",
+    //     "name":"Babylon Bitcoin Staking Testnet",
+    //     "identifier":"babylon",
+    //     "description":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
+    //     "rating":3,
+    //     "image":"https://node101.s3.eu-central-1.amazonaws.com/node101-project-jackal-testnet",
+    //     "is_completed":true,
+    //     "social_media_accounts":{
+    //       "telegram":"https://t.me/+rtuZnbTlHaIzNjVh",
+    //       "github":"https://github.com/JackalLabs/canine-chain",
+    //       "discord":"https://discord.com/invite/5GKym3p6rj",
+    //       "twitter":"https://twitter.com/Jackal_Protocol",
+    //       "web":"https://www.jackalprotocol.com/",
+    //       "gitbook":"https://docs.jackalprotocol.com/"
+    //     },
+    //     "translations":{
+    //       "tr":{
+    //         "name":"Babylon Bitcoin Staking Testnet",
+    //         "description":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
+    //         "social_media_accounts":{}
+    //       },
+    //       "ru":{
+    //         "name":"Babylon Bitcoin Staking Testnet",
+    //         "description":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
+    //         "social_media_accounts":{}
+    //       }
+    //     }
+    //   },
+    //   "title":"Babylon Bitcoin Staking Testnet",
+    //   "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
+    //   "identifier":"babylon",
+    //   "image":"https://node101.s3.eu-central-1.amazonaws.com/node101-guide-jackal-testnet",
+    //   "is_completed":true,
+    //   "mainnet_explorer_url":null,
+    //   "testnet_explorer_url":null,
+    //   "rewards":null,"lock_period":null,
+    //   "cpu":"4 Cores (modern CPU's)",
+    //   "ram":"128GB RAM",
+    //   "os":null,
+    //   "network":"testnet",
+    //   "frequently_asked_questions":[],
+    //   "social_media_accounts":{},
+    //   "translations":{
+    //     "tr":{
+    //       "title":"Jackal Testnet",
+    //       "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
+    //       "social_media_accounts":{},
+    //       "mainnet_explorer_url":null,
+    //       "testnet_explorer_url":null,
+    //       "rewards":null,
+    //       "lock_period":null,
+    //       "cpu":"4 Cores (modern CPU's)",
+    //       "ram":"128GB RAM",
+    //       "os":null,
+    //       "network":"testnet",
+    //       "frequently_asked_questions":[]
+    //     },
+    //     "ru":{
+    //       "title":"Jackal Testnet",
+    //       "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
+    //       "social_media_accounts":{},
+    //       "mainnet_explorer_url":null,
+    //       "testnet_explorer_url":null,
+    //       "rewards":null,
+    //       "lock_period":null,
+    //       "cpu":"4 Cores (modern CPU's)",
+    //       "ram":"128GB RAM",
+    //       "os":null,
+    //       "network":"testnet",
+    //       "frequently_asked_questions":[]
+    //     }
+    //   },
+    //   "is_active":false,
+    //   "is_mainnet":false,
+    //   "wizard_key":"babylond",
+    //   "latest_version":null,
+    //   "system_requirements":{
+    //     "cpu":"4 Cores (modern CPU's)",
+    //     "ram":"128GB RAM",
+    //     "storage":"3TB of storage (SSD or NVME)"
+    //   },
+    //   "writing":{
+    //     "_id":"6534625d65144dde9d6df3e5",
+    //     "title":"Jackal Testnet",
+    //     "identifier":"jackal-testnet",
+    //     "parent_id":"6534625d65144dde9d6df3e1",
+    //     "parent_title":null,
+    //     "created_at":"2023-10-21T23:44:29.551Z",
+    //     "writer_id":null,
+    //     "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
+    //     "logo":"https://node101.s3.eu-central-1.amazonaws.com/node101-writing-logo-jackal-testnet",
+    //     "cover":null,
+    //     "content":[],
+    //     "is_completed":true,
+    //     "label":null,
+    //     "flag":null,
+    //     "social_media_accounts":{},
+    //     "is_hidden":false,
+    //     "translations":{
+    //       "tr":{
+    //         "title":"Jackal Testnet",
+    //         "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
+    //         "logo":null,
+    //         "cover":null,
+    //         "content":[],
+    //         "flag":null,
+    //         "social_media_accounts":{},
+    //         "is_hidden":false
+    //       },
+    //       "ru":{
+    //         "title":"Jackal Testnet",
+    //         "parent_title":null,
+    //         "subtitle":"The Jackal Protocol provides a decentralized infrastructure for secure and scalable data storage, enabling individuals, developers, and enterprises to protect their data privacy and improve their cybersecurity posture.",
+    //         "logo":null,
+    //         "cover":null,
+    //         "content":[],
+    //         "flag":null,
+    //         "social_media_accounts":{},
+    //         "is_hidden":false
+    //       }
+    //     }
+    //   }
+    // });
 
     console.log("testnet_data", testnets_data.data.testnets);
     testnet_projects.push(...testnets_data.data.testnets);

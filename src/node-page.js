@@ -126,7 +126,7 @@ const loadNodePage = async (start) => {
         document.getElementById(button).nextElementSibling.style.display = currentIp.icon == "Celestia Light" ? "none" : "";
     };
 
-    if (currentIp.icon != "Babylon")
+    if (currentIp.icon != "Babylon" && currentIp.icon != "Babylon Bitcoin Staking Testnet")
         document.getElementById("create-bls-key-button").style.display = "none";
 
     if (start) {
@@ -427,9 +427,8 @@ const nodeOperationsSetup = async () => {
             await deleteNode();
         };
     });
-    if (currentIp.icon != "Babylon") {
+    if (currentIp.icon != "Babylon" && currentIp.icon != "Babylon Bitcoin Staking Testnet")
         document.getElementById("babylon-guide").style.display = "none";
-    };
     await getLatestTag();
     hideLoadingAnimation();
     window.scrollTo(0, 0);
@@ -502,8 +501,9 @@ const addValidatorSetup = () => {
                 details: document.querySelectorAll(".each-input-field")[8].value,
                 exception: exception
             }).then(async (res) => {
-                res = JSON.parse(res);
+                res = res.slice(res.indexOf('{'));
                 console.log(res);
+                res = JSON.parse(res);
                 if (res.raw_log.length == 2) {
                     createMessage("Tx Hash", res.txhash);
                     await tauri.invoke("show_wallets", { exception: exception }).then(async (list) => {
@@ -536,14 +536,16 @@ const editValidatorSetup = () => {
             showLoadingAnimation();
             hideErrorMessage();
             await tauri.invoke("edit_validator", {
-                amount: document.querySelectorAll(".each-input-field")[0].value,
-                walletName: document.querySelectorAll(".each-input-field")[1].value,
-                website: document.querySelectorAll(".each-input-field")[2].value,
-                comRate: document.querySelectorAll(".each-input-field")[3].value,
-                contact: document.querySelectorAll(".each-input-field")[4].value,
-                keybaseId: document.querySelectorAll(".each-input-field")[5].value,
-                details: document.querySelectorAll(".each-input-field")[6].value,
+                walletName: document.querySelectorAll(".each-input-field")[0].value,
+                website: document.querySelectorAll(".each-input-field")[1].value,
+                comRate: document.querySelectorAll(".each-input-field")[2].value,
+                contact: document.querySelectorAll(".each-input-field")[3].value,
+                keybaseId: document.querySelectorAll(".each-input-field")[4].value,
+                details: document.querySelectorAll(".each-input-field")[5].value,
+                exception: exception
             }).then((res) => {
+                res = res.slice(res.indexOf('{'));
+                console.log(res);
                 res = JSON.parse(res);
                 if (res.raw_log.length == 2) {
                     createMessage("Tx Hash", res.txhash);
@@ -565,6 +567,7 @@ const withdrawRewardsSetup = () => {
         await tauri.invoke("withdraw_rewards", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             fees: document.querySelectorAll(".each-input-field")[1].value,
+            exception: exception
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
@@ -632,6 +635,7 @@ const voteSetup = () => {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             proposalNumber: document.querySelectorAll(".each-input-field")[1].value,
             selectedOption: document.querySelector(".each-input-radio-option:checked").nextElementSibling.textContent.toLowerCase(),
+            exception: exception
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
@@ -651,6 +655,7 @@ const unjailSetup = () => {
         await tauri.invoke("unjail", {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             fees: document.querySelectorAll(".each-input-field")[1].value,
+            exception: exception
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
@@ -671,7 +676,8 @@ const sendTokenSetup = () => {
             walletName: document.querySelectorAll(".each-input-field")[0].value,
             receiverAddress: document.querySelectorAll(".each-input-field")[1].value,
             amount: document.querySelectorAll(".each-input-field")[2].value,
-            fees: document.querySelectorAll(".each-input-field")[3].value
+            fees: document.querySelectorAll(".each-input-field")[3].value,
+            exception: exception
         }).then((res) => {
             res = JSON.parse(res);
             if (res.raw_log.length == 2) {
