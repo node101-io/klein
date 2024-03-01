@@ -715,7 +715,6 @@ const createBLSKeySetup = () => {
         showLoadingAnimation();
         hideErrorMessage();
         await tauri.invoke("create_bls_key", { walletName: document.querySelectorAll(".each-input-field")[0].value }).then((res) => {
-            res = getJsonFromText(res);
             console.log(res);
             if (res.includes("Error")) {
                 showErrorMessage("Wrong wallet name!");
