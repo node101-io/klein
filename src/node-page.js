@@ -94,6 +94,15 @@ tevent.listen("check_logs", (event) => {
     }
 });
 
+function getJsonFromText(text) {
+    const startIndex = text.indexOf('{');
+    const endIndex = text.lastIndexOf('}') + 1;
+
+    const json = text.substring(startIndex, endIndex);
+
+    return JSON.parse(json);
+};
+
 const loadNodePage = async (start) => {
     const eachSidebarTag = document.querySelectorAll(".each-sidebar-tag");
     eachSidebarTag[0].setAttribute("class", "each-sidebar-tag sidebar-active-tag");
@@ -501,26 +510,33 @@ const addValidatorSetup = () => {
                 details: document.querySelectorAll(".each-input-field")[8].value,
                 exception: exception
             }).then(async (res) => {
-                console.log(res);
-                res = res.slice(res.indexOf('{'));
-                res = JSON.parse(res);
-                if (res.raw_log.length == 2) {
-                    createMessage("Tx Hash", res.txhash);
-                    await tauri.invoke("show_wallets", { exception: exception }).then(async (list) => {
-                        list = JSON.parse(list);
-                        currentIp.validator_addr = list.filter((item) => item.name == document.querySelectorAll(".each-input-field")[1].value)[0].address;
-                    }).catch((err) => {
-                        console.log(err);
-                        showErrorMessage(err);
-                    });
-                    await tauri.invoke("set_main_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, address: currentIp.validator_addr, exception: exception }).catch((err) => {
-                        console.log(err);
-                        showErrorMessage(err);
-                    });
-                    localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
-                    await updateSidebar();
-                } else {
-                    showErrorMessage(res.raw_log);
+                if (res.includes('validator already exist'))
+                    showErrorMessage("Validator already exists");
+                else if (res.includes('insufficient funds'))
+                    showErrorMessage("Insufficient funds");
+                else if (res.includes('not found: key not found'))
+                    showErrorMessage("Please send tokens to the wallet first");
+                else {
+                    res = getJsonFromText(res);
+                    console.log(res);
+                    if (res.raw_log.length == 2 || res.raw_log.length == 0) {
+                        createMessage("Tx Hash", res.txhash);
+                        await tauri.invoke("show_wallets", { exception: exception }).then(async (list) => {
+                            list = JSON.parse(list);
+                            currentIp.validator_addr = list.filter((item) => item.name == document.querySelectorAll(".each-input-field")[1].value)[0].address;
+                        }).catch((err) => {
+                            console.log(err);
+                            showErrorMessage(err);
+                        });
+                        await tauri.invoke("set_main_wallet", { walletname: document.querySelectorAll(".each-input-field")[1].value, address: currentIp.validator_addr, exception: exception }).catch((err) => {
+                            console.log(err);
+                            showErrorMessage(err);
+                        });
+                        localStorage.setItem("ipaddresses", JSON.stringify(ipAddresses));
+                        await updateSidebar();
+                    } else {
+                        showErrorMessage(res.raw_log);
+                    };
                 };
             }).catch(async (err) => { await handleTimeOut(err); showErrorMessage(err); });
             hideLoadingAnimation();
@@ -537,17 +553,16 @@ const editValidatorSetup = () => {
             hideErrorMessage();
             await tauri.invoke("edit_validator", {
                 walletName: document.querySelectorAll(".each-input-field")[0].value,
-                website: document.querySelectorAll(".each-input-field")[1].value,
-                comRate: document.querySelectorAll(".each-input-field")[2].value,
-                contact: document.querySelectorAll(".each-input-field")[3].value,
-                keybaseId: document.querySelectorAll(".each-input-field")[4].value,
+                comRate: document.querySelectorAll(".each-input-field")[1].value,
+                website: document.querySelectorAll(".each-input-field")[2].value,
+                keybaseId: document.querySelectorAll(".each-input-field")[3].value,
+                contact: document.querySelectorAll(".each-input-field")[4].value,
                 details: document.querySelectorAll(".each-input-field")[5].value,
                 exception: exception
             }).then((res) => {
-                res = res.slice(res.indexOf('{'));
                 console.log(res);
-                res = JSON.parse(res);
-                if (res.raw_log.length == 2) {
+                res = getJsonFromText(res);
+                if (res.raw_log.length == 2 || res.raw_log.length == 0) {
                     createMessage("Tx Hash", res.txhash);
                 } else {
                     showErrorMessage(res.raw_log);
@@ -569,8 +584,9 @@ const withdrawRewardsSetup = () => {
             fees: document.querySelectorAll(".each-input-field")[1].value,
             exception: exception
         }).then((res) => {
-            res = JSON.parse(res);
-            if (res.raw_log.length == 2) {
+            res = getJsonFromText(res);
+            console.log(res);
+            if (res.raw_log.length == 2 || res.raw_log.length == 0) {
                 createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
@@ -592,9 +608,9 @@ const delegateSetup = (valoper) => {
             amount: document.querySelectorAll(".each-input-field")[3].value,
             exception: exception
         }).then((res) => {
+            res = getJsonFromText(res);
             console.log(res);
-            res = JSON.parse(res);
-            if (res.raw_log.length == 2) {
+            if (res.raw_log.length == 2 || res.raw_log.length == 0) {
                 createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
@@ -616,8 +632,9 @@ const redelegateSetup = () => {
             amount: document.querySelectorAll(".each-input-field")[4].value,
             exception: exception
         }).then((res) => {
-            res = JSON.parse(res);
-            if (res.raw_log.length == 2) {
+            res = getJsonFromText(res);
+            console.log(res);
+            if (res.raw_log.length == 2 || res.raw_log.length == 0) {
                 createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
@@ -637,8 +654,9 @@ const voteSetup = () => {
             selectedOption: document.querySelector(".each-input-radio-option:checked").nextElementSibling.textContent.toLowerCase(),
             exception: exception
         }).then((res) => {
-            res = JSON.parse(res);
-            if (res.raw_log.length == 2) {
+            res = getJsonFromText(res);
+            console.log(res);
+            if (res.raw_log.length == 2 || res.raw_log.length == 0) {
                 createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
@@ -657,8 +675,9 @@ const unjailSetup = () => {
             fees: document.querySelectorAll(".each-input-field")[1].value,
             exception: exception
         }).then((res) => {
-            res = JSON.parse(res);
-            if (res.raw_log.length == 2) {
+            res = getJsonFromText(res);
+            console.log(res);
+            if (res.raw_log.length == 2 || res.raw_log.length == 0) {
                 createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
@@ -679,8 +698,9 @@ const sendTokenSetup = () => {
             fees: document.querySelectorAll(".each-input-field")[3].value,
             exception: exception
         }).then((res) => {
-            res = JSON.parse(res);
-            if (res.raw_log.length == 2) {
+            res = getJsonFromText(res);
+            console.log(res);
+            if (res.raw_log.length == 2 || res.raw_log.length == 0) {
                 createMessage("Tx Hash", res.txhash);
             } else {
                 showErrorMessage(res.raw_log);
@@ -695,6 +715,7 @@ const createBLSKeySetup = () => {
         showLoadingAnimation();
         hideErrorMessage();
         await tauri.invoke("create_bls_key", { walletName: document.querySelectorAll(".each-input-field")[0].value }).then((res) => {
+            res = getJsonFromText(res);
             console.log(res);
             if (res.includes("Error")) {
                 showErrorMessage("Wrong wallet name!");

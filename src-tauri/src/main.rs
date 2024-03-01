@@ -938,16 +938,17 @@ fn edit_validator(
                 --security-contact={contact} \
                 --identity={keybase_id} \
                 --commission-rate={com_rate} \
-                --details={details}'",
+                --details={details} 2>&1'",
             password = my_boxed_session.walletpassword,
             operation = match exception.as_str() {
-                "babylon" => "checkpointing",
+                "babylon" => "staking",
                 _ => "staking",
             },
         ))
         .map_err(|e| e.to_string())?;
     channel.read_to_string(&mut s).map_err(|e| e.to_string())?;
     channel.close().map_err(|e| e.to_string())?;
+    println!("{}", s);
     Ok(s)
 }
 
