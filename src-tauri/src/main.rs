@@ -103,7 +103,7 @@ fn cpu_mem_sync(window: Window, exception: String) -> Result<(), String> {
         "celestia-light" => (
             format!("$(systemctl is-active {exception}*.service 2>/dev/null)"),
             "$(curl -sX GET http://127.0.0.1:26659/head | jq -r .header.height 2>/dev/null)",
-            "$(echo $(if [ $((10#$(curl -sX GET https://rpc-blockspacerace.pops.one/block | jq -r .result.block.header.height) > 10#$(curl -sX GET http://127.0.0.1:26659/head | jq -r .header.height))) -eq 1 ]; then echo true; else echo false; fi) 2>/dev/null)",
+            "$(echo $(if [ $((10#$(curl -sX GET https://rpc-mocha.pops.one/block | jq -r .result.block.header.height) > 10#$(curl -sX GET http://127.0.0.1:26659/head | jq -r .header.height))) -eq 1 ]; then echo true; else echo false; fi) 2>/dev/null)",
             r#"$(celestia version | grep -oP "Semantic version: \K[^ ]+" 2>/dev/null)"#,
         ),
         "babylon" => (
@@ -262,7 +262,7 @@ fn delete_node(exception: String) -> Result<(), String> {
             sudo systemctl stop $EXECUTE;
             sudo systemctl disable $EXECUTE;
             pkill -f $EXECUTE;
-            sudo rm -rf .celestia-app .celestia-light-blockspacerace-0;
+            sudo rm -rf .celestia-app .celestia-light-mocha-4;
             sudo rm -rf $(which celestia);
             sudo rm -rf $(which celestia-appd);
             if [ -d "/etc/systemd/system/$EXECUTE*" ]; then
@@ -411,7 +411,7 @@ fn create_wallet(walletname: String, exception: String) -> Result<String, String
             my_boxed_session.walletpassword, walletname
         ),
         "celestia-light" => format!(
-            r#"bash -c -l 'celestia-node/cel-key add {walletname} --node.type light --p2p.network blockspacerace --output json 2>&1 | awk "NR > 1" | jq -r .mnemonic'"#
+            r#"bash -c -l 'celestia-node/cel-key add {walletname} --node.type light --p2p.network mocha --output json 2>&1 | awk "NR > 1" | jq -r .mnemonic'"#
         ),
         _ => format!(
             r#"echo -e '{}\ny\n' | bash -c -l '$EXECUTE keys add {} --output json 2>&1 | jq -r .mnemonic'"#,
@@ -438,7 +438,7 @@ fn show_wallets(exception: String) -> Result<String, String> {
             my_boxed_session.walletpassword,
         ),
         "celestia-light" => format!(
-            r#"bash -c -l 'echo -n "["; first=true; celestia-node/cel-key list --node.type light --p2p.network blockspacerace --output json | awk "NR > 1" | jq -c ".[]" | while read -r line; do address=$(echo $line | jq -r ".address"); balances=$(curl -sX GET http://localhost:26659/balance/$address); if [ $first = true ]; then echo -n "{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}, \"denom\": \"$DENOM\"}}"; first=false; else echo -n ",{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}}}"; fi; done; echo "]"' | jq"#,
+            r#"bash -c -l 'echo -n "["; first=true; celestia-node/cel-key list --node.type light --p2p.network mocha --output json | awk "NR > 1" | jq -c ".[]" | while read -r line; do address=$(echo $line | jq -r ".address"); balances=$(curl -sX GET http://localhost:26659/balance/$address); if [ $first = true ]; then echo -n "{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}, \"denom\": \"$DENOM\"}}"; first=false; else echo -n ",{{\"name\": \"$(echo $line | jq -r ".name")\", \"address\": \"$address\", \"balance\": {{ \"balances\": [ $balances ] }}}}"; fi; done; echo "]"' | jq"#,
         ),
         _ => format!(
             r#"yes '{}' | bash -c -l 'echo -n "["; first=true; $EXECUTE keys list --output json | jq -c ".[]" | while read -r line; do address=$(echo $line | jq -r ".address"); balances=$($EXECUTE query bank balances $address --output json); if [ $first = true ]; then echo -n " {{ \"name\": \"$(echo $line | jq -r .name)\", \"address\": \"$address\", \"balance\": $balances, \"denom\": \"$DENOM\" }} "; first=false; else echo -n ", {{ \"name\": \"$(echo $line | jq -r .name)\", \"address\": \"$address\", \"balance\": $balances }} "; fi; done; echo "]"' | jq"#,
@@ -466,7 +466,7 @@ fn delete_wallet(walletname: String, exception: String) -> Result<(), String> {
             my_boxed_session.walletpassword, walletname
         ),
         "celestia-light" => format!(
-            r#"yes '{}' | bash -c -l 'celestia-node/cel-key delete {} --node.type light --p2p.network blockspacerace --output json -y | awk "NR > 1"'"#,
+            r#"yes '{}' | bash -c -l 'celestia-node/cel-key delete {} --node.type light --p2p.network mocha --output json -y | awk "NR > 1"'"#,
             my_boxed_session.walletpassword, walletname
         ),
         _ => format!(
@@ -507,7 +507,7 @@ fn recover_wallet(
             walletname
         ),
         "celestia-light" => format!(
-            r#"echo -e '{}\n{}' | bash -c -l 'celestia-node/cel-key add {} --recover --node.type light --p2p.network blockspacerace --output json | awk "NR > 1"'"#,
+            r#"echo -e '{}\n{}' | bash -c -l 'celestia-node/cel-key add {} --recover --node.type light --p2p.network mocha --output json | awk "NR > 1"'"#,
             mnemo,
             if passwordneed {
                 my_boxed_session.walletpassword.to_string() + "\n"
@@ -543,7 +543,7 @@ fn set_main_wallet(walletname: String, address: String, exception: String) -> Re
         .map_err(|e| e.to_string())?;
     let command = match exception.as_str() {
         "celestia-light" => format!(
-            r#"yes '{}' | bash -c -l 'systemctl stop $EXECUTE; celestia light init --keyring.accname {} --p2p.network blockspacerace; systemctl start $EXECUTE'; echo 'export MAIN_WALLET_NAME={}' >> $HOME/.bash_profile; echo 'export MAIN_WALLET_ADDRESS={}' >> $HOME/.bash_profile; source $HOME/.bash_profile"#,
+            r#"yes '{}' | bash -c -l 'systemctl stop $EXECUTE; celestia light init --keyring.accname {} --p2p.network mocha; systemctl start $EXECUTE'; echo 'export MAIN_WALLET_NAME={}' >> $HOME/.bash_profile; echo 'export MAIN_WALLET_ADDRESS={}' >> $HOME/.bash_profile; source $HOME/.bash_profile"#,
             my_boxed_session.walletpassword,
             walletname,
             walletname,
