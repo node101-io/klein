@@ -707,15 +707,15 @@ fn delegate_token(
         .channel_session()
         .map_err(|e| e.to_string())?;
     channel.exec(&format!(
-        "yes '{password}' | bash -c -l '$EXECUTE tx {operation} delegate {validator_valoper} {amount}$DENOM --from={wallet_name} --fees={fees}$DENOM --chain-id=$CHAIN_ID --gas=auto --output json {extra}'",
+        "yes '{password}' | bash -c -l '$EXECUTE tx {operation} delegate {validator_valoper} {amount}$DENOM --from={wallet_name} --fees={fees}$DENOM --chain-id=$CHAIN_ID --gas-adjustment 1.4 --output json {extra}'",
         password = my_boxed_session.walletpassword,
         operation = match exception.as_str() {
             "babylon" => "epoching",
             _ => "staking",
         },
         extra = match exception.as_str() {
-            "babylon" => "--keyring-backend test --gas-adjustment 1.4 -y",
-            _ => "",
+            "babylon" => "-y",
+            _ => "--gas=auto -y",
         }
     )).map_err(|e| e.to_string())?;
     let mut s = String::new();
