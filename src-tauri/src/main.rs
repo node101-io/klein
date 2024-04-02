@@ -714,7 +714,7 @@ fn delegate_token(
             _ => "staking",
         },
         extra = match exception.as_str() {
-            "babylon" => "-y",
+            "babylon" => "--keyring-backend test -y",
             _ => "--gas=auto -y",
         }
     )).map_err(|e| e.to_string())?;
